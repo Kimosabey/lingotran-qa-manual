@@ -1,10 +1,9 @@
-# Unpacking artefacts — the repo root IS the project.
-# These are the original zips and their extracted duplicate tree.
-files/
-files.zip
-lingotran-qa-manual.zip
+# Original archives this project was unpacked from. Kept on disk as a
+# safety net, never committed — the repo root is now the project itself.
+.backup/
 
 # Vercel
+.vercel
 .vercel/
 
 # OS

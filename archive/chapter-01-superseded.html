@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lingotran · QA Engineering Handbook — Chapter 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,500;1,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-purple:#41009A;--violet:#7C4DFF;--pill-purple:#412485;--coral:#FF6B4A;
+    --ink:#1A1A2E;--ink-deep:#1A0B2E;
+    --body-grey:#444444;--muted-grey:#666666;--border-grey:#DDDDDD;
+    --lilac:#F0E6FF;--cream:#FAF6F0;--off-white:#FAFAFA;--white:#FFFFFF;
+    --coral-text:#DC2800;--coral-display:#FF4E27;
+    --success-text:#008168;--alert-text:#E60000;--caption-safe:#727272;
+    --sans:'Nunito','Helvetica Neue',Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --focus:#41009A;--rail:280px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;scroll-padding-top:24px;}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{animation:none!important;transition:none!important;}}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px;}
+  body{margin:0;font-family:var(--sans);font-weight:500;font-size:17px;line-height:1.75;
+       color:var(--body-grey);background:var(--off-white);-webkit-font-smoothing:antialiased;}
+
+  /* ---------- COVER ---------- */
+  .cover{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%);color:#fff;
+         padding:88px 32px 72px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;inset:0;
+         background:radial-gradient(circle at 84% 8%,rgba(255,255,255,.16),transparent 46%);pointer-events:none;}
+  .cover .inner{max-width:820px;margin:0 auto;position:relative;z-index:1;}
+  .wordmark{font-weight:900;font-size:26px;letter-spacing:-.6px;color:#fff;}
+  .wordmark span{color:#FFD9CC;}
+  .cover .kicker{display:inline-block;margin-top:26px;font-weight:700;font-size:11px;letter-spacing:1.6px;
+         text-transform:uppercase;color:#fff;background:rgba(255,255,255,.16);padding:6px 16px;border-radius:30px;}
+  .cover h1{font-weight:800;font-size:clamp(34px,5.6vw,54px);line-height:1.06;letter-spacing:-1px;margin:20px 0 0;}
+  .cover h1 em{font-style:italic;color:#FFC7B5;}
+  .cover .sub{max-width:600px;margin:16px 0 0;font-size:18px;line-height:1.6;color:rgba(255,255,255,.9);}
+  .meta-strip{display:flex;flex-wrap:wrap;gap:1px;background:rgba(255,255,255,.22);
+         border-radius:14px;overflow:hidden;margin-top:34px;}
+  .meta-strip div{flex:1 1 150px;background:rgba(26,11,46,.34);padding:16px 18px;}
+  .meta-strip .k{font-weight:600;font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:rgba(255,255,255,.62);}
+  .meta-strip .v{font-weight:800;font-size:15px;color:#fff;margin-top:4px;}
+
+  /* ---------- LAYOUT ---------- */
+  .shell{max-width:1240px;margin:0 auto;padding:0 24px;display:block;}
+  @media(min-width:1080px){
+    .shell{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);gap:48px;align-items:start;}
+    .rail{position:sticky;top:22px;max-height:calc(100vh - 44px);overflow-y:auto;padding:30px 0 40px;}
+    .rail-mobile{display:none;}
+  }
+  @media(max-width:1079px){.rail{display:none;}}
+  main{padding:30px 0 60px;min-width:0;}
+
+  .rail .rail-t{font-weight:800;font-size:11px;letter-spacing:1.3px;text-transform:uppercase;
+       color:var(--caption-safe);margin:0 0 12px;padding-left:14px;}
+  .rail a{display:block;font-size:13.5px;line-height:1.4;font-weight:600;color:var(--muted-grey);
+       text-decoration:none;padding:6px 12px 6px 14px;border-left:2px solid var(--border-grey);}
+  .rail a:hover{color:var(--brand-purple);border-left-color:var(--violet);background:var(--lilac);}
+  .rail a.grp{margin-top:14px;font-weight:800;font-size:11px;letter-spacing:1.1px;text-transform:uppercase;
+       color:var(--pill-purple);border-left-color:transparent;pointer-events:none;padding-bottom:2px;}
+  .rail-mobile{margin:22px 0 4px;background:#fff;border:1px solid var(--border-grey);border-radius:14px;padding:4px 18px;}
+  .rail-mobile summary{font-weight:800;font-size:14px;color:var(--brand-purple);cursor:pointer;padding:12px 0;}
+  .rail-mobile a{display:block;font-size:14px;color:var(--muted-grey);text-decoration:none;padding:5px 0;}
+
+  /* ---------- SECTIONS ---------- */
+  .part-head{margin:46px 0 8px;}
+  .eyebrow{font-weight:700;font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;
+       color:var(--coral-text);margin:0 0 8px;display:block;}
+  h2.sec{display:flex;align-items:baseline;gap:14px;font-weight:800;font-size:clamp(23px,3vw,30px);
+       line-height:1.2;letter-spacing:-.4px;color:var(--ink);margin:52px 0 14px;
+       padding-top:26px;border-top:1px solid var(--border-grey);}
+  h2.sec .n{flex:none;font-size:13px;font-weight:800;color:var(--brand-purple);background:var(--lilac);
+       border-radius:8px;padding:4px 10px;line-height:1;position:relative;top:-3px;font-variant-numeric:tabular-nums;}
+  h3{font-weight:800;font-size:19px;line-height:1.4;color:var(--ink);margin:30px 0 10px;}
+  h4{font-weight:800;font-size:13px;letter-spacing:.7px;text-transform:uppercase;color:var(--pill-purple);margin:24px 0 8px;}
+  p{margin:0 0 20px;max-width:74ch;}
+  .lead{font-weight:700;font-size:20px;line-height:1.6;color:var(--ink);max-width:70ch;}
+  ul,ol{max-width:74ch;padding-left:22px;margin:0 0 20px;}
+  li{margin-bottom:9px;}
+  li::marker{color:var(--brand-purple);font-weight:800;}
+  strong{color:var(--ink);font-weight:800;}
+  a{color:var(--brand-purple);}
+  code{font-family:var(--mono);font-size:.87em;background:var(--lilac);color:var(--pill-purple);
+       padding:2px 6px;border-radius:5px;font-weight:600;}
+
+  .card{background:#fff;border:1px solid var(--border-grey);border-radius:16px;padding:26px 28px;
+       margin:22px 0;box-shadow:0 1px 2px rgba(26,11,46,.04);}
+  .card > :last-child{margin-bottom:0;}
+  .card .ct{font-weight:800;font-size:12px;letter-spacing:.8px;text-transform:uppercase;
+       color:var(--brand-purple);margin:0 0 12px;}
+
+  .box{border-left:4px solid var(--brand-purple);background:var(--lilac);border-radius:0 12px 12px 0;
+       padding:16px 20px;margin:20px 0;}
+  .box .bl{display:block;font-weight:800;font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;
+       color:var(--brand-purple);margin-bottom:5px;}
+  .box p{margin:0;font-size:16px;line-height:1.6;font-weight:600;color:var(--pill-purple);max-width:none;}
+  .box.tip{border-left-color:#008168;background:#EAF7F3;}
+  .box.tip .bl{color:var(--success-text);} .box.tip p{color:#0B4A3D;}
+  .box.warn{border-left-color:#E60000;background:#FDECEC;}
+  .box.warn .bl{color:var(--alert-text);} .box.warn p{color:#7A1414;}
+  .box.note{border-left-color:var(--coral-text);background:var(--cream);}
+  .box.note .bl{color:var(--coral-text);} .box.note p{color:#5A2A18;}
+
+  table{width:100%;border-collapse:collapse;margin:18px 0 24px;font-size:14.5px;line-height:1.55;
+       background:#fff;border:1px solid var(--border-grey);border-radius:12px;overflow:hidden;}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border-grey);vertical-align:top;}
+  th{font-weight:800;color:#fff;background:var(--brand-purple);font-size:11px;letter-spacing:.7px;text-transform:uppercase;}
+  tbody tr:nth-child(even){background:var(--off-white);}
+  tbody tr:last-child td{border-bottom:0;}
+  td code{font-size:12.5px;}
+  .tw{overflow-x:auto;}
+
+  pre{background:var(--ink-deep);color:#EAE2FF;border-radius:14px;padding:18px 20px;overflow-x:auto;
+       font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:18px 0;}
+  pre .c{color:#9F8FC7;} pre .k{color:#FF9C7D;} pre .s{color:#8CE0C4;} pre .f{color:#C9B4FF;}
+  .filename{display:inline-block;font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--pill-purple);
+       background:var(--lilac);border:1px solid #DCC9FF;border-bottom:0;padding:5px 12px;border-radius:8px 8px 0 0;margin:18px 0 -18px;}
+  .filename + pre{border-top-left-radius:0;}
+
+  .ascii{background:#fff;border:1px solid var(--border-grey);border-left:4px solid var(--violet);
+       border-radius:0 12px 12px 0;padding:20px 22px;overflow-x:auto;margin:20px 0;
+       font-family:var(--mono);font-size:12.5px;line-height:1.5;color:var(--pill-purple);white-space:pre;}
+  .cap{font-size:12.5px;color:var(--caption-safe);margin:-10px 0 22px;}
+
+  .grid2{display:grid;grid-template-columns:1fr;gap:16px;margin:20px 0;}
+  @media(min-width:760px){.grid2{grid-template-columns:1fr 1fr;}}
+  .stat-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:22px 0;}
+  @media(min-width:760px){.stat-cards{grid-template-columns:repeat(4,1fr);}}
+  .stat-card{position:relative;background:#fff;border:1px solid var(--border-grey);border-radius:16px;
+       padding:26px 20px 20px;overflow:hidden;box-shadow:0 3px 14px rgba(26,11,46,.06);}
+  .stat-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+       background:linear-gradient(90deg,#41009A,#7C4DFF);}
+  .stat-card .num{font-weight:800;font-size:clamp(28px,3vw,38px);line-height:1;letter-spacing:-1px;
+       color:var(--brand-purple);font-variant-numeric:tabular-nums;}
+  .stat-card .lab{font-weight:700;font-size:11px;letter-spacing:.7px;line-height:1.45;text-transform:uppercase;
+       color:var(--muted-grey);margin-top:12px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 22px;}
+  .chip{font-weight:700;font-size:12px;color:var(--pill-purple);background:var(--lilac);padding:5px 14px;border-radius:20px;}
+
+  .check{list-style:none;padding:0;margin:16px 0 22px;}
+  .check li{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--border-grey);margin:0;}
+  .check li:last-child{border-bottom:0;}
+  .check .bx{flex:none;width:18px;height:18px;border:2px solid var(--violet);border-radius:5px;margin-top:4px;}
+  .qa{counter-reset:q;}
+  .qa .q{font-weight:800;color:var(--ink);margin:20px 0 4px;}
+  .qa .q::before{counter-increment:q;content:"Q" counter(q) " · ";color:var(--brand-purple);}
+  .qa .a{font-size:15px;color:var(--muted-grey);margin:0 0 4px;}
+
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:18px 0 24px;}
+  .flow .st{background:#fff;border:1.6px solid var(--violet);color:var(--pill-purple);font-weight:700;
+       font-size:12.5px;padding:8px 14px;border-radius:10px;}
+  .flow .ar{color:var(--violet);font-weight:800;}
+
+  footer{border-top:1px solid var(--border-grey);text-align:center;padding:40px 24px 60px;
+       color:var(--caption-safe);font-size:13px;background:#fff;margin-top:40px;}
+  .nextup{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%);color:#fff;border-radius:18px;
+       padding:30px 32px;margin:44px 0 10px;}
+  .nextup .bl{font-weight:700;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.72);}
+  .nextup h3{color:#fff;font-size:24px;margin:8px 0 10px;}
+  .nextup p{color:rgba(255,255,255,.9);margin:0;font-weight:500;}
+
+  @media print{
+    body{background:#fff;font-size:11pt;}
+    .rail,.rail-mobile{display:none;}
+    .shell{display:block;max-width:none;}
+    pre{background:#F4F0FB;color:#1A0B2E;border:1px solid #DDD;}
+    pre .c,pre .k,pre .s,pre .f{color:#41009A;}
+    h2.sec{page-break-after:avoid;} table,.card,.box{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="inner">
+    <div class="wordmark">lingo<span>tran</span></div>
+    <span class="kicker">Internal Engineering Manual · Part I of VIII</span>
+    <h1>The QA Engineering <em>Handbook</em></h1>
+    <p class="sub">How quality is designed, defended and measured across the Lingotran platform — React, Node.js, PostgreSQL and Azure DevOps. Written for engineers who own quality, not just execute test cases.</p>
+    <div class="meta-strip">
+      <div><div class="k">Chapter</div><div class="v">01 of 40</div></div>
+      <div><div class="k">Part</div><div class="v">QA Foundations</div></div>
+      <div><div class="k">Audience</div><div class="v">Intern → Test Architect</div></div>
+      <div><div class="k">Revision</div><div class="v">v1.0 · Aug 2026</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+
+<nav class="rail" aria-label="Chapter contents">
+  <p class="rail-t">Chapter 1 contents</p>
+  <a class="grp">Orientation</a>
+  <a href="#s1">1 · Introduction</a>
+  <a href="#s2">2 · Learning objectives</a>
+  <a href="#s3">3 · Why this matters</a>
+  <a href="#s4">4 · Enterprise concepts</a>
+  <a class="grp">The system</a>
+  <a href="#s5">5 · Architecture diagram</a>
+  <a href="#s6">6 · Workflow diagram</a>
+  <a href="#s7">7 · Step-by-step process</a>
+  <a class="grp">Three lenses</a>
+  <a href="#s8">8 · QA perspective</a>
+  <a href="#s9">9 · Developer perspective</a>
+  <a href="#s10">10 · Business perspective</a>
+  <a class="grp">Reading the stack</a>
+  <a href="#s11">11 · Source code walkthrough</a>
+  <a href="#s12">12 · API walkthrough</a>
+  <a href="#s13">13 · Database walkthrough</a>
+  <a href="#s14">14 · Azure DevOps</a>
+  <a class="grp">Designing the tests</a>
+  <a href="#s15">15 · Example scenario</a>
+  <a href="#s16">16 · Positive test cases</a>
+  <a href="#s17">17 · Negative test cases</a>
+  <a href="#s18">18 · Boundary value tests</a>
+  <a href="#s19">19 · Equivalence partitioning</a>
+  <a href="#s20">20 · Security test cases</a>
+  <a href="#s21">21 · Performance</a>
+  <a href="#s22">22 · Accessibility</a>
+  <a class="grp">Analysis</a>
+  <a href="#s23">23 · Common production bugs</a>
+  <a href="#s24">24 · Root cause analysis</a>
+  <a href="#s25">25 · Risk analysis</a>
+  <a href="#s26">26 · Regression scope</a>
+  <a href="#s27">27 · Automation opportunities</a>
+  <a href="#s28">28 · AI assistance</a>
+  <a class="grp">Closing</a>
+  <a href="#s29">29 · Common mistakes</a>
+  <a href="#s30">30 · Best practices</a>
+  <a href="#s31">31 · Senior QA tips</a>
+  <a href="#s32">32 · Checklist</a>
+  <a href="#s33">33 · Summary</a>
+  <a href="#s34">34 · Knowledge check</a>
+</nav>
+
+<main>
+
+<details class="rail-mobile">
+  <summary>Jump to a section ▾</summary>
+  <a href="#s1">1 · Introduction</a><a href="#s4">4 · Enterprise concepts</a>
+  <a href="#s5">5 · Architecture</a><a href="#s7">7 · Step-by-step process</a>
+  <a href="#s11">11 · Source code walkthrough</a><a href="#s12">12 · API walkthrough</a>
+  <a href="#s13">13 · Database walkthrough</a><a href="#s16">16 · Positive test cases</a>
+  <a href="#s20">20 · Security test cases</a><a href="#s24">24 · Root cause analysis</a>
+  <a href="#s28">28 · AI assistance</a><a href="#s32">32 · Checklist</a>
+  <a href="#s34">34 · Knowledge check</a>
+</details>
+
+<!-- ============ CHAPTER OPENER ============ -->
+<div class="part-head">
+  <span class="eyebrow">Part I · QA Foundations</span>
+  <h1 style="font-weight:800;font-size:clamp(30px,4.4vw,44px);line-height:1.1;letter-spacing:-.8px;color:var(--ink);margin:0 0 14px;">
+    Chapter 1 — What Quality Engineering Actually Is</h1>
+  <p class="lead">Testing is an activity. Quality engineering is a responsibility. This chapter draws the line between the two, then walks a single Lingotran login request end to end so you can see exactly where a QA engineer applies pressure at every layer.</p>
+  <div class="chips">
+    <span class="chip">Shift-left</span><span class="chip">Risk-based testing</span>
+    <span class="chip">Quality gates</span><span class="chip">Test pyramid</span>
+    <span class="chip">Cost of defects</span><span class="chip">Definition of Done</span>
+  </div>
+</div>
+
+<h2 class="sec" id="s1"><span class="n">01</span> Chapter Introduction</h2>
+
+<p>Most engineers arrive at QA believing the job is to find bugs. It isn't. Finding bugs is the most visible output of the job, in the same way that a doctor writing a prescription is the most visible output of a consultation — but the prescription is not the medicine, and the bug report is not the quality.</p>
+
+<p>The actual job is <strong>reducing the probability that Lingotran does something unacceptable in front of a paying customer</strong>. Every technique in this handbook — equivalence partitioning, contract testing, k6 load profiles, Playwright suites, release readiness reports — exists to serve that one sentence. When a technique stops serving it, a senior engineer drops the technique.</p>
+
+<p>That reframing has practical consequences. It means a QA engineer who spots an ambiguous acceptance criterion in refinement and gets it clarified has done more valuable work than one who files fifteen defects during regression, because the first prevented the defects and the second only documented them. It means reading a pull request is testing. It means asking "what happens to the users already logged in when we deploy this?" is testing. It means that a test which has passed for eighteen months without ever failing is, statistically, a candidate for deletion rather than a badge of coverage.</p>
+
+<p>Throughout this chapter we use one narrow, real slice of the Lingotran product: <strong>the login flow</strong>. It is deliberately unglamorous. It is also the single highest-traffic path in the product, the gateway to every other feature, the place where security failures are most expensive, and a feature every reader already understands — which means no cognitive budget is wasted on domain knowledge and all of it goes to method.</p>
+
+<div class="box">
+  <span class="bl">The frame to carry forward</span>
+  <p>A tester asks "does this work?" A quality engineer asks "under what conditions does this stop working, how likely are those conditions, and what does it cost us when they occur?"</p>
+</div>
+
+<h2 class="sec" id="s2"><span class="n">02</span> Learning Objectives</h2>
+
+<p>By the end of this chapter you will be able to:</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:34%">Objective</th><th>What competence looks like</th><th style="width:14%">Level</th></tr></thead>
+  <tbody>
+    <tr><td>Distinguish QA, QC and QE</td><td>Explain which of the three a given task belongs to, and why the distinction changes who is accountable</td><td>Foundational</td></tr>
+    <tr><td>Apply the cost-of-defect curve</td><td>Justify, with numbers, why a requirement review is cheaper than a hotfix</td><td>Foundational</td></tr>
+    <tr><td>Read the Lingotran architecture</td><td>Name every layer a login request passes through and state what can fail at each</td><td>Intermediate</td></tr>
+    <tr><td>Trace a feature through source code</td><td>Follow React → Axios → route → controller → service → repository → SQL without assistance</td><td>Intermediate</td></tr>
+    <tr><td>Design a test set from first principles</td><td>Produce positive, negative, boundary, equivalence, security and accessibility cases for a feature</td><td>Intermediate</td></tr>
+    <tr><td>Perform risk-based scoping</td><td>Defend a decision to <em>not</em> test something, in writing, to a release manager</td><td>Advanced</td></tr>
+    <tr><td>Run a structured RCA</td><td>Take a production incident to a systemic cause rather than a human one</td><td>Advanced</td></tr>
+    <tr><td>Use AI tools as a QA multiplier</td><td>Write prompts that produce reviewable test artifacts, and know which outputs to distrust</td><td>Advanced</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="s3"><span class="n">03</span> Why This Topic Matters</h2>
+
+<p>Lingotran is a language platform. Users record speech, receive pronunciation feedback, and translate content across languages. Three properties of that product shape everything about how we test it.</p>
+
+<h4>1 · Failures are silent</h4>
+<p>If a payment gateway fails, the user sees an error and complains. If our pronunciation scorer silently marks a correct Tamil-accented English speaker as wrong, the user does not file a bug — they conclude the product doesn't work for people like them, and they leave. A significant class of Lingotran defects produces <strong>plausible wrong answers rather than visible errors</strong>. Traditional pass/fail checking does not catch these; only test design that includes representative data does.</p>
+
+<h4>2 · The blast radius is the whole account</h4>
+<p>Login, session handling and tenancy are shared infrastructure. A defect in the login flow is not a defect in one feature — it is an outage. This is why Chapter 1 uses login as its example: it is the canonical case where the risk of a change is far larger than the size of the change.</p>
+
+<h4>3 · We ship weekly, to real classrooms</h4>
+<p>Release cadence removes the luxury of a two-week regression cycle. Quality has to be built into the pipeline, not inspected in at the end. That is the entire argument for shift-left, and it is an economic argument before it is a philosophical one.</p>
+
+<div class="stat-cards">
+  <div class="stat-card"><div class="num">1×</div><div class="lab">Cost to fix in requirements</div></div>
+  <div class="stat-card"><div class="num">6×</div><div class="lab">Cost to fix in development</div></div>
+  <div class="stat-card"><div class="num">15×</div><div class="lab">Cost to fix in QA</div></div>
+  <div class="stat-card"><div class="num">100×</div><div class="lab">Cost to fix in production</div></div>
+</div>
+<p class="cap">Indicative multipliers based on the widely cited IBM Systems Sciences Institute relative-cost-of-defect model. Treat the shape of the curve as the lesson, not the precise integers — the ratios vary by organisation, but the exponential character does not.</p>
+
+<div class="box note">
+  <span class="bl">Read the curve correctly</span>
+  <p>The curve does not say "test earlier." It says the <em>cost of discovery</em> rises with distance from the decision that caused the defect. A defect born in an ambiguous requirement is cheapest to kill in the refinement meeting — which is a room, not a test environment.</p>
+</div>
+
+<h2 class="sec" id="s4"><span class="n">04</span> Enterprise Concepts</h2>
+
+<h3>4.1 QA vs QC vs QE</h3>
+
+<p>These three terms are used interchangeably in casual conversation and precisely in engineering organisations. The distinction determines accountability.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:16%">Term</th><th style="width:26%">Definition</th><th style="width:30%">Example at Lingotran</th><th>Orientation</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Quality Assurance</strong><br>(QA)</td><td>Process-oriented. Prevents defects by improving how work is done.</td><td>Introducing a Definition of Ready so no story enters a sprint without testable acceptance criteria</td><td><strong>Preventive</strong> — acts on the process</td></tr>
+    <tr><td><strong>Quality Control</strong><br>(QC)</td><td>Product-oriented. Detects defects in a built artifact.</td><td>Executing the regression suite against release candidate <code>2026.08.1</code></td><td><strong>Detective</strong> — acts on the product</td></tr>
+    <tr><td><strong>Quality Engineering</strong><br>(QE)</td><td>System-oriented. Builds the capability that makes quality repeatable and measurable.</td><td>Building the pipeline gate that blocks a merge when API contract tests fail</td><td><strong>Systemic</strong> — acts on the capability</td></tr>
+  </tbody>
+</table></div>
+
+<p>A junior engineer spends most of their time in QC. A senior engineer moves work leftwards into QA and upwards into QE. Your seniority is measurable by the ratio.</p>
+
+<h3>4.2 Verification and validation</h3>
+
+<p>Two questions that sound identical and are not:</p>
+
+<ul>
+  <li><strong>Verification</strong> — "Did we build the product right?" Does the implementation match the specification? A unit test is verification.</li>
+  <li><strong>Validation</strong> — "Did we build the right product?" Does the specification solve the user's actual problem? A usability session with a teacher is validation.</li>
+</ul>
+
+<p>A feature can pass 100% of verification and fail validation entirely. Lingotran's original pronunciation feedback was exactly this case: the code did precisely what the spec described, and the spec described something that did not measure pronunciation. Every test passed. The feature was wrong.</p>
+
+<div class="box warn">
+  <span class="bl">Warning · the most expensive defect class</span>
+  <p>A correctly implemented wrong requirement is invisible to every automated check you will ever write. Only a human asking "why do we believe this is what the user needs?" catches it. Do not delegate that question to a test suite.</p>
+</div>
+
+<h3>4.3 Shift-left and shift-right</h3>
+
+<p><strong>Shift-left</strong> means moving quality activity earlier: requirement reviews, design reviews, test-case design before code exists, static analysis, unit tests in the pull request. <strong>Shift-right</strong> means extending quality activity into production: synthetic monitoring, canary releases, feature flags, error-rate alerting, real-user monitoring.</p>
+
+<p>They are not competing philosophies. A mature team does both, because they catch different defect classes. Shift-left catches logic and specification defects. Shift-right catches environment, scale and real-data defects — the ones that are structurally impossible to reproduce before production.</p>
+
+<div class="ascii">        SHIFT LEFT  ◀────────────────────────────────  SHIFT RIGHT
+  ┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+  │ Refine   │  Design  │   Code   │  Build   │  Deploy  │ Operate  │
+  ├──────────┼──────────┼──────────┼──────────┼──────────┼──────────┤
+  │ ACs      │ Threat   │ Unit     │ API      │ Smoke on │ Synthetic│
+  │ reviewed │ model    │ tests    │ contract │ staging  │ monitors │
+  │          │          │          │ tests    │          │          │
+  │ Test     │ Testabi- │ PR       │ Regress- │ Canary   │ Error    │
+  │ design   │ lity req.│ review   │ ion suite│ 5% users │ budgets  │
+  └──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
+     cheap  ◀────────── cost of finding a defect ──────────▶  expensive</div>
+<p class="cap">Figure 1.1 — Quality activities distributed across the delivery lifecycle. QA is present in every column, not just "Build".</p>
+
+<h3>4.4 The test pyramid</h3>
+
+<p>The pyramid is a statement about <em>economics</em>, not about virtue. Tests lower in the pyramid are faster, more stable, cheaper to maintain, and more precise about where a failure lives. Tests higher up are slower and flakier, but they are the only ones that verify the system actually holds together.</p>
+
+<div class="ascii">                        ▲
+                       ╱ ╲          E2E  ·  ~5%   ·  Playwright
+                      ╱   ╲         Slow, brittle, highest confidence.
+                     ╱─────╲        Only critical user journeys.
+                    ╱       ╲
+                   ╱         ╲      INTEGRATION · ~25% · Supertest / Bruno
+                  ╱           ╲     API + DB together. Contracts, auth,
+                 ╱─────────────╲    transactions, error mapping.
+                ╱               ╲
+               ╱                 ╲  UNIT · ~70% · Jest / Vitest
+              ╱                   ╲ Milliseconds. Pure logic, validators,
+             ╱─────────────────────╲ reducers, mappers, guards.
+                                     ▲ speed & stability increase downward
+                                     ▼ confidence & realism increase upward</div>
+<p class="cap">Figure 1.2 — Target distribution. The percentages are a starting heuristic, not a law; the ordering of the properties is the actual rule.</p>
+
+<div class="box tip">
+  <span class="bl">Tip · diagnosing an inverted pyramid</span>
+  <p>If your regression suite takes 90 minutes and half of its failures turn out to be timing issues rather than real defects, you have an ice-cream cone, not a pyramid. The fix is never "add retries" — it is to push each flaky E2E assertion down to the lowest layer that can prove the same thing.</p>
+</div>
+
+<h3>4.5 Quality gates and Definition of Done</h3>
+
+<p>A <strong>quality gate</strong> is an automated, non-negotiable condition that a change must satisfy before it advances. It is non-negotiable by design: a gate that can be waived under deadline pressure is not a gate, it is a suggestion. Lingotran's gates:</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:22%">Gate</th><th style="width:30%">Condition</th><th>Enforced by</th></tr></thead>
+  <tbody>
+    <tr><td>Pull request</td><td>Build green · lint clean · unit coverage ≥ 80% on changed files · 1 approval</td><td>Azure DevOps branch policy</td></tr>
+    <tr><td>Merge to <code>develop</code></td><td>Integration + API contract suites pass</td><td>CI pipeline</td></tr>
+    <tr><td>Deploy to staging</td><td>Smoke suite green within 6 minutes</td><td>Release pipeline pre-deploy condition</td></tr>
+    <tr><td>Deploy to production</td><td>Zero open Sev-1/Sev-2 · release notes signed · rollback plan attached</td><td>Manual approval + checklist</td></tr>
+    <tr><td>Post-deploy</td><td>Error rate &lt; 0.5% and p95 latency within budget for 30 min</td><td>Azure Monitor alert on canary slot</td></tr>
+  </tbody>
+</table></div>
+
+<p>The <strong>Definition of Done</strong> is the human-judgement counterpart to the automated gate. A story is done when: acceptance criteria demonstrably met, tests written at the appropriate pyramid level, no known Sev-1/Sev-2 defects, documentation updated, feature flag configured, and telemetry emitted. "Dev complete" is not done. "Works on my machine" is not done. "Tested manually once" is not done.</p>
+
+<h3>4.6 Risk-based testing</h3>
+
+<p>You will never have time to test everything, and attempting to is itself a failure of engineering judgement. Risk-based testing allocates effort in proportion to <em>expected loss</em>:</p>
+
+<div class="ascii">    Risk score  =  Probability of failure  ×  Impact of failure
+
+    Probability rises with:            Impact rises with:
+      · code churn in the area           · number of users affected
+      · complexity / cyclomatic depth    · reversibility (can we undo it?)
+      · newness of the code              · data loss or corruption
+      · number of integration points     · security / privacy exposure
+      · historical defect density        · revenue or contractual effect
+      · developer unfamiliarity          · regulatory consequence</div>
+
+<p>The output is a ranked list, not a binary. Section 25 applies this concretely to the login change we will follow.</p>
+
+<h2 class="sec" id="s5"><span class="n">05</span> Architecture Diagram</h2>
+
+<p>You cannot test a system you cannot draw. Every QA engineer at Lingotran should be able to reproduce the following from memory within their first month.</p>
+
+<div class="ascii">┌───────────────────────────────────────────────────────────────────────┐
+│                          CLIENT  ·  Browser                           │
+│   React 18 SPA  ·  React Router  ·  Axios  ·  Context (AuthProvider)  │
+│   Web Speech API (recording)      Token in memory + refresh in cookie  │
+└──────────────────────────────┬────────────────────────────────────────┘
+                               │ HTTPS / JSON
+                               ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│              Azure Front Door  ·  WAF  ·  TLS termination             │
+│              rate limiting · geo routing · custom domain              │
+└──────────────────────────────┬────────────────────────────────────────┘
+                               ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│         Azure App Service  ·  Node.js 20 + Express  (2 instances)     │
+│  ┌──────────┐  ┌────────────┐  ┌───────────┐  ┌──────────┐           │
+│  │  Routes  │─▶│ Middleware │─▶│Controllers│─▶│ Services │──┐        │
+│  │ /api/v1  │  │ authN/authZ│  │  (thin)   │  │ (logic)  │  │        │
+│  └──────────┘  │ validation │  └───────────┘  └──────────┘  │        │
+│                │ rate limit │                                │        │
+│                │ correlation│                    ┌───────────▼──────┐ │
+│                └────────────┘                    │  Repositories    │ │
+│                                                  │  (SQL only)      │ │
+└──────────────────────────────────────────────────┴────────┬─────────┘ │
+                               │                            │           │
+        ┌──────────────────────┼────────────────────┬───────▼─────────┐ │
+        ▼                      ▼                    ▼                 ▼ │
+┌───────────────┐   ┌────────────────────┐  ┌──────────────┐  ┌─────────────┐
+│ PostgreSQL 15 │   │ Azure AI Speech    │  │ Blob Storage │  │ App Insights│
+│ (Flexible Srv)│   │ Pronunciation Asmt │  │ audio files  │  │ logs+traces │
+│ users, orgs,  │   │ (3rd-party proc.)  │  │              │  │             │
+│ sessions, ... │   └────────────────────┘  └──────────────┘  └─────────────┘
+└───────────────┘</div>
+<p class="cap">Figure 1.3 — Lingotran production topology (simplified). Each box is a place a defect can live and a place a test can be aimed.</p>
+
+<h4>What QA reads from this diagram</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:24%">Layer</th><th style="width:38%">Failure modes to design tests for</th><th>Cheapest test level</th></tr></thead>
+  <tbody>
+    <tr><td>React SPA</td><td>Stale state, race conditions on double-submit, unhandled promise rejections, loading states that never resolve, token kept after logout</td><td>Component / unit</td></tr>
+    <tr><td>Front Door / WAF</td><td>Legitimate traffic blocked by WAF rule, rate limit too aggressive for classrooms on one shared IP</td><td>Manual + staging soak</td></tr>
+    <tr><td>Middleware</td><td>AuthZ check missing on a new route, validation bypassed, correlation ID not propagated</td><td>Integration</td></tr>
+    <tr><td>Service layer</td><td>Business rule wrong, error swallowed, transaction not wrapped</td><td>Unit</td></tr>
+    <tr><td>Repository / SQL</td><td>Missing index causing timeout at scale, N+1 queries, tenant filter omitted</td><td>Integration + query plan review</td></tr>
+    <tr><td>PostgreSQL</td><td>Constraint missing, migration not reversible, orphaned rows</td><td>Migration test</td></tr>
+    <tr><td>Azure AI Speech</td><td>Third-party latency spike, quota exhaustion, region outage, no fallback</td><td>Contract + chaos</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box">
+  <span class="bl">Classroom traffic, one IP</span>
+  <p>A school of forty students logs in from a single NAT address within ninety seconds of the bell. Any rate limit tuned for "normal consumer traffic" will lock out an entire class. This is a real risk that no unit test will ever surface — it comes from reading the architecture <em>alongside</em> the customer profile.</p>
+</div>
+
+<h2 class="sec" id="s6"><span class="n">06</span> Workflow Diagram</h2>
+
+<p>How a requirement becomes a tested, released capability — and where QA is present.</p>
+
+<div class="ascii">  ┌────────────┐
+  │ Discovery  │  PM + design + SME define the problem
+  └─────┬──────┘  ◆ QA: challenge assumptions, ask for measurable outcomes
+        ▼
+  ┌────────────┐
+  │ Refinement │  Story written, ACs drafted, estimated
+  └─────┬──────┘  ◆ QA: Definition of Ready check, ambiguity hunt, testability
+        ▼
+  ┌────────────┐
+  │ Test design│  Cases written BEFORE code exists
+  └─────┬──────┘  ◆ QA: positive/negative/boundary/security set, risk score
+        ▼
+  ┌────────────┐
+  │ Development│  Branch → commit → unit tests → PR
+  └─────┬──────┘  ◆ QA: read the diff, pair on edge cases, review test names
+        ▼
+  ┌────────────┐
+  │ CI build   │  Lint · unit · SAST · package
+  └─────┬──────┘  ◆ QA: owns gate thresholds, triages red builds
+        ▼
+  ┌────────────┐
+  │ Deploy DEV │  Auto-deploy on merge to develop
+  └─────┬──────┘  ◆ QA: smoke, then exploratory charter (time-boxed)
+        ▼
+  ┌────────────┐
+  │ Deploy STG │  Release candidate, production-like data volume
+  └─────┬──────┘  ◆ QA: regression suite, perf check, accessibility scan
+        ▼
+  ┌────────────┐
+  │ Sign-off   │  Release readiness report
+  └─────┬──────┘  ◆ QA: states residual risk in writing; does not "approve"
+        ▼
+  ┌────────────┐
+  │ Deploy PRD │  Canary 5% → 100% · feature flag off by default
+  └─────┬──────┘  ◆ QA: production smoke, watch dashboards for 30 min
+        ▼
+  ┌────────────┐
+  │ Operate    │  Monitoring, incidents, feedback
+  └────────────┘  ◆ QA: RCA, add regression test for every escaped defect</div>
+<p class="cap">Figure 1.4 — The QA engineer appears in all nine stages. Only two of them involve executing test cases.</p>
+
+<div class="box note">
+  <span class="bl">"QA does not approve releases"</span>
+  <p>Sign-off is a business decision about accepting risk, and it belongs to the release manager or product owner. QA's job is to make the risk <em>visible and specific</em> — "the new refresh-token path is untested against Safari 16, which is 4% of our users" — not to say yes or no. Engineers who accept the approval role inherit blame for decisions they do not control.</p>
+</div>
+
+<h2 class="sec" id="s7"><span class="n">07</span> Step-by-Step Process</h2>
+
+<p>This is the repeatable method a senior QA engineer applies to any feature, on any team, in any stack. Learn it as a sequence; eventually it becomes reflex.</p>
+
+<h4>Step 1 · Understand the intent, not the ticket</h4>
+<p>Read the story, then ask: <em>what user outcome changes if this ships?</em> If you cannot answer without re-reading the ticket, the ticket is not ready. Write the outcome in one sentence and check it with the product owner.</p>
+
+<h4>Step 2 · Identify the change surface</h4>
+<p>Determine precisely what is being modified: which components, which endpoints, which tables, which config. Get this from the developer or the branch, not from guesswork. The change surface bounds your regression scope.</p>
+
+<h4>Step 3 · Map the blast radius</h4>
+<p>What else touches the change surface? A change to the <code>users</code> table touches login, profile, org membership, billing and analytics exports. Blast radius is almost always larger than change surface — the gap between them is where escaped defects live.</p>
+
+<h4>Step 4 · Score the risk</h4>
+<p>Probability × impact, per Section 4.6. Produce a ranked list of what could go wrong. This list, not the acceptance criteria, drives depth of testing.</p>
+
+<h4>Step 5 · Design tests before code exists</h4>
+<p>Write positive, negative, boundary, equivalence, security and accessibility cases from the specification. Doing this early has a side effect more valuable than the tests themselves: <strong>it exposes specification gaps while they are still free to fix</strong>.</p>
+
+<h4>Step 6 · Read the implementation</h4>
+<p>When the PR opens, read the diff. Compare it against your test design. Two questions: <em>what did they build that I did not expect?</em> and <em>what did I test for that they did not handle?</em> Both are findings.</p>
+
+<h4>Step 7 · Execute at the cheapest sufficient level</h4>
+<p>For each case, ask which pyramid level can prove it. Never verify through the UI what a unit test can verify in 4 milliseconds.</p>
+
+<h4>Step 8 · Explore beyond the script</h4>
+<p>Time-box a charter — "for 45 minutes, investigate session behaviour across two tabs and a network drop" — and follow curiosity. Scripted tests confirm what you predicted; exploratory testing finds what you didn't. Both are required.</p>
+
+<h4>Step 9 · Report risk, then close the loop</h4>
+<p>State residual risk in writing before release. After release, watch telemetry. If a defect escapes, add a regression test <em>at the level where it should have been caught</em> and ask what in the process allowed it through.</p>
+
+<div class="flow">
+  <span class="st">Intent</span><span class="ar">→</span>
+  <span class="st">Change surface</span><span class="ar">→</span>
+  <span class="st">Blast radius</span><span class="ar">→</span>
+  <span class="st">Risk score</span><span class="ar">→</span>
+  <span class="st">Test design</span><span class="ar">→</span>
+  <span class="st">Read code</span><span class="ar">→</span>
+  <span class="st">Execute</span><span class="ar">→</span>
+  <span class="st">Explore</span><span class="ar">→</span>
+  <span class="st">Report &amp; learn</span>
+</div>
+
+<h2 class="sec" id="s8"><span class="n">08</span> QA Perspective</h2>
+
+<p>The QA engineer's mental model is <strong>adversarial but collaborative</strong>. You are looking for the conditions under which the system betrays its user, and you are doing it on the same side of the table as the developer who wrote it.</p>
+
+<p>Four habits define the perspective:</p>
+
+<ul>
+  <li><strong>Assume nothing is validated until proven.</strong> Client-side validation is a UX convenience; it is not a control. Every rule enforced in React must be independently enforced in the API, and usually in the database too. Test each layer separately.</li>
+  <li><strong>Follow the data, not the screen.</strong> A green success toast means the frontend received a 200. It does not mean the row was written, the audit log recorded, or the cache invalidated. Verify at the source of truth.</li>
+  <li><strong>Think in states, not clicks.</strong> A user is not a sequence of button presses — they are a state machine with a network connection that drops, a browser tab they duplicate, a session that expires mid-action, and a back button. Most interesting defects live in state transitions.</li>
+  <li><strong>Prefer specific over comprehensive.</strong> "Login is broken" is not a finding. "Login returns 500 when the email contains a plus sign, because the address is not URL-decoded before the lookup in <code>auth.repository.js:42</code>" is a finding. The second one gets fixed today.</li>
+</ul>
+
+<h2 class="sec" id="s9"><span class="n">09</span> Developer Perspective <span style="font-weight:600;font-size:15px;color:var(--caption-safe);">(comparison only)</span></h2>
+
+<p>Understanding how the developer sees the same feature is what turns a defect report from an accusation into a collaboration. The two roles optimise for genuinely different things, and both optimisations are correct.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:20%">Dimension</th><th style="width:40%">Developer lens</th><th>QA lens</th></tr></thead>
+  <tbody>
+    <tr><td>Primary question</td><td>"How do I make this work?"</td><td>"How does this stop working?"</td></tr>
+    <tr><td>Default path</td><td>The happy path — it must exist first</td><td>The unhappy paths — they outnumber the happy one</td></tr>
+    <tr><td>Success signal</td><td>Feature functions, tests they wrote pass</td><td>Risk is understood and residual risk is acceptable</td></tr>
+    <tr><td>Bias</td><td>Optimism — knows what it should do, sees what it should do</td><td>Scepticism — must be shown, not told</td></tr>
+    <tr><td>Blind spot</td><td>Their own assumptions are invisible to them</td><td>Implementation constraints that make an "obvious" fix expensive</td></tr>
+    <tr><td>Time horizon</td><td>This sprint's story</td><td>This story plus everything it can break</td></tr>
+    <tr><td>Relationship to code</td><td>Owns and shapes it</td><td>Reads it as evidence of intent and risk</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box tip">
+  <span class="bl">Tip · the one sentence that changes the relationship</span>
+  <p>Open a defect conversation with "I want to check whether this is expected" rather than "this is broken." You are frequently wrong about intent, and the phrasing costs you nothing while preserving the developer's willingness to bring you edge cases voluntarily. Long term, developers who volunteer edge cases are worth more than any test suite.</p>
+</div>
+
+<h2 class="sec" id="s10"><span class="n">10</span> Business Perspective</h2>
+
+<p>Quality decisions are economic decisions, and a senior QA engineer must be able to argue them in the language the business uses. Three translations you will need constantly:</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:34%">Engineering statement</th><th>Business translation</th></tr></thead>
+  <tbody>
+    <tr><td>"The login endpoint has no rate limit"</td><td>"A single script can lock out every account in a school district, and we would learn about it from the customer rather than from monitoring"</td></tr>
+    <tr><td>"We have no test for the refresh-token path"</td><td>"If refresh breaks, every active user is logged out mid-lesson. At 08:50 on a Monday that is roughly 12,000 interrupted sessions and a support queue we cannot staff"</td></tr>
+    <tr><td>"Coverage on the payments module is 34%"</td><td>"Changes to billing carry an unquantified risk of charging the wrong amount, which is a refund cost plus a trust cost plus, in the EU, a regulatory question"</td></tr>
+  </tbody>
+</table></div>
+
+<p>Note the pattern: <strong>quantity of users, cost of recovery, and reversibility</strong>. Those three variables convert almost any technical risk into a sentence a product owner can act on. "It's not tested" is not actionable. "It's not tested, it affects everyone, and we cannot roll it back without a data migration" is.</p>
+
+<div class="box">
+  <span class="bl">Quality is not free, and neither is its absence</span>
+  <p>The business case for QA is never "bugs are bad." It is that <em>unplanned work destroys predictability</em>. A team that spends 40% of its capacity on production firefighting cannot commit to a roadmap, and a team that cannot commit to a roadmap loses enterprise deals. Quality buys forecastability, and forecastability is what leadership actually purchases.</p>
+</div>
+
+<h2 class="sec" id="s11"><span class="n">11</span> Source Code Walkthrough</h2>
+
+<p>A QA engineer who cannot read code is limited to testing what they can see. A QA engineer who can read code tests what is actually there. This section traces one request through every layer. Read each block asking the handbook's recurring question: <strong>what should a QA engineer understand from this code?</strong></p>
+
+<h3>11.1 The full path</h3>
+
+<div class="ascii">  React &lt;LoginForm&gt;
+        │  onSubmit
+        ▼
+  useAuth().login()          ── context, holds token + user
+        │
+        ▼
+  Axios POST /api/v1/auth/login
+        │
+        ▼  ═══════════ network boundary ═══════════
+        │
+  Express route  routes/auth.routes.js
+        │
+        ▼
+  Middleware  rateLimit → validate(loginSchema) → correlationId
+        │
+        ▼
+  Controller  auth.controller.js       (thin: HTTP in, HTTP out)
+        │
+        ▼
+  Service     auth.service.js          (business rules live here)
+        │
+        ▼
+  Repository  user.repository.js       (SQL only, no logic)
+        │
+        ▼
+  PostgreSQL  SELECT ... FROM users WHERE lower(email) = lower($1)
+        │
+        ▼
+  Response    200 { accessToken, user }  ·  Set-Cookie: refreshToken
+        │
+        ▼
+  React updates AuthContext → redirect to /dashboard</div>
+<p class="cap">Figure 1.5 — Nine layers, nine independent opportunities for a defect. Testing only the first and last is testing 22% of the system.</p>
+
+<h3>11.2 The React component</h3>
+
+<span class="filename">src/features/auth/LoginForm.jsx</span>
+<pre><span class="c">// Simplified for the handbook — error handling condensed.</span>
+<span class="k">import</span> { useState } <span class="k">from</span> <span class="s">'react'</span>;
+<span class="k">import</span> { useAuth } <span class="k">from</span> <span class="s">'./AuthContext'</span>;
+
+<span class="k">export default function</span> <span class="f">LoginForm</span>() {
+  <span class="k">const</span> [email, setEmail]       = <span class="f">useState</span>(<span class="s">''</span>);
+  <span class="k">const</span> [password, setPassword] = <span class="f">useState</span>(<span class="s">''</span>);
+  <span class="k">const</span> [error, setError]       = <span class="f">useState</span>(<span class="k">null</span>);
+  <span class="k">const</span> [busy, setBusy]         = <span class="f">useState</span>(<span class="k">false</span>);
+  <span class="k">const</span> { login } = <span class="f">useAuth</span>();
+
+  <span class="k">async function</span> <span class="f">handleSubmit</span>(e) {
+    e.<span class="f">preventDefault</span>();
+    <span class="k">if</span> (busy) <span class="k">return</span>;              <span class="c">// ① double-submit guard</span>
+    <span class="f">setBusy</span>(<span class="k">true</span>); <span class="f">setError</span>(<span class="k">null</span>);
+    <span class="k">try</span> {
+      <span class="k">await</span> <span class="f">login</span>(email.<span class="f">trim</span>(), password);   <span class="c">// ② trims email, not password</span>
+      <span class="c">// navigation handled by AuthContext on success</span>
+    } <span class="k">catch</span> (err) {
+      <span class="f">setError</span>(err?.response?.data?.message ?? <span class="s">'Something went wrong.'</span>); <span class="c">// ③</span>
+    } <span class="k">finally</span> {
+      <span class="f">setBusy</span>(<span class="k">false</span>);                    <span class="c">// ④ runs even after unmount?</span>
+    }
+  }
+
+  <span class="k">return</span> (
+    &lt;form onSubmit={handleSubmit} noValidate&gt;
+      &lt;label htmlFor=<span class="s">"email"</span>&gt;Email&lt;/label&gt;
+      &lt;input id=<span class="s">"email"</span> type=<span class="s">"email"</span> value={email} autoComplete=<span class="s">"username"</span>
+             onChange={e =&gt; <span class="f">setEmail</span>(e.target.value)} required /&gt;
+
+      &lt;label htmlFor=<span class="s">"password"</span>&gt;Password&lt;/label&gt;
+      &lt;input id=<span class="s">"password"</span> type=<span class="s">"password"</span> value={password} autoComplete=<span class="s">"current-password"</span>
+             onChange={e =&gt; <span class="f">setPassword</span>(e.target.value)} required /&gt;
+
+      {error &amp;&amp; &lt;p role=<span class="s">"alert"</span>&gt;{error}&lt;/p&gt;}          <span class="c">// ⑤</span>
+      &lt;button type=<span class="s">"submit"</span> disabled={busy}&gt;
+        {busy ? <span class="s">'Signing in…'</span> : <span class="s">'Sign in'</span>}
+      &lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</pre>
+
+<h4>What a QA engineer reads here</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:8%">Mark</th><th style="width:34%">Observation</th><th>Test that follows from it</th></tr></thead>
+  <tbody>
+    <tr><td>①</td><td>Double submit is guarded by a state flag, not by the button alone</td><td>Press Enter rapidly three times; confirm exactly one network request in DevTools</td></tr>
+    <tr><td>②</td><td>Email is trimmed client-side; password is not</td><td>Register with a trailing space in the password, then log in without it — does the API trim server-side too? A mismatch locks the user out permanently</td></tr>
+    <tr><td>③</td><td>Error text comes from the server response body</td><td>Force a 500 and confirm no stack trace or SQL fragment reaches the user; force a 401 and confirm the message is generic (see Section 20)</td></tr>
+    <tr><td>④</td><td><code>finally</code> sets state after an await — if the component unmounted, React may warn</td><td>Submit, then navigate away before the response returns; check the console for a state-update-on-unmounted warning</td></tr>
+    <tr><td>⑤</td><td>Error is rendered with <code>role="alert"</code></td><td>Screen-reader test: confirm the error is announced, not just displayed (Section 22)</td></tr>
+    <tr><td>—</td><td><code>noValidate</code> disables native browser validation</td><td>All field validation must therefore be explicit; test empty submit, malformed email, and confirm the API rejects them independently</td></tr>
+    <tr><td>—</td><td><code>autoComplete</code> values are correct</td><td>Password managers will fill correctly — a real usability check, and a common regression when forms are refactored</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box warn">
+  <span class="bl">The most common React testing mistake</span>
+  <p>Assuming the UI reflects the truth. <code>setBusy(false)</code> re-enables the button whether the login succeeded or failed. If the redirect in <code>AuthContext</code> silently fails, the user sees a form that looks ready and a session that already exists. Always verify the state store and the network tab, not the pixels.</p>
+</div>
+
+<h3>11.3 Route, middleware and controller</h3>
+
+<span class="filename">src/routes/auth.routes.js</span>
+<pre><span class="k">const</span> router = <span class="f">require</span>(<span class="s">'express'</span>).<span class="f">Router</span>();
+<span class="k">const</span> ctrl   = <span class="f">require</span>(<span class="s">'../controllers/auth.controller'</span>);
+<span class="k">const</span> { validate } = <span class="f">require</span>(<span class="s">'../middleware/validate'</span>);
+<span class="k">const</span> { loginLimiter } = <span class="f">require</span>(<span class="s">'../middleware/rateLimit'</span>);
+<span class="k">const</span> { loginSchema } = <span class="f">require</span>(<span class="s">'../schemas/auth.schema'</span>);
+
+router.<span class="f">post</span>(<span class="s">'/login'</span>, loginLimiter, <span class="f">validate</span>(loginSchema), ctrl.login);
+router.<span class="f">post</span>(<span class="s">'/refresh'</span>, ctrl.refresh);        <span class="c">// ← no limiter. Deliberate?</span>
+router.<span class="f">post</span>(<span class="s">'/logout'</span>, ctrl.logout);
+
+<span class="k">module.exports</span> = router;</pre>
+
+<p>Routing files are the highest-value five minutes of code reading available to a QA engineer. In one screen you can see every entry point, and — more importantly — which entry points are <em>missing</em> a guard that their neighbours have. The absent <code>loginLimiter</code> on <code>/refresh</code> is exactly the kind of asymmetry to raise in a PR comment. It may be intentional. It is worth one sentence to find out.</p>
+
+<span class="filename">src/controllers/auth.controller.js</span>
+<pre><span class="k">exports</span>.login = <span class="k">async</span> (req, res, next) =&gt; {
+  <span class="k">try</span> {
+    <span class="k">const</span> { email, password, rememberMe = <span class="k">false</span> } = req.body;
+    <span class="k">const</span> result = <span class="k">await</span> authService.<span class="f">login</span>({
+      email, password, rememberMe,
+      ip: req.ip, userAgent: req.get(<span class="s">'user-agent'</span>), traceId: req.traceId
+    });
+
+    res.<span class="f">cookie</span>(<span class="s">'refreshToken'</span>, result.refreshToken, {
+      httpOnly: <span class="k">true</span>,
+      secure:   process.env.NODE_ENV === <span class="s">'production'</span>,   <span class="c">// ← env-dependent!</span>
+      sameSite: <span class="s">'strict'</span>,
+      maxAge:   rememberMe ? <span class="s">30</span>*<span class="s">24</span>*<span class="s">3600</span>*<span class="s">1000</span> : <span class="s">12</span>*<span class="s">3600</span>*<span class="s">1000</span>
+    });
+
+    <span class="k">return</span> res.<span class="f">status</span>(<span class="s">200</span>).<span class="f">json</span>({ accessToken: result.accessToken, user: result.user });
+  } <span class="k">catch</span> (err) { <span class="k">return</span> <span class="f">next</span>(err); }   <span class="c">// central error handler maps to status</span>
+};</pre>
+
+<p>A controller should be boring. This one is: it unpacks HTTP, delegates, and repacks HTTP. When you find business rules inside a controller, that is a testability smell worth flagging — logic in the controller can only be tested through HTTP, which is a slower and less precise level than it deserves.</p>
+
+<div class="box">
+  <span class="bl">Environment-dependent behaviour is a QA trap</span>
+  <p><code>secure: NODE_ENV === 'production'</code> means the cookie behaves differently in staging than in production. Any test of cookie security executed on staging is testing a different configuration from the one customers get. Whenever you see config branching on environment, note it — and test that branch where it actually applies, or at minimum assert the setting via configuration review.</p>
+</div>
+
+<h3>11.4 Service and repository</h3>
+
+<span class="filename">src/services/auth.service.js</span>
+<pre><span class="k">const</span> GENERIC = <span class="s">'Invalid email or password.'</span>;   <span class="c">// ① never reveal which</span>
+
+<span class="k">exports</span>.login = <span class="k">async</span> ({ email, password, rememberMe, ip, userAgent, traceId }) =&gt; {
+  <span class="k">const</span> user = <span class="k">await</span> userRepo.<span class="f">findByEmail</span>(email);
+
+  <span class="k">if</span> (!user) {
+    <span class="k">await</span> bcrypt.<span class="f">compare</span>(password, DUMMY_HASH);   <span class="c">// ② constant-time-ish</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="f">AppError</span>(<span class="s">401</span>, GENERIC);
+  }
+  <span class="k">if</span> (user.locked_until &amp;&amp; user.locked_until &gt; <span class="k">new</span> <span class="f">Date</span>()) {
+    <span class="k">throw</span> <span class="k">new</span> <span class="f">AppError</span>(<span class="s">423</span>, <span class="s">'Account temporarily locked.'</span>);   <span class="c">// ③</span>
+  }
+
+  <span class="k">const</span> ok = <span class="k">await</span> bcrypt.<span class="f">compare</span>(password, user.password_hash);
+  <span class="k">if</span> (!ok) {
+    <span class="k">await</span> userRepo.<span class="f">recordFailedAttempt</span>(user.id);          <span class="c">// ④ increments + may lock</span>
+    <span class="k">throw</span> <span class="k">new</span> <span class="f">AppError</span>(<span class="s">401</span>, GENERIC);
+  }
+  <span class="k">if</span> (!user.email_verified) <span class="k">throw</span> <span class="k">new</span> <span class="f">AppError</span>(<span class="s">403</span>, <span class="s">'Verify your email first.'</span>);
+  <span class="k">if</span> (user.status !== <span class="s">'active'</span>) <span class="k">throw</span> <span class="k">new</span> <span class="f">AppError</span>(<span class="s">403</span>, <span class="s">'Account is not active.'</span>);
+
+  <span class="k">await</span> userRepo.<span class="f">clearFailedAttempts</span>(user.id);
+  <span class="k">await</span> sessionRepo.<span class="f">create</span>({ userId: user.id, ip, userAgent, rememberMe });  <span class="c">// ⑤</span>
+
+  <span class="k">return</span> {
+    accessToken:  <span class="f">signAccess</span>(user),        <span class="c">// 15 min</span>
+    refreshToken: <span class="f">signRefresh</span>(user, rememberMe),
+    user: { id: user.id, name: user.display_name, role: user.role, orgId: user.org_id }
+  };
+};</pre>
+
+<h4>What a QA engineer reads here</h4>
+
+<ul>
+  <li><strong>①</strong> One generic message for both "no such user" and "wrong password". Test that the responses are indistinguishable — same status, same body, and ideally similar timing. A difference here is a user-enumeration vulnerability.</li>
+  <li><strong>②</strong> A dummy bcrypt comparison runs even when the user doesn't exist, to flatten timing. Worth a timing test: 100 requests for a known email vs 100 for an unknown one, compare distributions.</li>
+  <li><strong>③</strong> The lock check happens <em>before</em> the password check. Good: a locked account cannot be probed. Confirm this ordering survives refactors — it is exactly the kind of thing a well-meaning cleanup reverses.</li>
+  <li><strong>④</strong> Failed attempts increment only for existing users. Design the boundary tests around the lockout threshold (Section 18).</li>
+  <li><strong>⑤</strong> Session creation and failed-attempt clearing are two separate writes with no transaction wrapping them. If <code>sessionRepo.create</code> throws, attempts are already cleared. Ask the developer whether that matters — this is a genuine QA finding from reading code alone.</li>
+  <li>The <code>user</code> object returned is explicitly field-picked, not spread. That prevents <code>password_hash</code> leaking into the response. Add a test asserting the response body contains no unexpected keys — a regression here is a serious incident.</li>
+</ul>
+
+<span class="filename">src/repositories/user.repository.js</span>
+<pre><span class="k">exports</span>.findByEmail = <span class="k">async</span> (email) =&gt; {
+  <span class="k">const</span> { rows } = <span class="k">await</span> db.<span class="f">query</span>(
+    <span class="s">`SELECT id, email, password_hash, display_name, role, org_id,
+            status, email_verified, failed_attempts, locked_until
+       FROM users
+      WHERE lower(email) = lower($1)
+        AND deleted_at IS NULL`</span>,                 <span class="c">// ← soft delete respected</span>
+    [email]                                       <span class="c">// ← parameterised: no SQLi here</span>
+  );
+  <span class="k">return</span> rows[<span class="s">0</span>] ?? <span class="k">null</span>;
+};</pre>
+
+<p>Three QA-relevant facts in nine lines: the query is parameterised (so injection is not possible <em>at this call site</em>, though you must still check every other one), email matching is case-insensitive (so <code>Harshan@school.edu</code> and <code>harshan@school.edu</code> are the same account — test it), and soft-deleted users are excluded (so test that a deleted user cannot log in, and that the row still exists for audit).</p>
+
+<div class="box tip">
+  <span class="bl">Tip · make <code>lower(email)</code> earn its index</span>
+  <p><code>WHERE lower(email) = lower($1)</code> cannot use a plain B-tree index on <code>email</code>. It needs a functional index: <code>CREATE INDEX idx_users_email_lower ON users (lower(email)) WHERE deleted_at IS NULL;</code>. Run <code>EXPLAIN ANALYZE</code> on the query at production row counts. This single check has caught more login latency incidents than any load test.</p>
+</div>
+
+<h2 class="sec" id="s12"><span class="n">12</span> API Walkthrough</h2>
+
+<p>The API is the contract. UI defects annoy users; contract defects break integrators, mobile clients and every future consumer at once.</p>
+
+<h4>Request</h4>
+<pre>POST /api/v1/auth/login HTTP/1.1
+Host: api.lingotran.com
+Content-Type: application/json
+X-Correlation-Id: 8f2c1a94-...
+
+{
+  "email": "harshan@school.edu",
+  "password": "Str0ng!Passphrase",
+  "rememberMe": true
+}</pre>
+
+<h4>Success response</h4>
+<pre>HTTP/1.1 200 OK
+Set-Cookie: refreshToken=eyJhbGc...; HttpOnly; Secure; SameSite=Strict; Max-Age=2592000
+Content-Type: application/json
+
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "user": { "id": "u_8123", "name": "Harshan A.", "role": "teacher", "orgId": "org_42" }
+}</pre>
+
+<h4>Status code contract</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:10%">Status</th><th style="width:28%">Meaning</th><th style="width:32%">Trigger condition</th><th>What QA verifies</th></tr></thead>
+  <tbody>
+    <tr><td><code>200</code></td><td>Authenticated</td><td>Valid credentials, active, verified</td><td>Body shape exact; no extra fields; cookie flags present</td></tr>
+    <tr><td><code>400</code></td><td>Malformed request</td><td>Missing field, wrong type, invalid JSON</td><td>Field-level error detail; no server internals leaked</td></tr>
+    <tr><td><code>401</code></td><td>Bad credentials</td><td>Unknown email <em>or</em> wrong password</td><td>Both cases produce identical body and status</td></tr>
+    <tr><td><code>403</code></td><td>Known but not permitted</td><td>Unverified email, suspended account</td><td>Distinct from 401; message is actionable but not revealing</td></tr>
+    <tr><td><code>423</code></td><td>Locked</td><td>Too many failed attempts</td><td>Includes retry guidance; lock actually expires</td></tr>
+    <tr><td><code>429</code></td><td>Rate limited</td><td>Limiter threshold exceeded</td><td><code>Retry-After</code> header present and honest</td></tr>
+    <tr><td><code>500</code></td><td>Server fault</td><td>DB down, unhandled exception</td><td>Generic body, correlation ID returned, full detail only in logs</td></tr>
+  </tbody>
+</table></div>
+
+<h4>Bruno / Postman assertions worth writing</h4>
+<pre><span class="c">// Response shape is exactly what the contract promises</span>
+<span class="f">test</span>(<span class="s">"no unexpected top-level keys"</span>, () =&gt; {
+  expect(Object.<span class="f">keys</span>(res.body).<span class="f">sort</span>()).<span class="f">toEqual</span>([<span class="s">"accessToken"</span>, <span class="s">"user"</span>]);
+});
+
+<span class="c">// Secrets never travel</span>
+<span class="f">test</span>(<span class="s">"no hash or internal fields leak"</span>, () =&gt; {
+  <span class="k">const</span> body = JSON.<span class="f">stringify</span>(res.body);
+  [<span class="s">"password"</span>, <span class="s">"hash"</span>, <span class="s">"salt"</span>, <span class="s">"stack"</span>].<span class="f">forEach</span>(k =&gt; expect(body).<span class="k">not</span>.<span class="f">toContain</span>(k));
+});
+
+<span class="c">// Cookie hardening — one assertion per flag, so failures are specific</span>
+<span class="f">test</span>(<span class="s">"refresh cookie is hardened"</span>, () =&gt; {
+  <span class="k">const</span> c = res.headers[<span class="s">"set-cookie"</span>][<span class="s">0</span>];
+  expect(c).<span class="f">toContain</span>(<span class="s">"HttpOnly"</span>);
+  expect(c).<span class="f">toContain</span>(<span class="s">"Secure"</span>);
+  expect(c).<span class="f">toContain</span>(<span class="s">"SameSite=Strict"</span>);
+});
+
+<span class="c">// Enumeration guard — the two 401s must be byte-identical</span>
+<span class="f">test</span>(<span class="s">"unknown email and wrong password are indistinguishable"</span>, () =&gt; {
+  expect(unknownEmailRes.status).<span class="f">toEqual</span>(wrongPasswordRes.status);
+  expect(unknownEmailRes.body).<span class="f">toEqual</span>(wrongPasswordRes.body);
+});</pre>
+
+<div class="box note">
+  <span class="bl">Versioning is a test concern</span>
+  <p>The path is <code>/api/v1/</code>. That prefix is a promise: within v1, we may add optional response fields but never remove one, rename one, or change a type. Your contract tests are the mechanism that keeps the promise. When a developer proposes changing <code>user.name</code> to <code>user.displayName</code>, the correct QA response is not "no" — it is "that's a v2 change, or an additive alias in v1."</p>
+</div>
+
+<h2 class="sec" id="s13"><span class="n">13</span> Database Walkthrough</h2>
+
+<p>The database is the source of truth. The UI and the API are opinions about it. When they disagree, the database wins — so QA verifies there.</p>
+
+<span class="filename">migrations/2026_08_01_users.sql</span>
+<pre><span class="k">CREATE TABLE</span> users (
+  id               <span class="k">UUID</span> <span class="k">PRIMARY KEY</span> <span class="k">DEFAULT</span> gen_random_uuid(),
+  email            <span class="k">CITEXT</span> <span class="k">NOT NULL</span>,
+  password_hash    <span class="k">TEXT</span>   <span class="k">NOT NULL</span>,
+  display_name     <span class="k">TEXT</span>   <span class="k">NOT NULL</span>,
+  role             <span class="k">TEXT</span>   <span class="k">NOT NULL</span> <span class="k">CHECK</span> (role <span class="k">IN</span> (<span class="s">'student'</span>,<span class="s">'teacher'</span>,<span class="s">'admin'</span>)),
+  org_id           <span class="k">UUID</span>   <span class="k">NOT NULL</span> <span class="k">REFERENCES</span> organisations(id) <span class="k">ON DELETE RESTRICT</span>,
+  status           <span class="k">TEXT</span>   <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> <span class="s">'active'</span>,
+  email_verified   <span class="k">BOOLEAN</span> <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> <span class="k">FALSE</span>,
+  failed_attempts  <span class="k">SMALLINT</span> <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> <span class="s">0</span>,
+  locked_until     <span class="k">TIMESTAMPTZ</span>,
+  created_at       <span class="k">TIMESTAMPTZ</span> <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> now(),
+  deleted_at       <span class="k">TIMESTAMPTZ</span>
+);
+
+<span class="c">-- one live account per email; soft-deleted rows may repeat</span>
+<span class="k">CREATE UNIQUE INDEX</span> uq_users_email_live
+  <span class="k">ON</span> users (email) <span class="k">WHERE</span> deleted_at <span class="k">IS NULL</span>;</pre>
+
+<h4>What QA validates about this schema</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:26%">Constraint</th><th style="width:34%">Test</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td><code>CITEXT</code> email</td><td>Insert <code>A@school.edu</code>, then attempt <code>a@school.edu</code></td><td>Second insert must be rejected — otherwise two accounts share a login</td></tr>
+    <tr><td>Partial unique index</td><td>Soft-delete a user, re-register the same email</td><td>Must succeed. A plain unique index would block legitimate re-registration</td></tr>
+    <tr><td><code>CHECK</code> on role</td><td><code>UPDATE users SET role='superadmin'</code></td><td>Must fail. Role sprawl is a privilege-escalation vector</td></tr>
+    <tr><td><code>ON DELETE RESTRICT</code></td><td>Delete an organisation with members</td><td>Must fail. Cascade here would silently destroy accounts</td></tr>
+    <tr><td><code>NOT NULL</code> defaults</td><td>Insert minimal row</td><td>Defaults must be correct; a NULL <code>failed_attempts</code> breaks the lockout arithmetic</td></tr>
+    <tr><td>Migration reversibility</td><td>Run <code>up</code> then <code>down</code> on a copy of prod</td><td>An irreversible migration removes rollback as a recovery option</td></tr>
+  </tbody>
+</table></div>
+
+<h4>Validation queries you will run constantly</h4>
+<pre><span class="c">-- 1. Did the login actually create a session?</span>
+<span class="k">SELECT</span> s.id, s.created_at, s.ip, s.expires_at
+  <span class="k">FROM</span> sessions s <span class="k">JOIN</span> users u <span class="k">ON</span> u.id = s.user_id
+ <span class="k">WHERE</span> u.email = <span class="s">'harshan@school.edu'</span>
+ <span class="k">ORDER BY</span> s.created_at <span class="k">DESC</span> <span class="k">LIMIT</span> <span class="s">5</span>;
+
+<span class="c">-- 2. Did a failed attempt increment, and does the lock expire?</span>
+<span class="k">SELECT</span> email, failed_attempts, locked_until, now() <span class="k">AS</span> server_time
+  <span class="k">FROM</span> users <span class="k">WHERE</span> email = <span class="s">'harshan@school.edu'</span>;
+
+<span class="c">-- 3. Orphan check — sessions whose user no longer exists</span>
+<span class="k">SELECT</span> count(*) <span class="k">FROM</span> sessions s
+  <span class="k">LEFT JOIN</span> users u <span class="k">ON</span> u.id = s.user_id
+ <span class="k">WHERE</span> u.id <span class="k">IS NULL</span>;              <span class="c">-- expect 0</span>
+
+<span class="c">-- 4. Will login stay fast at 500k users?</span>
+<span class="k">EXPLAIN ANALYZE</span>
+<span class="k">SELECT</span> id <span class="k">FROM</span> users <span class="k">WHERE</span> email = <span class="s">'harshan@school.edu'</span> <span class="k">AND</span> deleted_at <span class="k">IS NULL</span>;
+<span class="c">-- Look for "Index Scan using uq_users_email_live". "Seq Scan" is a defect.</span></pre>
+
+<div class="box warn">
+  <span class="bl">Transactions: the defect you only see under load</span>
+  <p>Section 11.4 showed <code>clearFailedAttempts</code> and <code>sessionRepo.create</code> executing as two independent writes. Under normal conditions this never fails. Under a database failover, connection-pool exhaustion, or a deploy mid-request, it fails in the middle and leaves inconsistent state. Test it by killing the connection between the two writes — that is a legitimate, valuable, five-minute test.</p>
+</div>
+
+<h2 class="sec" id="s14"><span class="n">14</span> Azure DevOps Perspective</h2>
+
+<p>Azure DevOps is where quality becomes visible to the organisation. QA does not merely use it — QA owns significant parts of it.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:20%">Area</th><th style="width:38%">QA responsibility</th><th>Concrete artifact</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Boards</strong></td><td>Ensure every story has testable ACs before sprint start; link every bug to its parent story</td><td>Definition of Ready checklist as a work-item template</td></tr>
+    <tr><td><strong>Repos</strong></td><td>Read PRs; comment on missing tests, missing guards, asymmetric middleware</td><td>PR review comments (measurable and worth measuring)</td></tr>
+    <tr><td><strong>Branch policies</strong></td><td>Define and defend the merge gates</td><td>Required reviewers, build validation, comment resolution</td></tr>
+    <tr><td><strong>Pipelines</strong></td><td>Own test stages, thresholds and failure triage</td><td><code>azure-pipelines.yml</code> test jobs</td></tr>
+    <tr><td><strong>Test Plans</strong></td><td>Maintain manual suites for what cannot be automated; record exploratory charters</td><td>Test suites linked to requirements for traceability</td></tr>
+    <tr><td><strong>Releases</strong></td><td>Pre-deploy gates, approvals, rollback verification</td><td>Release readiness report attached to the release</td></tr>
+    <tr><td><strong>Dashboards</strong></td><td>Publish the small number of metrics that change behaviour</td><td>Escaped defects, flaky rate, pipeline duration, MTTR</td></tr>
+  </tbody>
+</table></div>
+
+<span class="filename">azure-pipelines.yml (test stages, abridged)</span>
+<pre><span class="k">stages</span>:
+- <span class="k">stage</span>: Build
+  <span class="k">jobs</span>:
+  - <span class="k">job</span>: BuildAndUnitTest
+    <span class="k">steps</span>:
+    - script: npm ci
+    - script: npm run lint
+    - script: npm run test:unit -- --coverage
+      displayName: <span class="s">'Unit tests'</span>
+    - task: PublishTestResults@2
+      inputs: { testResultsFiles: <span class="s">'**/junit-*.xml'</span> }
+    - task: PublishCodeCoverageResults@2
+      inputs: { summaryFileLocation: <span class="s">'coverage/cobertura-coverage.xml'</span> }
+
+- <span class="k">stage</span>: Integration
+  <span class="k">dependsOn</span>: Build
+  <span class="k">jobs</span>:
+  - <span class="k">job</span>: ApiTests
+    <span class="k">services</span>: { postgres: postgres:15 }      <span class="c"># ephemeral DB per run</span>
+    <span class="k">steps</span>:
+    - script: npm run migrate:up
+    - script: npm run test:api
+      displayName: <span class="s">'API + contract tests'</span>
+
+- <span class="k">stage</span>: E2E
+  <span class="k">dependsOn</span>: Integration
+  <span class="k">jobs</span>:
+  - <span class="k">job</span>: Playwright
+    <span class="k">steps</span>:
+    - script: npx playwright install --with-deps chromium
+    - script: npx playwright test --grep @smoke     <span class="c"># PR: smoke only</span>
+    - task: PublishPipelineArtifact@1
+      condition: failed()
+      inputs: { targetPath: <span class="s">'playwright-report'</span> }   <span class="c"># traces on failure</span></pre>
+
+<div class="box tip">
+  <span class="bl">Tip · tag your E2E tests by intent</span>
+  <p><code>@smoke</code> on pull requests, <code>@regression</code> nightly, <code>@critical</code> before production. A single untagged suite forces an impossible choice between fast feedback and real coverage. Tagging lets you have both, and it is a ten-minute change.</p>
+</div>
+
+<h2 class="sec" id="s15"><span class="n">15</span> Example Scenario</h2>
+
+<div class="card">
+  <p class="ct">Sprint 42 · Story LT-1187</p>
+  <p style="margin-bottom:8px;"><strong>As a</strong> teacher using Lingotran on my classroom laptop,<br>
+  <strong>I want</strong> a "Keep me signed in" option on the login screen,<br>
+  <strong>so that</strong> I don't have to re-authenticate between lessons.</p>
+  <p style="margin-bottom:0;"><strong>Acceptance criteria</strong></p>
+  <ul style="margin-bottom:0;">
+    <li>A checkbox labelled "Keep me signed in" appears on the login form, unchecked by default.</li>
+    <li>When checked, the session persists for 30 days. When unchecked, 12 hours.</li>
+    <li>The choice is not remembered between visits.</li>
+  </ul>
+</div>
+
+<p>A junior engineer reads this and writes three test cases, one per criterion. <strong>Shashi Kumar</strong>, the QA engineer on this story, reads the same three lines and finds <strong>seven unanswered questions before writing anything</strong>:</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:44%">Question the ACs do not answer</th><th>Why it matters</th></tr></thead>
+  <tbody>
+    <tr><td>Does "persists for 30 days" mean 30 days from login, or 30 days of sliding inactivity?</td><td>Completely different implementations, and different security postures</td></tr>
+    <tr><td>What happens to an existing 12-hour session if the user logs in again with the box checked?</td><td>Session upgrade behaviour is undefined; both answers are defensible</td></tr>
+    <tr><td>Does a password change invalidate 30-day sessions?</td><td>If not, a compromised account stays compromised after the "fix"</td></tr>
+    <tr><td>Should this be available to student accounts on shared classroom devices?</td><td>A 30-day session on a shared laptop is a child-safeguarding issue, not a UX preference</td></tr>
+    <tr><td>Does the admin console show and allow revoking long-lived sessions?</td><td>Without revocation, the feature has no off switch during an incident</td></tr>
+    <tr><td>What does the existing <code>/refresh</code> endpoint do with a 30-day token — is it also unlimited?</td><td>Refresh chaining can extend a session indefinitely, silently defeating both limits</td></tr>
+    <tr><td>Is 30 days compatible with the school district contracts we signed?</td><td>Some education contracts specify maximum session lifetime explicitly</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box">
+  <span class="bl">This is the whole chapter in one table</span>
+  <p>Shashi found every question above by reading a three-line story against an architecture diagram and a customer profile — before a single line of code existed, and before any test was executed. Answering them costs one refinement conversation. Discovering them in production costs an incident, a rollback, and possibly a contract.</p>
+</div>
+
+<h2 class="sec" id="s16"><span class="n">16</span> Positive Test Cases</h2>
+
+<p>Positive cases prove the feature delivers its intended value under expected conditions. They are necessary and they are the easy half.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:9%">ID</th><th style="width:26%">Title</th><th style="width:30%">Steps</th><th style="width:24%">Expected result</th><th style="width:11%">Level</th></tr></thead>
+  <tbody>
+    <tr><td>LT-P01</td><td>Login without "keep me signed in"</td><td>Enter valid credentials, leave box unchecked, submit</td><td>200; redirect to dashboard; refresh cookie <code>Max-Age=43200</code></td><td>API + E2E</td></tr>
+    <tr><td>LT-P02</td><td>Login with "keep me signed in"</td><td>Enter valid credentials, check box, submit</td><td>200; refresh cookie <code>Max-Age=2592000</code></td><td>API</td></tr>
+    <tr><td>LT-P03</td><td>Checkbox defaults unchecked</td><td>Load <code>/login</code> fresh</td><td>Checkbox is unchecked and focusable via keyboard</td><td>Component</td></tr>
+    <tr><td>LT-P04</td><td>Choice not remembered</td><td>Log in with box checked, log out, return to <code>/login</code></td><td>Checkbox unchecked again</td><td>E2E</td></tr>
+    <tr><td>LT-P05</td><td>Session survives browser restart</td><td>Log in with box checked, close browser, reopen, visit <code>/dashboard</code></td><td>Still authenticated, no login prompt</td><td>E2E</td></tr>
+    <tr><td>LT-P06</td><td>Case-insensitive email</td><td>Register as <code>Harshan@school.edu</code>, log in as <code>harshan@school.edu</code></td><td>200 — same account</td><td>API</td></tr>
+    <tr><td>LT-P07</td><td>Session row created</td><td>Log in, then query <code>sessions</code></td><td>Exactly one new row with correct <code>expires_at</code> and IP</td><td>Integration</td></tr>
+    <tr><td>LT-P08</td><td>Failed counter resets</td><td>Fail twice, then succeed, then query <code>users</code></td><td><code>failed_attempts = 0</code>, <code>locked_until IS NULL</code></td><td>Integration</td></tr>
+    <tr><td>LT-P09</td><td>Password manager autofill</td><td>Saved credentials in browser, open <code>/login</code></td><td>Both fields populate via <code>autoComplete</code> attributes</td><td>Manual</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="s17"><span class="n">17</span> Negative Test Cases</h2>
+
+<p>Negative cases prove the feature fails <em>safely, predictably and informatively</em>. This is where most real defects are found, because this is where developers spend the least design effort.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:9%">ID</th><th style="width:28%">Condition</th><th style="width:34%">Expected behaviour</th><th>Defect class if wrong</th></tr></thead>
+  <tbody>
+    <tr><td>LT-N01</td><td>Unknown email</td><td>401 with the generic message; no hint that the account is unknown</td><td>User enumeration</td></tr>
+    <tr><td>LT-N02</td><td>Correct email, wrong password</td><td>401, byte-identical body to LT-N01</td><td>User enumeration</td></tr>
+    <tr><td>LT-N03</td><td>Empty email and password</td><td>400 with field-level detail; no server call if client validation catches it first</td><td>Validation gap</td></tr>
+    <tr><td>LT-N04</td><td>Malformed email <code>harshan@@x</code></td><td>400; identical handling client and server side</td><td>Layered-validation mismatch</td></tr>
+    <tr><td>LT-N05</td><td>Unverified email</td><td>403 with actionable guidance and a resend option</td><td>Support-load defect</td></tr>
+    <tr><td>LT-N06</td><td>Suspended account</td><td>403; no token issued; no session row created</td><td>Authorisation bypass</td></tr>
+    <tr><td>LT-N07</td><td>Soft-deleted account</td><td>401 generic — deleted accounts must not be distinguishable</td><td>Information disclosure</td></tr>
+    <tr><td>LT-N08</td><td>Locked account, correct password</td><td>423; lock is <em>not</em> bypassed by a correct password</td><td>Lockout bypass — high severity</td></tr>
+    <tr><td>LT-N09</td><td><code>rememberMe: "yes"</code> (string, not boolean)</td><td>400, or coerced deterministically — never silently treated as <code>true</code></td><td>Type-coercion defect</td></tr>
+    <tr><td>LT-N10</td><td>Extra unexpected field <code>{"isAdmin": true}</code></td><td>Ignored or 400; must never influence the issued role</td><td>Mass assignment — critical</td></tr>
+    <tr><td>LT-N11</td><td>Database unavailable</td><td>500 generic body with correlation ID; full detail only in App Insights</td><td>Information leakage</td></tr>
+    <tr><td>LT-N12</td><td>Network drops mid-request</td><td>UI recovers; button re-enables; no duplicate session on retry</td><td>Stuck-state defect</td></tr>
+    <tr><td>LT-N13</td><td>Submit twice rapidly</td><td>One request, one session row</td><td>Double-submit race</td></tr>
+    <tr><td>LT-N14</td><td>Expired refresh token used</td><td>401; user redirected to login cleanly, not into an error loop</td><td>Session-handling defect</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box warn">
+  <span class="bl">LT-N10 deserves a paragraph of its own</span>
+  <p>Mass assignment — where an unexpected field in the request body reaches a database write — is one of the most reliably present vulnerabilities in Node.js applications, because <code>{...req.body}</code> is such a convenient pattern. Test it on <em>every</em> endpoint that accepts a body, not just this one. The test costs thirty seconds and has caught privilege escalation in production systems many times over.</p>
+</div>
+
+<h2 class="sec" id="s18"><span class="n">18</span> Boundary Value Tests</h2>
+
+<p>Defects cluster at boundaries because that is where programmers write <code>&lt;</code> instead of <code>&lt;=</code>. For any boundary <em>n</em>, test <strong>n−1, n, n+1</strong> — and where the boundary is temporal, test the moment of transition itself.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:22%">Boundary</th><th style="width:12%">Value</th><th style="width:33%">Cases to execute</th><th>What typically breaks</th></tr></thead>
+  <tbody>
+    <tr><td>Password minimum length</td><td>8</td><td>7 chars → reject · 8 → accept · 9 → accept</td><td>Off-by-one rejecting valid 8-char passwords</td></tr>
+    <tr><td>Password maximum length</td><td>128</td><td>127 · 128 · 129 · 1,000 · 100,000</td><td>bcrypt truncates at 72 bytes — long passwords may silently match on the first 72</td></tr>
+    <tr><td>Email maximum length</td><td>254</td><td>253 · 254 · 255</td><td>Column overflow or silent truncation creating a different address</td></tr>
+    <tr><td>Failed attempts before lock</td><td>5</td><td>4 fails → still open · 5th → locks · 6th → still locked, counter does not grow unbounded</td><td>Lock at 6 instead of 5; counter never resetting</td></tr>
+    <tr><td>Lock duration</td><td>15 min</td><td>At 14:59 → locked · at 15:00 → unlocked · at 15:01 → unlocked</td><td>Timezone handling; comparing local time to a UTC column</td></tr>
+    <tr><td>Access token lifetime</td><td>15 min</td><td>Request at 14:59 · at 15:00 · at 15:01</td><td>Clock skew between App Service instances</td></tr>
+    <tr><td>Refresh token — standard</td><td>12 h</td><td>11:59 · 12:00 · 12:01</td><td>DST transition changing the effective duration by an hour</td></tr>
+    <tr><td>Refresh token — remembered</td><td>30 d</td><td>Day 29 · day 30 · day 31 · across a DST change</td><td><code>Max-Age</code> vs <code>Expires</code> disagreement</td></tr>
+    <tr><td>Rate limit</td><td>10/min</td><td>10th request → 200 · 11th → 429 · after 60 s → 200</td><td>Window resetting incorrectly; limit applied per-instance instead of shared</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box note">
+  <span class="bl">The bcrypt 72-byte boundary</span>
+  <p>bcrypt ignores input beyond 72 bytes. If your maximum password length is 128 characters, two different 100-character passwords sharing their first 72 bytes will authenticate against each other. This is not theoretical, it is not rare, and it will never be found by a test that only uses realistic passwords. Boundary testing exists precisely for defects like this one.</p>
+</div>
+
+<h2 class="sec" id="s19"><span class="n">19</span> Equivalence Partitioning</h2>
+
+<p>Equivalence partitioning is the technique that makes exhaustive testing unnecessary. Divide the input space into classes where every member is expected to be handled identically, then test one representative per class — plus the boundaries between them.</p>
+
+<h4>Partitioning the email input</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:9%">Class</th><th style="width:23%">Description</th><th style="width:30%">Representative</th><th>Expected</th></tr></thead>
+  <tbody>
+    <tr><td>EC1</td><td>Valid, registered, active</td><td><code>harshan@school.edu</code></td><td>200</td></tr>
+    <tr><td>EC2</td><td>Valid format, not registered</td><td><code>nobody@school.edu</code></td><td>401 generic</td></tr>
+    <tr><td>EC3</td><td>Valid format, unverified</td><td><code>new@school.edu</code></td><td>403</td></tr>
+    <tr><td>EC4</td><td>Valid format, suspended</td><td><code>banned@school.edu</code></td><td>403</td></tr>
+    <tr><td>EC5</td><td>Invalid format — no <code>@</code></td><td><code>harshan.school.edu</code></td><td>400</td></tr>
+    <tr><td>EC6</td><td>Invalid format — no domain</td><td><code>harshan@</code></td><td>400</td></tr>
+    <tr><td>EC7</td><td>Empty</td><td><code>""</code></td><td>400</td></tr>
+    <tr><td>EC8</td><td>Whitespace only</td><td><code>"   "</code></td><td>400 (trim must precede the empty check)</td></tr>
+    <tr><td>EC9</td><td>Valid with plus addressing</td><td><code>harshan+lt@school.edu</code></td><td>200 — a real address, frequently broken by naive validation</td></tr>
+    <tr><td>EC10</td><td>Unicode / IDN domain</td><td><code>பயனர்@example.இந்தியா</code></td><td>Defined behaviour, documented either way — never a 500</td></tr>
+    <tr><td>EC11</td><td>Injection-shaped</td><td><code>' OR 1=1 --</code></td><td>400 or 401; never a database error</td></tr>
+    <tr><td>EC12</td><td>Extremely long</td><td>10,000 characters</td><td>400 or 413; never a crash or timeout</td></tr>
+  </tbody>
+</table></div>
+
+<p><strong>Twelve tests instead of infinity.</strong> That is the entire value proposition. But note EC9 and EC10 — both are valid input that naive implementations reject, and both represent real users. Lingotran serves a multilingual audience by definition; a validation rule that assumes ASCII is not a minor bug for us, it is a statement about who the product is for.</p>
+
+<div class="box tip">
+  <span class="bl">Tip · partition the output too</span>
+  <p>Most engineers partition inputs and stop. Also partition outcomes: authenticated, rejected-safely, blocked, degraded, error. Then ask whether every outcome class has at least one test. Output partitioning is how you discover that "what happens when Azure AI Speech is down?" has no test at all.</p>
+</div>
+
+<h2 class="sec" id="s20"><span class="n">20</span> Security Test Cases</h2>
+
+<p>QA is not a replacement for a penetration test, and it is the layer that catches the ordinary, repeated, avoidable failures long before a pentest would.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:22%">Vector</th><th style="width:34%">Test</th><th style="width:22%">Expected</th><th>Severity</th></tr></thead>
+  <tbody>
+    <tr><td>SQL injection</td><td><code>' OR '1'='1</code> in both fields</td><td>401/400; parameterised query unaffected</td><td>Critical</td></tr>
+    <tr><td>User enumeration</td><td>Compare status, body and response-time distribution for known vs unknown emails</td><td>Indistinguishable</td><td>High</td></tr>
+    <tr><td>Brute force</td><td>200 sequential attempts against one account</td><td>Locked at 5; 429 from the limiter well before 200</td><td>Critical</td></tr>
+    <tr><td>Credential stuffing</td><td>1 attempt each against 500 different accounts from one IP</td><td>IP-level throttling triggers — per-account locking alone does not stop this</td><td>Critical</td></tr>
+    <tr><td>Token in the wrong place</td><td>Inspect <code>localStorage</code> and <code>sessionStorage</code> after login</td><td>No refresh token present; refresh is <code>HttpOnly</code> cookie only</td><td>High</td></tr>
+    <tr><td>Cookie flags</td><td>Inspect <code>Set-Cookie</code> in production</td><td><code>HttpOnly; Secure; SameSite=Strict</code></td><td>High</td></tr>
+    <tr><td>JWT algorithm confusion</td><td>Re-sign a token with <code>alg: none</code> and with HS256 using the public key</td><td>Rejected</td><td>Critical</td></tr>
+    <tr><td>JWT claim tampering</td><td>Change <code>role</code> to <code>admin</code>, keep the original signature</td><td>Rejected — signature verification precedes claim reading</td><td>Critical</td></tr>
+    <tr><td>Session fixation</td><td>Capture the pre-login session identifier; compare after login</td><td>New identifier issued on authentication</td><td>High</td></tr>
+    <tr><td>Logout completeness</td><td>Capture a token, log out, replay the token</td><td>401 — server-side revocation, not just a client-side delete</td><td>High</td></tr>
+    <tr><td>Password change invalidation</td><td>Log in on two devices, change password on one</td><td>Other device's session is terminated</td><td>High</td></tr>
+    <tr><td>Mass assignment</td><td>POST <code>{"email","password","role":"admin","org_id":"&lt;other&gt;"}</code></td><td>Extra fields ignored entirely</td><td>Critical</td></tr>
+    <tr><td>Error verbosity</td><td>Stop the database, then log in</td><td>Generic message; no host, driver version, or stack trace</td><td>Medium</td></tr>
+    <tr><td>Tenant isolation</td><td>Authenticate as org A, request an org B resource</td><td>404 or 403 — never data</td><td>Critical</td></tr>
+    <tr><td>Timing on lockout</td><td>Measure response time for locked vs unlocked accounts</td><td>No exploitable difference</td><td>Medium</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box">
+  <span class="bl">Credential stuffing vs brute force</span>
+  <p>These need different controls, and teams routinely implement only the first. Per-account lockout stops many attempts against one account. It does nothing against one attempt each against fifty thousand accounts using a leaked password list — which is the far more common real attack. If your test plan has "brute force" but not "stuffing", you have tested the less likely threat.</p>
+</div>
+
+<h2 class="sec" id="s21"><span class="n">21</span> Performance Considerations</h2>
+
+<p>Login is not a heavy endpoint, and it is a <em>bursty</em> one, which is a harder problem. Lingotran's traffic is dominated by school timetables: near-zero load, then several thousand authentications inside ninety seconds.</p>
+
+<h4>Performance budget</h4>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:26%">Metric</th><th style="width:18%">Target</th><th style="width:16%">Alert</th><th>Rationale</th></tr></thead>
+  <tbody>
+    <tr><td>p50 latency</td><td>&lt; 250 ms</td><td>&gt; 400 ms</td><td>Perceived as instant</td></tr>
+    <tr><td>p95 latency</td><td>&lt; 600 ms</td><td>&gt; 1 s</td><td>bcrypt cost is deliberate and dominates</td></tr>
+    <tr><td>p99 latency</td><td>&lt; 1.2 s</td><td>&gt; 2 s</td><td>Tail experience during bell-time bursts</td></tr>
+    <tr><td>Error rate</td><td>&lt; 0.1%</td><td>&gt; 0.5%</td><td>Excludes legitimate 401s</td></tr>
+    <tr><td>Throughput</td><td>≥ 120 req/s sustained</td><td>—</td><td>Largest district: 4,000 users in ~90 s, with margin</td></tr>
+  </tbody>
+</table></div>
+
+<span class="filename">k6/login-burst.js</span>
+<pre><span class="k">import</span> http <span class="k">from</span> <span class="s">'k6/http'</span>;
+<span class="k">import</span> { check } <span class="k">from</span> <span class="s">'k6'</span>;
+
+<span class="k">export const</span> options = {
+  scenarios: {
+    bell_time: {                      <span class="c">// morning burst, not a gentle ramp</span>
+      executor: <span class="s">'ramping-arrival-rate'</span>,
+      startRate: <span class="s">5</span>, timeUnit: <span class="s">'1s'</span>,
+      preAllocatedVUs: <span class="s">200</span>, maxVUs: <span class="s">600</span>,
+      stages: [
+        { target: <span class="s">150</span>, duration: <span class="s">'30s'</span> },   <span class="c">// bell rings</span>
+        { target: <span class="s">150</span>, duration: <span class="s">'90s'</span> },   <span class="c">// the whole school</span>
+        { target: <span class="s">5</span>,   duration: <span class="s">'60s'</span> }    <span class="c">// settled</span>
+      ]
+    }
+  },
+  thresholds: {
+    <span class="s">'http_req_duration{status:200}'</span>: [<span class="s">'p(95)&lt;600'</span>, <span class="s">'p(99)&lt;1200'</span>],
+    <span class="s">'http_req_failed'</span>: [<span class="s">'rate&lt;0.005'</span>]
+  }
+};
+
+<span class="k">export default function</span> () {
+  <span class="k">const</span> res = http.<span class="f">post</span>(<span class="s">`${__ENV.BASE}/api/v1/auth/login`</span>,
+    JSON.<span class="f">stringify</span>({ email: <span class="f">pickUser</span>(), password: <span class="s">'LoadTest!2026'</span> }),
+    { headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> } });
+  <span class="f">check</span>(res, { <span class="s">'authenticated'</span>: r =&gt; r.status === <span class="s">200</span> });
+}</pre>
+
+<h4>Where login performance actually degrades</h4>
+<ul>
+  <li><strong>bcrypt cost factor.</strong> Intentionally slow. Cost 12 is roughly four times cost 10. Raising it for security silently quadruples your CPU per login — a security change with a performance blast radius.</li>
+  <li><strong>Missing functional index.</strong> <code>lower(email)</code> without a matching index turns into a sequential scan. Invisible at 500 rows, fatal at 500,000.</li>
+  <li><strong>Connection pool exhaustion.</strong> A pool of 10 against 150 req/s of 400 ms queries queues immediately. Latency does not degrade gracefully here; it collapses.</li>
+  <li><strong>Rate limiter state.</strong> An in-memory limiter across two App Service instances enforces double the intended limit and behaves non-deterministically. Shared state is required.</li>
+  <li><strong>Synchronous audit writes.</strong> Logging each login inside the request path adds a write to the critical path. It belongs on a queue.</li>
+</ul>
+
+<div class="box warn">
+  <span class="bl">Never load-test with one account</span>
+  <p>Hammering a single account exercises one database row, one cache line, and — if lockout works — produces 423s after five requests. You will have measured your lockout logic, at speed, and learned nothing about capacity. Use a pool of at least a thousand seeded accounts.</p>
+</div>
+
+<h2 class="sec" id="s22"><span class="n">22</span> Accessibility Considerations</h2>
+
+<p>Lingotran is sold to schools. Accessibility is therefore a procurement requirement, a legal obligation in most of our markets, and — given that language learners include students with disabilities by definition — a straightforward product-quality matter. The login form is the gate: if it is inaccessible, the entire product is.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:16%">WCAG 2.2</th><th style="width:24%">Requirement</th><th style="width:32%">How to test</th><th>Common failure</th></tr></thead>
+  <tbody>
+    <tr><td>1.3.1 A</td><td>Labels programmatically associated</td><td>Inspect <code>&lt;label for&gt;</code> ↔ <code>id</code>; click the label and confirm focus moves</td><td>Placeholder used as the only label</td></tr>
+    <tr><td>1.4.3 AA</td><td>Contrast ≥ 4.5:1 for text</td><td>Axe DevTools, plus manual check of error text and disabled button</td><td>Grey helper text at 3.1:1</td></tr>
+    <tr><td>2.1.1 A</td><td>Full keyboard operability</td><td>Unplug the mouse. Complete a login</td><td>Custom checkbox not reachable by Tab</td></tr>
+    <tr><td>2.4.7 AA</td><td>Visible focus indicator</td><td>Tab through; every stop has a visible ring</td><td><code>outline:none</code> in a CSS reset</td></tr>
+    <tr><td>3.3.1 A</td><td>Errors identified in text</td><td>Submit invalid; confirm text, not just a red border</td><td>Colour as the only error signal</td></tr>
+    <tr><td>3.3.2 A</td><td>Labels and instructions provided</td><td>Password rules visible before submission, not after failure</td><td>Requirements revealed only on error</td></tr>
+    <tr><td>4.1.3 AA</td><td>Status messages announced</td><td>NVDA or VoiceOver: submit invalid credentials and listen</td><td>Error rendered without <code>role="alert"</code>, never announced</td></tr>
+    <tr><td>1.4.10 AA</td><td>Reflow at 320 px / 400% zoom</td><td>Zoom to 400%; confirm no horizontal scroll and nothing clipped</td><td>Fixed-width form container</td></tr>
+    <tr><td>2.5.8 AA</td><td>Target size ≥ 24×24 px</td><td>Measure the checkbox and its label hit area</td><td>16 px checkbox with no label association</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box tip">
+  <span class="bl">Tip · the three-minute accessibility smoke test</span>
+  <p>Tab through the whole form with the mouse unplugged. Zoom to 400%. Submit an empty form with a screen reader on. These three checks take three minutes and catch the majority of real accessibility defects that reach production. Automated scanners catch roughly 30–40% of WCAG issues — useful, and not sufficient.</p>
+</div>
+
+<h2 class="sec" id="s23"><span class="n">23</span> Common Production Bugs</h2>
+
+<p>These are the login-related failures that actually reach production in Node/React/PostgreSQL systems. Each one is listed with the reason it escapes, because the escape route is the more useful lesson.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:26%">Bug</th><th style="width:30%">Symptom in production</th><th>Why it escaped QA</th></tr></thead>
+  <tbody>
+    <tr><td>Session not invalidated on password change</td><td>Compromised account remains accessible after the user "secures" it</td><td>Requires two concurrent sessions to observe; single-session testing cannot see it</td></tr>
+    <tr><td>Rate limiter per-instance</td><td>Limit is effectively doubled; scaling out weakens security</td><td>Tested on a single instance in staging</td></tr>
+    <tr><td>Clock skew between instances</td><td>Intermittent "token expired" for tokens issued seconds earlier</td><td>Single-instance dev environment has no skew</td></tr>
+    <tr><td>Missing functional index</td><td>Login latency climbs steadily over months, then a timeout cliff</td><td>Test data volume was 200 rows</td></tr>
+    <tr><td>Case-sensitive email in one code path</td><td>User can register but not reset their password</td><td>The reset path was tested with the same casing used at registration</td></tr>
+    <tr><td>Refresh chaining unlimited</td><td>Sessions never truly expire; a stolen token is permanent</td><td>Nobody tested refresh-then-refresh over an extended period</td></tr>
+    <tr><td>Error message reveals account existence</td><td>Enumeration; attacker builds a valid user list</td><td>Only the happy path and one 401 were checked</td></tr>
+    <tr><td>Double submit creates two sessions</td><td>Duplicate session rows; confusing "active devices" screen</td><td>Manual testing is too slow to trigger the race</td></tr>
+    <tr><td>Token retained after logout</td><td>Back button restores an authenticated view</td><td>Logout was verified by looking at the UI, not by replaying the token</td></tr>
+    <tr><td>WAF blocks a legitimate password</td><td>Passwords containing <code>&lt;</code> or <code>'</code> rejected as attacks</td><td>Test passwords were all alphanumeric</td></tr>
+    <tr><td>Cookie <code>Secure</code> flag absent in staging carried to prod</td><td>Token transmitted over plain HTTP in a misconfigured environment</td><td>Environment-conditional config not reviewed</td></tr>
+    <tr><td>DST shifts session expiry</td><td>Twice a year, sessions expire an hour early or late</td><td>No test ever crossed a DST boundary</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box">
+  <span class="bl">The pattern across all twelve</span>
+  <p>Almost none of these are logic errors. They are <strong>environment, concurrency, scale and time</strong> defects — conditions that a functional test on a single machine with clean data structurally cannot produce. This is why senior QA work involves configuration review, load profiles, and multi-session scenarios rather than more test cases of the same kind.</p>
+</div>
+
+<h2 class="sec" id="s24"><span class="n">24</span> Root Cause Analysis</h2>
+
+<div class="card">
+  <p class="ct">Incident LT-INC-0219 · Sev-1</p>
+  <p style="margin:0;"><strong>Summary.</strong> On Monday 08:47, approximately 3,400 users across eleven schools received <code>429 Too Many Requests</code> on login. Duration 26 minutes. Resolved by raising the rate limit and restarting both App Service instances.</p>
+</div>
+
+<h4>Five Whys</h4>
+
+<div class="ascii">1. Why did users see 429?
+   → The login rate limiter rejected their requests.
+
+2. Why did the limiter reject legitimate logins?
+   → The limit is 10 requests per minute per IP, and each school
+     network presents a single NAT address for all its students.
+
+3. Why was the limit set per-IP?
+   → The middleware default is per-IP, and it was accepted unchanged
+     when the limiter was added in LT-0904.
+
+4. Why was the default accepted without review?
+   → The change was a two-line security improvement. It was reviewed
+     for correctness, but no one asked how it behaves under our
+     customers' actual network topology.
+
+5. Why did no one ask?
+   → Our PR checklist covers code correctness and test coverage.
+     It has no prompt to consider deployment topology or customer
+     network shape for changes affecting traffic control.
+
+   ROOT CAUSE ─ a process gap: security-relevant middleware changes
+   are not evaluated against real customer traffic patterns.</div>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:14%">Layer</th><th style="width:44%">Corrective action</th><th>Owner / horizon</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Immediate</strong></td><td>Raise limit and key it on IP + email rather than IP alone</td><td>Backend · same day</td></tr>
+    <tr><td><strong>Short term</strong></td><td>Move the limiter to shared state so the limit does not scale with instance count</td><td>Backend · this sprint</td></tr>
+    <tr><td><strong>Detection</strong></td><td>Alert when 429 rate exceeds 1% of login traffic over 5 minutes</td><td>Shashi Kumar (QA) + SRE · this sprint</td></tr>
+    <tr><td><strong>Prevention</strong></td><td>Add "How does this behave for 40 users behind one NAT IP?" to the PR checklist for traffic-control changes</td><td>QA · this sprint</td></tr>
+    <tr><td><strong>Regression</strong></td><td>k6 scenario: 40 concurrent logins from a single source IP must all succeed</td><td>QA · this sprint</td></tr>
+    <tr><td><strong>Systemic</strong></td><td>Publish a one-page customer network profile that every engineer reads during onboarding</td><td>QA lead · this quarter</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box warn">
+  <span class="bl">A root cause is never a person</span>
+  <p>"The developer used the default configuration" is not a root cause — it is the last event in a chain. The root cause is that our process had no step at which that default would be questioned. If your RCA ends at a name, stop and ask one more why. Blame produces silence; systemic causes produce fixes.</p>
+</div>
+
+<h2 class="sec" id="s25"><span class="n">25</span> Risk Analysis</h2>
+
+<p>Applying Section 4.6 to story LT-1187 ("Keep me signed in"). Probability and impact are scored 1–5; risk is their product; response follows the score.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:30%">Risk</th><th style="width:8%">P</th><th style="width:8%">I</th><th style="width:9%">Score</th><th>Response</th></tr></thead>
+  <tbody>
+    <tr><td>30-day session on a shared classroom device exposes a student account</td><td>4</td><td>5</td><td><strong style="color:#E60000">20</strong></td><td><strong>Mitigate</strong> — restrict the option to teacher/admin roles; require product decision before build</td></tr>
+    <tr><td>Password change does not revoke long-lived sessions</td><td>3</td><td>5</td><td><strong style="color:#E60000">15</strong></td><td><strong>Mitigate</strong> — explicit test; block release if it fails</td></tr>
+    <tr><td>Refresh chaining extends sessions past 30 days</td><td>3</td><td>4</td><td><strong style="color:#DC2800">12</strong></td><td><strong>Mitigate</strong> — absolute maximum lifetime independent of refresh</td></tr>
+    <tr><td>No admin revocation path during an incident</td><td>2</td><td>5</td><td><strong style="color:#DC2800">10</strong></td><td><strong>Mitigate</strong> — feature flag as the emergency off switch, tested before release</td></tr>
+    <tr><td>DST/timezone error in 30-day arithmetic</td><td>3</td><td>3</td><td>9</td><td><strong>Mitigate</strong> — boundary tests across a DST change; store UTC</td></tr>
+    <tr><td>Cookie <code>Max-Age</code> vs <code>Expires</code> disagreement across browsers</td><td>3</td><td>2</td><td>6</td><td><strong>Mitigate</strong> — cross-browser check on Chrome, Safari, Firefox</td></tr>
+    <tr><td>Checkbox state incorrectly remembered between visits</td><td>2</td><td>2</td><td>4</td><td><strong>Accept</strong> — one E2E case; minor and self-evident if wrong</td></tr>
+    <tr><td>Checkbox label truncates in German</td><td>2</td><td>1</td><td>2</td><td><strong>Accept</strong> — cosmetic; catch in the localisation pass</td></tr>
+  </tbody>
+</table></div>
+
+<p>The two highest-scoring risks are not testing problems at all — they are <strong>specification problems</strong> that must be resolved before development starts. That is the ordinary output of doing risk analysis early: the most valuable findings are questions, not defects.</p>
+
+<div class="box tip">
+  <span class="bl">Tip · write down what you decided not to test</span>
+  <p>The "Accept" rows are as important as the "Mitigate" rows. Recording an accepted risk converts a future accusation ("QA missed it") into a documented, deliberate engineering decision that the team made together. Never leave acceptance implicit.</p>
+</div>
+
+<h2 class="sec" id="s26"><span class="n">26</span> Regression Scope</h2>
+
+<p>Regression scope is derived from blast radius (Step 3), not from habit. Running the full suite for every change is not thoroughness — it is an absence of analysis, and it trains the team to ignore slow pipelines.</p>
+
+<div class="ascii">  CHANGE SURFACE                     BLAST RADIUS
+  ┌────────────────────┐             ┌──────────────────────────────┐
+  │ LoginForm.jsx      │             │ Session refresh              │
+  │ auth.controller.js │  ────────▶  │ Logout                       │
+  │ auth.service.js    │             │ "Active devices" screen      │
+  │ sessions table     │             │ Admin session revocation     │
+  │ (new column)       │             │ Password reset flow          │
+  └────────────────────┘             │ Analytics: session duration  │
+                                     │ Mobile web session handling  │
+                                     └──────────────────────────────┘</div>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:24%">Scope tier</th><th style="width:36%">Included</th><th>Justification</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Must run</strong> (blocking)</td><td>Full auth suite · session lifecycle · logout · password reset · admin revocation · tenant isolation</td><td>Directly touched or shares the session model</td></tr>
+    <tr><td><strong>Should run</strong></td><td>Dashboard load after login · role-based menu rendering · analytics session-duration report</td><td>Consumes session data; a wrong expiry corrupts reporting</td></tr>
+    <tr><td><strong>Spot check</strong></td><td>One representative journey per major module</td><td>Cheap confidence that nothing global broke</td></tr>
+    <tr><td><strong>Skip</strong></td><td>Pronunciation scoring · translation engine · billing · content authoring</td><td>No dependency on the session model beyond authentication itself, which the auth suite already covers</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box note">
+  <span class="bl">Skipping is a decision that must be written down</span>
+  <p>"We skipped billing regression because the change does not touch billing code paths, and billing's own contract tests run nightly" is engineering. Silently not running it is negligence. The difference is one sentence in the release readiness report.</p>
+</div>
+
+<h2 class="sec" id="s27"><span class="n">27</span> Automation Opportunities</h2>
+
+<p>Automate what is <strong>repetitive, deterministic, and expensive to get wrong</strong>. Keep humans on what is <strong>novel, subjective, or exploratory</strong>.</p>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:32%">Candidate</th><th style="width:16%">Verdict</th><th style="width:16%">Level</th><th>Reasoning</th></tr></thead>
+  <tbody>
+    <tr><td>Email format validation rules</td><td><strong style="color:#008168">Automate</strong></td><td>Unit</td><td>Twelve equivalence classes, pure function, milliseconds</td></tr>
+    <tr><td>Status-code contract per condition</td><td><strong style="color:#008168">Automate</strong></td><td>API</td><td>Deterministic, high value, protects every client</td></tr>
+    <tr><td>Cookie flags on the refresh token</td><td><strong style="color:#008168">Automate</strong></td><td>API</td><td>Security regression that is otherwise invisible</td></tr>
+    <tr><td>Lockout threshold and expiry</td><td><strong style="color:#008168">Automate</strong></td><td>Integration</td><td>Time-based; tedious and error-prone manually</td></tr>
+    <tr><td>Successful login journey</td><td><strong style="color:#008168">Automate</strong></td><td>E2E (@smoke)</td><td>The one path that must never break</td></tr>
+    <tr><td>Bell-time burst capacity</td><td><strong style="color:#008168">Automate</strong></td><td>k6, nightly</td><td>Impossible to do manually at all</td></tr>
+    <tr><td>Axe accessibility scan</td><td><strong style="color:#008168">Automate</strong></td><td>E2E</td><td>Catches 30–40% of issues for near-zero cost</td></tr>
+    <tr><td>Screen-reader announcement quality</td><td><strong style="color:#DC2800">Manual</strong></td><td>—</td><td>Requires human judgement of what was announced and whether it made sense</td></tr>
+    <tr><td>Error-message tone and clarity</td><td><strong style="color:#DC2800">Manual</strong></td><td>—</td><td>Subjective; automation can assert presence, not helpfulness</td></tr>
+    <tr><td>Password-manager compatibility</td><td><strong style="color:#DC2800">Manual</strong></td><td>—</td><td>Extension behaviour differs from headless automation</td></tr>
+    <tr><td>Exploratory session-state charter</td><td><strong style="color:#DC2800">Manual</strong></td><td>—</td><td>Finds the unpredicted, which is by definition not scriptable</td></tr>
+    <tr><td>One-off migration verification</td><td><strong style="color:#DC2800">Manual</strong></td><td>—</td><td>Runs once; automation cost exceeds lifetime value</td></tr>
+  </tbody>
+</table></div>
+
+<span class="filename">e2e/auth/login.spec.ts</span>
+<pre><span class="k">import</span> { test, expect } <span class="k">from</span> <span class="s">'@playwright/test'</span>;
+
+test.<span class="f">describe</span>(<span class="s">'Login'</span>, () =&gt; {
+  test(<span class="s">'@smoke teacher signs in and reaches the dashboard'</span>, <span class="k">async</span> ({ page }) =&gt; {
+    <span class="k">await</span> page.<span class="f">goto</span>(<span class="s">'/login'</span>);
+    <span class="k">await</span> page.<span class="f">getByLabel</span>(<span class="s">'Email'</span>).<span class="f">fill</span>(process.env.TEACHER_EMAIL!);
+    <span class="k">await</span> page.<span class="f">getByLabel</span>(<span class="s">'Password'</span>).<span class="f">fill</span>(process.env.TEACHER_PASSWORD!);
+    <span class="k">await</span> page.<span class="f">getByRole</span>(<span class="s">'button'</span>, { name: <span class="s">'Sign in'</span> }).<span class="f">click</span>();
+
+    <span class="c">// assert the outcome, never a fixed wait</span>
+    <span class="k">await</span> <span class="f">expect</span>(page.<span class="f">getByRole</span>(<span class="s">'heading'</span>, { name: <span class="s">'My classes'</span> })).<span class="f">toBeVisible</span>();
+  });
+
+  test(<span class="s">'@critical wrong password shows a generic, announced error'</span>, <span class="k">async</span> ({ page }) =&gt; {
+    <span class="k">await</span> page.<span class="f">goto</span>(<span class="s">'/login'</span>);
+    <span class="k">await</span> page.<span class="f">getByLabel</span>(<span class="s">'Email'</span>).<span class="f">fill</span>(process.env.TEACHER_EMAIL!);
+    <span class="k">await</span> page.<span class="f">getByLabel</span>(<span class="s">'Password'</span>).<span class="f">fill</span>(<span class="s">'definitely-not-it'</span>);
+    <span class="k">await</span> page.<span class="f">getByRole</span>(<span class="s">'button'</span>, { name: <span class="s">'Sign in'</span> }).<span class="f">click</span>();
+
+    <span class="k">const</span> alert = page.<span class="f">getByRole</span>(<span class="s">'alert'</span>);            <span class="c">// role, not CSS class</span>
+    <span class="k">await</span> <span class="f">expect</span>(alert).<span class="f">toHaveText</span>(<span class="s">'Invalid email or password.'</span>);
+    <span class="k">await</span> <span class="f">expect</span>(page).<span class="f">toHaveURL</span>(/\/login/);
+  });
+});</pre>
+
+<div class="box tip">
+  <span class="bl">Tip · locate by role and label, never by CSS class</span>
+  <p><code>getByRole('button', { name: 'Sign in' })</code> survives restyling and simultaneously asserts that the element is accessible. <code>page.click('.btn-primary-2')</code> breaks the moment a designer renames a class, and tells you nothing about whether a screen reader can find it. The accessible locator is both the more stable and the more meaningful choice.</p>
+</div>
+
+<h2 class="sec" id="s28"><span class="n">28</span> AI Assistance</h2>
+
+<p>AI tools multiply a QA engineer's throughput on the analytical parts of the job — reading diffs, drafting cases, spotting omissions. They do not replace judgement, and they fail in a specific, predictable way: <strong>they are confidently wrong about things they cannot see</strong>, such as your production configuration, your customer network topology, and your actual data.</p>
+
+<h3>28.1 Prompt library</h3>
+
+<div class="card">
+  <p class="ct">Prompt 1 · Analyse a pull request as QA</p>
+  <pre style="margin:0;">You are a senior QA engineer reviewing a pull request for a Node.js +
+Express + PostgreSQL API. Here is the diff:
+
+&lt;paste diff&gt;
+
+Produce:
+1. A plain-English summary of the behavioural change.
+2. Every input that reaches new or modified code, and how it is validated.
+3. Guards present on neighbouring routes but ABSENT on changed routes.
+4. Edge cases the diff does not appear to handle.
+5. A ranked list of regression areas, with reasoning.
+6. Questions I should ask the author.
+
+Do not write test code. Do not assume anything not visible in the diff —
+if something matters and is not shown, list it as an open question.</pre>
+</div>
+
+<div class="card">
+  <p class="ct">Prompt 2 · Generate an equivalence and boundary set</p>
+  <pre style="margin:0;">Given this validation schema and endpoint contract:
+
+&lt;paste schema + contract&gt;
+
+Produce a table of test cases covering: valid equivalence classes,
+invalid equivalence classes, boundary values (n-1, n, n+1 for every
+numeric or length limit), and type-confusion inputs.
+
+Columns: ID · Class · Input · Expected status · Expected body · Why it matters.
+Flag any input where the correct behaviour is genuinely ambiguous from
+the contract as OPEN QUESTION rather than guessing.</pre>
+</div>
+
+<div class="card">
+  <p class="ct">Prompt 3 · Review a SQL migration for QA risk</p>
+  <pre style="margin:0;">Review this PostgreSQL migration as a QA engineer, not a DBA.
+
+&lt;paste migration&gt;
+
+Tell me:
+1. Is it reversible? If not, exactly what is lost.
+2. Does it lock a table, and for how long at ~500,000 rows?
+3. What existing data would violate the new constraints?
+4. What must I verify before deployment, and after.
+5. Which application code paths this could break, given the columns touched.</pre>
+</div>
+
+<div class="card">
+  <p class="ct">Prompt 4 · Draft a root cause analysis</p>
+  <pre style="margin:0;">Here are the incident timeline, logs and the change that preceded it:
+
+&lt;paste&gt;
+
+Draft an RCA with: timeline, impact (users and duration), a Five Whys
+chain that terminates at a PROCESS cause rather than an individual,
+and corrective actions split into immediate / detection / prevention /
+regression / systemic.
+
+Never name an individual as a cause. If the evidence does not support
+a conclusion, say what additional evidence is needed.</pre>
+</div>
+
+<div class="card">
+  <p class="ct">Prompt 5 · Convert a manual case into Playwright</p>
+  <pre style="margin:0;">Convert this manual test case into a Playwright test in TypeScript.
+
+&lt;paste case&gt;
+
+Rules: locate elements by role and accessible name only; no CSS or
+XPath selectors; no fixed waits — assert on the outcome; no shared
+state between tests; tag with @smoke, @regression or @critical based
+on the case's stated criticality; add a one-line comment stating what
+the test actually protects.</pre>
+</div>
+
+<h3>28.2 What to distrust</h3>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:34%">AI output</th><th>Why you must verify it</th></tr></thead>
+  <tbody>
+    <tr><td>"This endpoint is secure"</td><td>The model sees a diff, not your deployed configuration, WAF rules, or middleware ordering</td></tr>
+    <tr><td>Specific numbers — coverage %, latency, industry statistics</td><td>Frequently fabricated with high confidence. Measure, don't quote</td></tr>
+    <tr><td>Generated test data resembling real users</td><td>May be plausible-looking but structurally invalid, or worse, may embed real-looking personal data</td></tr>
+    <tr><td>"No further edge cases"</td><td>Absence of a suggestion is not evidence of absence. It reflects the prompt, not the system</td></tr>
+    <tr><td>Cited standards, RFCs, or CVE numbers</td><td>Citations are a known failure mode. Open the source before repeating it</td></tr>
+  </tbody>
+</table></div>
+
+<div class="box warn">
+  <span class="bl">Never paste production data into a general-purpose AI tool</span>
+  <p>Real user emails, audio recordings, tokens, connection strings and customer names are covered by our data-processing agreements and, in the EU, by GDPR. Use synthetic data. If you need realistic shapes, generate them — do not export them. This rule has no exceptions and no "just this once".</p>
+</div>
+
+<h2 class="sec" id="s29"><span class="n">29</span> Common Mistakes</h2>
+
+<div class="tw"><table>
+  <thead><tr><th style="width:30%">Mistake</th><th style="width:32%">What it looks like</th><th>Correction</th></tr></thead>
+  <tbody>
+    <tr><td>Testing the UI for everything</td><td>An E2E test for every validation rule; a 70-minute suite</td><td>Push each assertion to the lowest level that can prove it</td></tr>
+    <tr><td>Trusting the green toast</td><td>Marking a case passed because the UI said success</td><td>Verify at the source of truth — database, logs, telemetry</td></tr>
+    <tr><td>Only happy-path data</td><td>Every test user is <code>test@test.com</code> with <code>Password123</code></td><td>Use plus-addressing, Unicode names, long passwords, apostrophes</td></tr>
+    <tr><td>Vague defect reports</td><td>"Login not working"</td><td>Steps, expected, actual, environment, build, correlation ID, evidence</td></tr>
+    <tr><td>Automating an unstable feature</td><td>Playwright suite for a screen still being redesigned</td><td>Automate after the interface stabilises; explore before that</td></tr>
+    <tr><td>Retrying flaky tests</td><td><code>retries: 3</code> in the config, permanently</td><td>Every flake is a defect in the test or the system. Fix or delete</td></tr>
+    <tr><td>Treating coverage as quality</td><td>Celebrating 90% while escaped defects rise</td><td>Coverage measures execution, not assertion. Track escapes instead</td></tr>
+    <tr><td>Waiting for "code complete"</td><td>Test design starts when the build is deployed</td><td>Design tests from the specification, before the code exists</td></tr>
+    <tr><td>Testing one instance</td><td>Everything verified against a single local server</td><td>Multi-instance behaviour is a distinct category of risk</td></tr>
+    <tr><td>Owning the release decision</td><td>Saying "QA approves"</td><td>Report residual risk; the business decides</td></tr>
+    <tr><td>Not reading the code</td><td>Black-box only, by choice</td><td>The diff tells you where the risk moved. Read it</td></tr>
+    <tr><td>Filing without reproducing</td><td>One observation, straight to a ticket</td><td>Reproduce twice and isolate the variable before filing</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec" id="s30"><span class="n">30</span> Best Practices</h2>
+
+<ul>
+  <li><strong>Design tests before code exists.</strong> The specification gaps you find are worth more than the tests you write.</li>
+  <li><strong>One assertion concept per test.</strong> When it fails, the name should tell you what broke without opening the file.</li>
+  <li><strong>Name tests as sentences.</strong> <code>rejects login when the account is locked even with a correct password</code> beats <code>test_login_4</code>.</li>
+  <li><strong>Every test must be independent.</strong> No shared state, no ordering dependency, no reliance on a previous test's user.</li>
+  <li><strong>Seed data explicitly.</strong> A test that depends on a row someone created manually in staging will fail on a Tuesday for reasons nobody can reconstruct.</li>
+  <li><strong>Assert on outcomes, never on timing.</strong> Fixed waits are the single largest source of flakiness in every suite ever measured.</li>
+  <li><strong>Every escaped defect earns a test</strong> — at the level where it should have been caught, not at the level where it was noticed.</li>
+  <li><strong>Review the diff, not just the ticket.</strong> The ticket describes intent; the diff describes reality.</li>
+  <li><strong>Automate the boring, explore the interesting.</strong> Automation defends what you already know; exploration finds what you don't.</li>
+  <li><strong>Write down accepted risk.</strong> An undocumented decision becomes someone's fault later.</li>
+  <li><strong>Test with representative data.</strong> For Lingotran that means multiple scripts, accented speech, and non-Latin names — our users are not <code>John Smith</code>.</li>
+  <li><strong>Keep the pipeline under ten minutes for PRs.</strong> Feedback that arrives after a context switch is not feedback.</li>
+</ul>
+
+<h2 class="sec" id="s31"><span class="n">31</span> Senior QA Tips</h2>
+
+<div class="grid2">
+  <div class="card">
+    <p class="ct">Ask "what changed?" before "what should I test?"</p>
+    <p style="margin:0;font-size:15.5px;">The blast radius of a change is a better guide to your effort than the acceptance criteria are. ACs describe the intent; the diff describes the risk.</p>
+  </div>
+  <div class="card">
+    <p class="ct">The best bug report is the one you prevented</p>
+    <p style="margin:0;font-size:15.5px;">Nobody will thank you for the incident that did not happen. Do it anyway, and keep a private record — it is the substance of your promotion case.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Learn the domain, not just the app</p>
+    <p style="margin:0;font-size:15.5px;">Understanding how a language classroom actually runs generates better tests than any technique. Domain knowledge is the highest-leverage thing a QA engineer can acquire.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Be specific enough to be actionable</p>
+    <p style="margin:0;font-size:15.5px;">Name the file, the line, the input, the correlation ID. Every minute you spend narrowing saves the developer ten and gets the fix into today's build.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Watch production deliberately</p>
+    <p style="margin:0;font-size:15.5px;">Spend twenty minutes a week in App Insights with no ticket. Error patterns and latency drift show up there long before a customer notices them.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Delete tests without guilt</p>
+    <p style="margin:0;font-size:15.5px;">A test that has never failed in eighteen months, and would not fail if the feature broke, is maintenance cost with no return. Suites should be pruned like code.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Escalate risk, not blame</p>
+    <p style="margin:0;font-size:15.5px;">"Here is the risk, here is the cost, here is what it would take to reduce it" makes you a trusted advisor. "They didn't test it" makes you an adversary.</p>
+  </div>
+  <div class="card">
+    <p class="ct">Keep a personal escape log</p>
+    <p style="margin:0;font-size:15.5px;">Record every defect that reached production and what would have caught it. After six months the patterns in that log are a customised curriculum for your own weaknesses.</p>
+  </div>
+</div>
+
+<h2 class="sec" id="s32"><span class="n">32</span> Checklist</h2>
+
+<h4>Before development starts</h4>
+<ul class="check">
+  <li><span class="bx"></span><span>Acceptance criteria are specific, measurable and unambiguous</span></li>
+  <li><span class="bx"></span><span>Every open question from the story has a written answer</span></li>
+  <li><span class="bx"></span><span>Change surface identified and confirmed with the developer</span></li>
+  <li><span class="bx"></span><span>Blast radius mapped beyond the change surface</span></li>
+  <li><span class="bx"></span><span>Risks scored; the top three have an explicit response</span></li>
+  <li><span class="bx"></span><span>Test cases designed: positive, negative, boundary, equivalence, security, accessibility</span></li>
+  <li><span class="bx"></span><span>Test data requirements identified and seedable</span></li>
+  <li><span class="bx"></span><span>Feature flag and rollback path confirmed to exist</span></li>
+</ul>
+
+<h4>During development</h4>
+<ul class="check">
+  <li><span class="bx"></span><span>Pull request diff read end to end</span></li>
+  <li><span class="bx"></span><span>New inputs traced to their validation, at every layer</span></li>
+  <li><span class="bx"></span><span>Guards compared against neighbouring routes for asymmetry</span></li>
+  <li><span class="bx"></span><span>Unit tests exist for the logic and are named meaningfully</span></li>
+  <li><span class="bx"></span><span>Migration reviewed for reversibility and lock duration</span></li>
+  <li><span class="bx"></span><span>Environment-conditional configuration identified and noted</span></li>
+</ul>
+
+<h4>Before release</h4>
+<ul class="check">
+  <li><span class="bx"></span><span>Must-run regression tier is green</span></li>
+  <li><span class="bx"></span><span>Skipped scope is documented with justification</span></li>
+  <li><span class="bx"></span><span>Security cases executed on an environment configured like production</span></li>
+  <li><span class="bx"></span><span>Performance within budget under a realistic burst profile</span></li>
+  <li><span class="bx"></span><span>Accessibility smoke test completed (keyboard · zoom · screen reader)</span></li>
+  <li><span class="bx"></span><span>Residual risk stated in writing in the release readiness report</span></li>
+  <li><span class="bx"></span><span>Rollback verified, not merely documented</span></li>
+  <li><span class="bx"></span><span>Post-deploy monitoring thresholds agreed and alerting configured</span></li>
+</ul>
+
+<h4>After release</h4>
+<ul class="check">
+  <li><span class="bx"></span><span>Production smoke test executed on the live build</span></li>
+  <li><span class="bx"></span><span>Error rate and p95 latency watched for the first 30 minutes</span></li>
+  <li><span class="bx"></span><span>Every escaped defect has a regression test at the right level</span></li>
+  <li><span class="bx"></span><span>RCA completed for any Sev-1 or Sev-2, terminating at a process cause</span></li>
+  <li><span class="bx"></span><span>Personal escape log updated</span></li>
+</ul>
+
+<h2 class="sec" id="s33"><span class="n">33</span> Chapter Summary</h2>
+
+<p>Quality engineering is the discipline of reducing the probability that the product does something unacceptable in front of a customer. Testing is one instrument in service of that goal, and it is not the most powerful one — the most powerful is asking the right question early enough that the defect is never written.</p>
+
+<p>Concretely, this chapter established:</p>
+
+<ul>
+  <li><strong>QA prevents, QC detects, QE builds the capability.</strong> Your seniority is measured by how much of your time sits in the first and third.</li>
+  <li><strong>The cost of a defect rises exponentially with distance from its origin</strong>, which is the economic argument for shift-left — and the reason a refinement meeting is a testing activity.</li>
+  <li><strong>You cannot test a system you cannot draw.</strong> Nine layers separate a click from a database row, and each is an independent place to aim a test.</li>
+  <li><strong>Reading code is testing.</strong> The service layer in Section 11.4 yielded a missing transaction, an ordering dependency and a potential enumeration issue — none of which required executing anything.</li>
+  <li><strong>Design tests before code exists.</strong> Story LT-1187 produced seven specification questions before a line was written; two of them were higher risk than any defect the build could have contained.</li>
+  <li><strong>Risk allocates effort.</strong> Everything cannot be tested, and pretending otherwise is not diligence — it is the absence of a decision.</li>
+  <li><strong>Environment, concurrency, scale and time</strong> produce the defects that reach production. Functional tests on one clean machine cannot see them.</li>
+  <li><strong>QA reports risk; the business accepts it.</strong> Making risk visible and specific is the job. Approval is not.</li>
+</ul>
+
+<div class="box">
+  <span class="bl">Carry one sentence out of this chapter</span>
+  <p>Your value is not measured by the defects you find. It is measured by the defects that never reach a customer — and most of those are stopped by a question asked in a meeting, not by a test executed in a browser.</p>
+</div>
+
+<h2 class="sec" id="s34"><span class="n">34</span> Knowledge Check</h2>
+
+<div class="qa">
+  <p class="q">Explain the difference between QA, QC and QE, and classify these three activities: writing a Playwright suite; introducing a Definition of Ready; building a pipeline gate that blocks merges on failing contract tests.</p>
+  <p class="a">Expected: QC, QA, QE respectively — with reasoning about product vs process vs capability.</p>
+
+  <p class="q">A story passes every acceptance criterion and every automated test, and the feature is still wrong. What happened, and which activity would have caught it?</p>
+  <p class="a">Expected: verification succeeded, validation failed. Caught only by questioning whether the specification solves the user's real problem.</p>
+
+  <p class="q">Trace a Lingotran login request through all nine layers and name one defect that can occur at each.</p>
+
+  <p class="q">Why must "unknown email" and "wrong password" return byte-identical responses, and what is the corresponding timing concern?</p>
+  <p class="a">Expected: user enumeration; and the dummy bcrypt comparison that flattens response time when no user exists.</p>
+
+  <p class="q">Your password policy allows up to 128 characters. Why is the boundary at 72 bytes more interesting, and what test proves it?</p>
+
+  <p class="q">A per-account lockout is implemented and working. Explain why credential stuffing still succeeds, and what control actually stops it.</p>
+
+  <p class="q">Given a change to the <code>sessions</code> table, distinguish change surface from blast radius and justify one area you would deliberately skip.</p>
+
+  <p class="q">An RCA concludes: "the developer used the default rate-limit configuration." Critique this conclusion and produce a better one.</p>
+
+  <p class="q">Which of these belongs in a unit test rather than E2E, and why: email format validation, cookie flags on the refresh token, the successful login journey, lockout expiry after 15 minutes?</p>
+
+  <p class="q">You are asked to sign off a release with one untested area. Write the two sentences you would put in the release readiness report.</p>
+  <p class="a">Expected: names the specific gap, quantifies affected users and reversibility, and hands the decision to the release owner without approving or blocking.</p>
+
+  <p class="q">Name three defect classes that a single-instance staging environment structurally cannot reveal.</p>
+
+  <p class="q">You prompt an AI tool to review a diff and it reports "no security concerns." What are you entitled to conclude?</p>
+  <p class="a">Expected: nothing. The absence of a finding reflects the prompt and the visible context, not the system's actual security posture.</p>
+</div>
+
+<div class="nextup">
+  <span class="bl">Next chapter preview</span>
+  <h3>Chapter 2 — SDLC, STLC and Where Quality Lives in the Sprint</h3>
+  <p>We move from mindset to mechanism. Chapter 2 maps the software development lifecycle against the software testing lifecycle, shows exactly what a QA engineer produces in each ceremony of a two-week Lingotran sprint, and builds the two documents that make quality legible to the rest of the organisation: the Definition of Ready and the Release Readiness Report. It closes with entry and exit criteria for every test phase, and a worked example of a sprint where the criteria were correctly used to stop a release.</p>
+</div>
+
+<p style="margin-top:36px;font-size:14px;color:var(--caption-safe);">Chapter 1 ends here. Reply with <strong>approved</strong> to generate Chapter 2, or tell me what to change about the depth, structure or styling first.</p>
+
+</main>
+</div>
+
+<footer>
+  Lingotran · QA Engineering Handbook · Chapter 1 of 40 · Revision 1.0 · Internal engineering documentation
+</footer>
+
+</body>
+</html>

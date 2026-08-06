@@ -1,0 +1,161 @@
+<!-- ══════════ 12 ══════════ -->
+<details class="mod" id="m12">
+<summary><span class="n">12</span> Templates &amp; checklists<span class="pp">4 p</span></summary>
+<div class="inner">
+
+<h3>12.1 Test plan — one page, no more</h3>
+<pre><b>Release:</b> 2.15 · <b>QA owner:</b> Shashi Kumar · <b>Dates:</b> …
+<b>In scope:</b>    LT-1187 extended sessions · LT-1201 phoneme panel
+<b>Out of scope:</b> billing, marketing site  — and why
+<b>Risk order:</b>  1 session handling  2 scoring quality  3 class reports
+<b>Environments:</b> staging (2 instances, 2M rows, real Speech)
+<b>Entry:</b> all stories merged, staging deployed, migrations run + rolled back once
+<b>Exit:</b>  E2E green · a11y scan clean · REF corpus within bands · no open Sev-1/2
+<b>Not being tested, accepted as risk:</b> [the honest list — this is the most valuable line]</pre>
+
+<h3>12.2 Release readiness</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:32%">Item</th><th style="width:12%">Status</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td>All ACs verified</td><td>&nbsp;</td><td>Test run link</td></tr>
+<tr><td>E2E suite green</td><td>&nbsp;</td><td>Pipeline run</td></tr>
+<tr><td>Migrations applied and rolled back in staging</td><td>&nbsp;</td><td>Pipeline log</td></tr>
+<tr><td>REF speech corpus within bands</td><td>&nbsp;</td><td>Nightly report</td></tr>
+<tr><td>Cross-school isolation query returns zero</td><td>&nbsp;</td><td>SQL output</td></tr>
+<tr><td>a11y scan clean + manual keyboard pass</td><td>&nbsp;</td><td>axe report + notes</td></tr>
+<tr><td>Load test at production instance count, single IP</td><td>&nbsp;</td><td>k6 summary</td></tr>
+<tr><td>Feature flags: default state confirmed</td><td>&nbsp;</td><td>Config diff</td></tr>
+<tr><td>Rollback rehearsed</td><td>&nbsp;</td><td>Who, and how long it took</td></tr>
+<tr><td>Open defects listed with severity</td><td>&nbsp;</td><td>Board query</td></tr>
+<tr><td>Known risks stated in plain language</td><td>&nbsp;</td><td>This document</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">Wording matters</b><p>QA never signs "it is fine". QA signs "these are the risks, this is what is untested, this is what I recommend." The business owns the decision; QA owns the honesty of the information it is made on.</p></div>
+
+<h3>12.3 Production smoke — 5 minutes after every deploy</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:8%">#</th><th style="width:42%">Check</th><th>Fail action</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Sign in as the canary learner account</td><td>Roll back immediately</td></tr>
+<tr><td>2</td><td>Open a lesson; content renders</td><td>Roll back</td></tr>
+<tr><td>3</td><td>Record and submit one clip; a score returns</td><td>Roll back</td></tr>
+<tr><td>4</td><td>Teacher dashboard loads a class report</td><td>Investigate; flag off if possible</td></tr>
+<tr><td>5</td><td>Error rate flat for 30 min in App Insights</td><td>Investigate</td></tr>
+<tr><td>6</td><td>429 rate below 1% of login traffic</td><td>Check limiter config</td></tr>
+<tr><td>7</td><td>Speech p95 latency within budget</td><td>Check quota and region</td></tr>
+</tbody></table></div>
+
+<h3>12.4 PR review checklist for QA</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:30%">Ask</th><th>Looking for</th></tr></thead>
+<tbody>
+<tr><td>Which trace layers change?</td><td>Test that layer and everything downstream (2.2)</td></tr>
+<tr><td>Any new route?</td><td>Auth middleware present on it <em>and</em> on every sibling verb</td></tr>
+<tr><td>Any new query?</td><td><code>EXPLAIN</code> on staging volumes; index present</td></tr>
+<tr><td>Any migration?</td><td>Reversible; concurrent index; expand/contract for renames</td></tr>
+<tr><td>Any in-process state?</td><td>Behaviour at 2+ instances (2.4)</td></tr>
+<tr><td>Any check-then-act?</td><td>Concurrency test required (5.3)</td></tr>
+<tr><td>Any new flag?</td><td>Both states plus the transition</td></tr>
+<tr><td>Any external call?</td><td>Timeout, retry, and what happens on failure</td></tr>
+<tr><td>Any user-visible text?</td><td>Escaped; translated; readable by a screen reader</td></tr>
+<tr><td>Do tests assert behaviour?</td><td>Not mock call counts (8.1)</td></tr>
+<tr><td>Anything touching learner audio?</td><td>Region, retention, deletion, sub-processors (7.4)</td></tr>
+</tbody></table></div>
+
+<h3>12.5 Exploratory charter</h3>
+<pre><b>Explore</b>  the lesson player
+<b>With</b>     an iPad on a throttled school wifi connection
+<b>To discover</b> how recording behaves when the network degrades mid-clip
+<b>Timebox</b>  45 minutes   <b>Tester</b> Shashi Kumar
+<b>Found:</b>   [notes, screenshots, correlation IDs]
+<b>New cases to automate:</b> […]     <b>Bugs raised:</b> […]</pre>
+
+<h3>12.6 Metrics worth publishing</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Metric</th><th style="width:20%">Target</th><th>Behaviour it drives</th></tr></thead>
+<tbody>
+<tr><td>Escaped defects / release</td><td>Falling trend</td><td>Strengthens the gate that let each one through</td></tr>
+<tr><td>Flaky rate</td><td>&lt; 1%</td><td>Keeps the suite trustworthy</td></tr>
+<tr><td>PR pipeline duration</td><td>&lt; 10 min</td><td>Keeps feedback inside the author's attention span</td></tr>
+<tr><td>Coverage on changed lines</td><td>≥ 80%</td><td>Resists gaming, unlike global coverage</td></tr>
+<tr><td>MTTR</td><td>Falling</td><td>Rewards mitigation speed over diagnosis pride</td></tr>
+<tr><td>REF corpus band breaches</td><td>Zero</td><td>The only guard on scoring quality</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Do not publish</b><p>Test case counts, bugs raised per tester, or automation percentage. Each one is trivially gamed and rewards volume over judgement.</p></div>
+
+<h3>12.7 Glossary</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Term</th><th>Meaning here</th></tr></thead>
+<tbody>
+<tr><td><strong>QA / QC / QE</strong></td><td>Assurance = preventing defects through process; Control = finding them by testing; Engineering = building the systems that do both.</td></tr>
+<tr><td><strong>Verification</strong></td><td>Did we build it to spec?</td></tr>
+<tr><td><strong>Validation</strong></td><td>Did we build a thing a teacher can actually use in a classroom?</td></tr>
+<tr><td><strong>Shift left</strong></td><td>QA in refinement, not after merge. Module 3 is shift-left in practice.</td></tr>
+<tr><td><strong>Shift right</strong></td><td>Learning from production — smoke, alerts, escape analysis.</td></tr>
+<tr><td><strong>Test pyramid</strong></td><td>Many fast unit tests, fewer API tests, fewest E2E. Inverted pyramids are slow and flaky.</td></tr>
+<tr><td><strong>Escape</strong></td><td>A defect that reached production. The gate that missed it is the finding, not the defect.</td></tr>
+<tr><td><strong>Flake</strong></td><td>A test that fails without a code change. Treated as a defect in the suite.</td></tr>
+<tr><td><strong>REF corpus</strong></td><td>The fixed reference clips in 7.3 — Lingotran's only scoring-quality regression signal.</td></tr>
+<tr><td><strong>Expand/contract</strong></td><td>Two-release pattern for renames so old and new code run together safely.</td></tr>
+</tbody></table></div>
+
+</div></details>
+
+</div><!-- /wrap -->
+
+<footer>Lingotran · QA Engineering Field Manual · Revision 2.0 · Internal engineering documentation<br>
+Built to be filtered and searched. Print expands every module.</footer>
+
+<script>
+(function(){
+  var q=document.getElementById('q'), mods=[].slice.call(document.querySelectorAll('.mod')),
+      count=document.getElementById('count'), open=null;
+
+  function clearMarks(root){
+    root.querySelectorAll('mark').forEach(function(m){
+      var p=m.parentNode; p.replaceChild(document.createTextNode(m.textContent),m); p.normalize();
+    });
+  }
+  function mark(root,term){
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null), nodes=[], n;
+    while(n=w.nextNode()){
+      if(n.parentNode.closest('summary')) continue;
+      if(n.nodeValue.toLowerCase().indexOf(term)>-1) nodes.push(n);
+    }
+    nodes.forEach(function(node){
+      var frag=document.createDocumentFragment(), txt=node.nodeValue, low=txt.toLowerCase(), i=0, j;
+      while((j=low.indexOf(term,i))>-1){
+        frag.appendChild(document.createTextNode(txt.slice(i,j)));
+        var m=document.createElement('mark'); m.textContent=txt.slice(j,j+term.length);
+        frag.appendChild(m); i=j+term.length;
+      }
+      frag.appendChild(document.createTextNode(txt.slice(i)));
+      node.parentNode.replaceChild(frag,node);
+    });
+  }
+
+  function run(){
+    var t=q.value.trim().toLowerCase();
+    mods.forEach(function(m){ clearMarks(m); });
+    if(!t){
+      mods.forEach(function(m){ m.classList.remove('hide'); m.open=(m.id==='m00'); });
+      count.textContent=''; return;
+    }
+    var hits=0;
+    mods.forEach(function(m){
+      var found=m.textContent.toLowerCase().indexOf(t)>-1;
+      m.classList.toggle('hide',!found);
+      m.open=found;
+      if(found){ hits++; mark(m,t); }
+    });
+    count.textContent=hits+' module'+(hits===1?'':'s');
+  }
+
+  var timer; q.addEventListener('input',function(){ clearTimeout(timer); timer=setTimeout(run,140); });
+  q.addEventListener('keydown',function(e){ if(e.key==='Escape'){ q.value=''; run(); } });
+  document.getElementById('all').addEventListener('click',function(){ mods.forEach(function(m){ m.open=true; }); });
+  document.getElementById('none').addEventListener('click',function(){ mods.forEach(function(m){ m.open=false; }); });
+  window.addEventListener('beforeprint',function(){ mods.forEach(function(m){ open=m.open; m.open=true; }); });
+})();
+</script>
+</body>
+</html>

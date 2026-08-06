@@ -1,0 +1,154 @@
+<!-- ══════════ 02 ══════════ -->
+<details class="mod" id="m02">
+<summary><span class="n">02</span> Lingotran architecture &amp; the layer trace<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<h3>2.1 The system</h3>
+<pre>                          ┌──────────────────────────┐
+   Browser                │  Azure Front Door / CDN  │
+   (Chrome, Safari,       └───────────┬──────────────┘
+    Edge, iPad Safari)                │
+        │                 ┌───────────▼──────────────┐
+        │  MediaRecorder  │  React SPA (TypeScript)  │  Azure Static Web Apps
+        │  getUserMedia   │  lesson player · capture │
+        │                 └───────────┬──────────────┘
+        │                        HTTPS │ JWT bearer
+        │                 ┌───────────▼──────────────┐
+        │                 │  Node / Express API      │  Azure App Service
+        │                 │  2 instances, autoscale  │  (this count matters — see 2.4)
+        │                 └──┬────────┬───────────┬──┘
+        │        ┌───────────┘        │           └────────────┐
+        │  ┌─────▼──────┐   ┌─────────▼────────┐   ┌───────────▼─────────┐
+        └─▶│ Blob Store │   │ PostgreSQL 15    │   │ Azure AI Speech     │
+           │ audio clips│   │ Flexible Server  │   │ Pronunciation Assmt │
+           └────────────┘   └──────────────────┘   └─────────────────────┘
+                                     │
+                            ┌────────▼─────────┐
+                            │ Application      │  correlation-id joins
+                            │ Insights         │  every hop above
+                            └──────────────────┘</pre>
+
+<h3>2.2 The layer trace — what QA validates at each hop</h3>
+<p>This is the core device of the manual. Any Lingotran request passes through these layers. When a PR changes one, you test that row and re-test every row below it.</p>
+
+<div class="trace">
+<div class="lyr"><div class="i">1</div><div class="l">React component<em>LessonPlayer.tsx</em></div><div class="v">Loading, empty, error and success states all render. Disabled controls during submit. No secrets in props. Keyboard reachable.</div></div>
+<div class="lyr"><div class="i">2</div><div class="l">API client<em>lib/apiClient.ts</em></div><div class="v">Correlation ID attached. Timeout set. 401 triggers refresh exactly once, not a loop. Network failure surfaces a retry, not a blank screen.</div></div>
+<div class="lyr"><div class="i">3</div><div class="l">Route<em>routes/*.routes.ts</em></div><div class="v">HTTP verb and path correct. Auth middleware present — and present on <em>every sibling route</em>, which is where it is usually missing.</div></div>
+<div class="lyr"><div class="i">4</div><div class="l">Middleware<em>authenticate, rateLimit</em></div><div class="v">Order matters: validate before authenticate leaks schema; authenticate before rateLimit lets unauthenticated floods through. Check the order, not just the presence.</div></div>
+<div class="lyr"><div class="i">5</div><div class="l">Validator<em>zod schema</em></div><div class="v">Unknown keys stripped. Type coercion explicit. Error shape identical across endpoints. Rejects before any DB call.</div></div>
+<div class="lyr"><div class="i">6</div><div class="l">Controller<em>*.controller.ts</em></div><div class="v">Maps result to status code. No business logic. No SQL. Never leaks an internal error message to the client.</div></div>
+<div class="lyr"><div class="i">7</div><div class="l">Service<em>*.service.ts</em></div><div class="v">Where the rules live, so where most bugs live. Ownership checks, quota checks, state transitions. Test this layer hardest.</div></div>
+<div class="lyr"><div class="i">8</div><div class="l">Repository<em>*.repository.ts</em></div><div class="v">Parameterised queries only. Transaction boundary wraps multi-write operations. Soft-delete filter applied.</div></div>
+<div class="lyr"><div class="i">9</div><div class="l">PostgreSQL<em>schema + indexes</em></div><div class="v">Constraint enforces what code assumes. Index supports the query's WHERE. Migration is reversible.</div></div>
+<div class="lyr"><div class="i">10</div><div class="l">Response<em>JSON envelope</em></div><div class="v">Shape matches the contract. Status code semantically right. No internal IDs, stack traces, or row counts.</div></div>
+<div class="lyr"><div class="i">11</div><div class="l">React render<em>state update</em></div><div class="v">Optimistic update rolls back on failure. Stale response from a superseded request is discarded, not rendered.</div></div>
+</div>
+
+<div class="box"><b class="bl">Use it as a diff checklist</b>
+<p>Open the PR, mark which layers the diff touches, and test that layer plus everything downstream. A change at layer 7 cannot break layer 1, but a change at layer 9 can break all ten above it.</p></div>
+
+<h3>2.3 Environments</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:13%">Env</th><th style="width:20%">Data</th><th style="width:22%">Speech backend</th><th>What it can and cannot prove</th></tr></thead>
+<tbody>
+<tr><td><strong>Local</strong></td><td>Seed script, ~200 rows</td><td>Stubbed JSON</td><td>Logic only. Proves nothing about latency, scale, or real audio.</td></tr>
+<tr><td><strong>CI</strong></td><td>Ephemeral container per run</td><td>Stubbed</td><td>Regression and contract. Deterministic by design.</td></tr>
+<tr><td><strong>Staging</strong></td><td>Anonymised copy, ~2M rows</td><td>Real, separate quota</td><td>The only place index and query-plan problems appear before production.</td></tr>
+<tr><td><strong>Production</strong></td><td>Live</td><td>Real</td><td>Read-only smoke against a dedicated canary account. Never exploratory testing.</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">The 200-row lie</b>
+<p>PostgreSQL will happily seq-scan 200 rows faster than it uses an index, so a missing index is invisible locally and in CI. It appears as gradually rising latency in production, then a timeout cliff. Any query added in a PR must be checked with <code>EXPLAIN</code> against staging volumes, not local.</p></div>
+
+<h3>2.4 Configuration and multi-instance behaviour</h3>
+<p>Lingotran's API runs on two or more App Service instances. Anything holding state in process memory behaves differently in production than on your laptop.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:30%">In-process state</th><th>Production consequence</th><th style="width:22%">Test approach</th></tr></thead>
+<tbody>
+<tr><td>Rate limiter counters</td><td>Effective limit = configured × instance count</td><td>Run staging at 2 instances and count actual rejections</td></tr>
+<tr><td>In-memory cache</td><td>Stale reads depending on which instance served you</td><td>Repeat the same read 10× and compare</td></tr>
+<tr><td>Scheduled job timers</td><td>Job fires once per instance — duplicate emails</td><td>Assert exactly-one side effect, not "at least one"</td></tr>
+<tr><td>WebSocket session map</td><td>Reconnect lands on the other instance and loses context</td><td>Force a reconnect mid-lesson</td></tr>
+</tbody></table></div>
+
+<h3>2.5 Feature flags</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Flag</th><th style="width:16%">Default</th><th>QA obligation</th></tr></thead>
+<tbody>
+<tr><td><code>phoneme_scoring_v2</code></td><td>Off</td><td>Test both states. Off is what most schools run; on is what the demo shows.</td></tr>
+<tr><td><code>keep_signed_in</code></td><td>Off</td><td>Test the transition — a session created while off, then read while on.</td></tr>
+<tr><td><code>offline_lesson_cache</code></td><td>Off</td><td>Flag flipped mid-session must not corrupt stored progress.</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">Rule</b><p>A flag doubles the state space of everything it touches. Test the <strong>transition</strong>, not just the two states — flags are flipped on live systems with users mid-lesson.</p></div>
+
+</div></details>
+
+<!-- ══════════ 03 ══════════ -->
+<details class="mod" id="m03">
+<summary><span class="n">03</span> Requirements to test design<span class="pp">4 p</span></summary>
+<div class="inner">
+
+<h3>3.1 Interrogating a story</h3>
+<div class="box"><b class="bl">Story LT-1187 · Sprint 42</b>
+<p>As a teacher using Lingotran on my classroom laptop, I want a "Keep me signed in" option, so I don't re-authenticate between lessons.</p>
+<p><strong>AC1</strong> Checkbox appears, unchecked by default. <strong>AC2</strong> Checked → session persists 30 days; unchecked → 12 hours. <strong>AC3</strong> The choice is not remembered between visits.</p></div>
+
+<p>A junior engineer writes three test cases, one per criterion. Shashi Kumar writes none yet, and asks seven questions first:</p>
+<div class="tw"><table>
+<thead><tr><th style="width:44%">Question the ACs do not answer</th><th>Why it changes the test plan</th></tr></thead>
+<tbody>
+<tr><td>30 days from login, or 30 days of sliding inactivity?</td><td>Different implementations and different security postures</td></tr>
+<tr><td>What happens to an existing 12-hour session if the user logs in again with the box checked?</td><td>Session upgrade is undefined; both behaviours are defensible</td></tr>
+<tr><td>Does a password change invalidate 30-day sessions?</td><td>If not, a compromised account stays compromised after the "fix"</td></tr>
+<tr><td>Is this offered to <em>student</em> accounts on shared classroom devices?</td><td>A 30-day session on a shared laptop is a safeguarding issue, not a UX preference</td></tr>
+<tr><td>Can an admin see and revoke long-lived sessions?</td><td>Without revocation the feature has no off switch during an incident</td></tr>
+<tr><td>What does <code>/refresh</code> do with a 30-day token?</td><td>Refresh chaining can extend a session indefinitely, defeating both limits</td></tr>
+<tr><td>Is 30 days compatible with signed district contracts?</td><td>Some education contracts cap session lifetime explicitly</td></tr>
+</tbody></table></div>
+<div class="box good"><b class="bl">The economics</b><p>Every question above came from reading three lines against an architecture diagram and a customer profile — before any code existed. Answering them costs one refinement conversation. Finding them in production costs an incident, a rollback, and possibly a contract.</p></div>
+
+<h3>3.2 Rewriting ACs as executable criteria</h3>
+<pre><i># Given/When/Then agreed before the sprint opens — this becomes the Playwright spec</i>
+<b>Scenario:</b> Teacher opts into an extended session
+  <b>Given</b> a teacher account at a school with extended sessions permitted
+  <b>When</b> they sign in with "Keep me signed in" checked
+  <b>Then</b> the refresh token expires in 30 days
+   <b>And</b> the session appears in Admin › Active sessions as revocable
+
+<b>Scenario:</b> Student accounts are excluded
+  <b>Given</b> a student account
+  <b>When</b> they open the sign-in form
+  <b>Then</b> the "Keep me signed in" control is not rendered
+
+<b>Scenario:</b> Password change ends all extended sessions
+  <b>Given</b> a teacher with an active 30-day session on a second device
+  <b>When</b> they change their password
+  <b>Then</b> the second device receives 401 on its next request</pre>
+
+<h3>3.3 Technique reference</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Technique</th><th style="width:34%">Use when</th><th>Lingotran example</th></tr></thead>
+<tbody>
+<tr><td><strong>Equivalence partitioning</strong></td><td>Input space is too large to enumerate</td><td>Recording length: &lt;1s (reject), 1–60s (accept), &gt;60s (reject) — three cases, not three hundred</td></tr>
+<tr><td><strong>Boundary values</strong></td><td>Any range, always</td><td>0.9s, 1.0s, 1.1s, 59.9s, 60.0s, 60.1s — bugs cluster at the edge, never the middle</td></tr>
+<tr><td><strong>Decision table</strong></td><td>Multiple conditions combine</td><td>role × flag × network → whether the control renders</td></tr>
+<tr><td><strong>State transition</strong></td><td>An entity has a lifecycle</td><td>Lesson: not-started → in-progress → submitted → scored → returned</td></tr>
+<tr><td><strong>Pairwise</strong></td><td>Combinatorial explosion</td><td>4 browsers × 3 OS × 3 mic types = 36; pairwise covers the interactions in 9</td></tr>
+<tr><td><strong>Error guessing</strong></td><td>You have read the code</td><td>Unbounded loops, missing <code>await</code>, unfiltered soft-deletes</td></tr>
+</tbody></table></div>
+
+<h3>3.4 Boundary analysis worked — audio submission</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Parameter</th><th style="width:12%">Rule</th><th>Values to test</th><th style="width:18%">Expected</th></tr></thead>
+<tbody>
+<tr><td>Clip duration</td><td>1–60 s</td><td>0.99 / 1.00 / 1.01 / 59.99 / 60.00 / 60.01</td><td>422 / 200 / 200 / 200 / 200 / 422</td></tr>
+<tr><td>File size</td><td>≤ 5 MB</td><td>5 242 879 / 5 242 880 / 5 242 881 bytes</td><td>200 / 200 / 413</td></tr>
+<tr><td>Attempts per exercise</td><td>≤ 3</td><td>3rd attempt / 4th attempt</td><td>200 / 429 with retry hint</td></tr>
+<tr><td>Display name</td><td>1–80 chars</td><td>0 / 1 / 80 / 81 chars; 80 emoji; 80 Devanagari</td><td>422 / 200 / 200 / 422 / 200 / 200</td></tr>
+<tr><td>Class size</td><td>≤ 200 seats</td><td>200th enrol / 201st enrol</td><td>200 / 409 seat limit</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Length is not character count</b>
+<p>An 80-character limit enforced with <code>str.length</code> in JavaScript counts UTF-16 code units. "🎓" is 2, and a Devanagari cluster can be 4+. A learner named in Hindi or Tamil hits an 80-character limit at 20 visible characters. Always test the limit with non-Latin script — this is Lingotran's core user base.</p></div>
+
+</div></details>

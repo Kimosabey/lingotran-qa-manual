@@ -1,0 +1,178 @@
+<!-- ══════════ 07 ══════════ -->
+<details class="mod" id="m07">
+<summary><span class="n">07</span> The speech pipeline<span class="pp">3 p</span></summary>
+<div class="inner">
+
+<p>This is the module that matters most, because it is the only part of Lingotran a competitor cannot copy from a screenshot — and the only part where "the tests pass" and "the product works" routinely disagree.</p>
+
+<h3>7.1 The path</h3>
+<pre>Mic ──▶ getUserMedia ──▶ MediaRecorder ──▶ Blob ──▶ POST /attempts
+                                                        │
+                              ┌─────────────────────────┘
+                              ▼
+                   Azure AI Speech · Pronunciation Assessment
+                   (reference text + audio → accuracy, fluency,
+                    completeness, per-phoneme scores)
+                              │
+                              ▼
+              Service maps raw scores → learner-facing feedback
+                              │
+                              ▼
+                        attempts table ──▶ progress report ──▶ teacher dashboard</pre>
+
+<h3>7.2 Why this pipeline is unusually hard to test</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Property</th><th>Consequence for QA</th></tr></thead>
+<tbody>
+<tr><td><strong>Non-deterministic</strong></td><td>The same clip can score 81 then 83. Assertions must use tolerance bands, never equality.</td></tr>
+<tr><td><strong>External and paid</strong></td><td>CI cannot call it on every run. Stub in CI; use a small real-audio suite nightly.</td></tr>
+<tr><td><strong>Device-dependent</strong></td><td>A laptop mic, an iPad mic, and a classroom headset produce materially different scores from the same speaker.</td></tr>
+<tr><td><strong>Accent-sensitive</strong></td><td>The failure mode is systematic, not random — see 7.4. This is the defect class most likely to reach production unnoticed.</td></tr>
+<tr><td><strong>Silently degrading</strong></td><td>If the service returns a default or partial payload, the app shows a plausible score. Nothing looks broken.</td></tr>
+</tbody></table></div>
+
+<h3>7.3 The reference clip corpus</h3>
+<p>Maintain a fixed set of recordings in blob storage. Every release is scored against them and compared to the previous release. This is the only reliable regression signal for scoring quality.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:12%">Clip</th><th style="width:30%">Content</th><th style="width:20%">Expected band</th><th>Catches</th></tr></thead>
+<tbody>
+<tr><td>REF-01</td><td>Native speaker, clean audio, correct</td><td>90–100</td><td>Baseline drift</td></tr>
+<tr><td>REF-02</td><td>Learner, accented, correct words</td><td>70–90</td><td><strong>Accent penalty</strong> — the critical one</td></tr>
+<tr><td>REF-03</td><td>Correct words, heavy classroom noise</td><td>60–85</td><td>Noise robustness</td></tr>
+<tr><td>REF-04</td><td>Wrong words, fluent delivery</td><td>0–30</td><td>Scoring fluency instead of accuracy</td></tr>
+<tr><td>REF-05</td><td>Half the sentence only</td><td>completeness &lt; 60</td><td>Completeness ignored</td></tr>
+<tr><td>REF-06</td><td>Silence</td><td>Rejected before billing</td><td>Wasting paid API calls</td></tr>
+<tr><td>REF-07</td><td>A different language entirely</td><td>Low + no crash</td><td>Unhandled service response</td></tr>
+<tr><td>REF-08</td><td>60 s at the duration limit</td><td>Scored, no timeout</td><td>Gateway timeout on long clips</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">Known defect class · systematic false negatives</b>
+<p>Lingotran's pronunciation feedback has historically penalised accented-but-correct speech, marking REF-02-type clips as errors. The learners most affected are exactly Lingotran's core users. This will never show up in a test suite that uses only native-speaker clips or stubbed responses — the stub always returns a good score. <strong>REF-02 must be in the nightly real-audio run, with a floor assertion, permanently.</strong></p></div>
+
+<h3>7.4 Failure handling</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Speech service behaviour</th><th style="width:26%">Correct app behaviour</th><th>Test</th></tr></thead>
+<tbody>
+<tr><td>Timeout</td><td>Retain clip, do not consume attempt, offer retry</td><td>Block the endpoint mid-flight</td></tr>
+<tr><td>429 quota exceeded</td><td>Queue or degrade gracefully, never a raw error</td><td>Exhaust the staging quota deliberately</td></tr>
+<tr><td>Partial payload (no phonemes)</td><td>Show overall score, hide phoneme panel</td><td>Stub a response with fields removed</td></tr>
+<tr><td>Malformed JSON</td><td>502 to the client, alert raised</td><td>Stub garbage</td></tr>
+<tr><td>Latency &gt; 10 s</td><td>Progress indicator, no double submit</td><td>Delay the stub by 15 s</td></tr>
+</tbody></table></div>
+
+<div class="box"><b class="bl">Privacy — a standing check</b>
+<p>Learner audio is personal data, and a large share of Lingotran's learners are minors. For any change touching capture or upload, confirm: audio goes only to the contracted Azure region, retention matches the school agreement, clips are deleted when a learner is removed, and no third-party endpoint appears in the network tab. Browser-native speech APIs in particular may transmit audio to servers outside the contracted sub-processor list — verify in DevTools, not in documentation.</p></div>
+
+</div></details>
+
+<!-- ══════════ 08 ══════════ -->
+<details class="mod" id="m08">
+<summary><span class="n">08</span> Automation · ATDD to pipeline<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<h3>8.1 TDD and ATDD — who owns what</h3>
+<p>Test-Driven Development is a developer practice. QA never runs the red-green-refactor loop. What QA needs is <strong>literacy</strong>: the ability to read a test-driven pull request and judge it.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:32%">Read the PR and ask</th><th>What a bad answer looks like</th></tr></thead>
+<tbody>
+<tr><td>Do the tests assert behaviour or implementation?</td><td>Assertions on mock call counts and internal state — they will pass through a refactor that breaks the feature</td></tr>
+<tr><td>Were they written with the code or after?</td><td>One giant test per function, named <code>test1</code>, added in the final commit</td></tr>
+<tr><td>What is already covered at unit level?</td><td>Nothing — so your E2E suite must carry the whole burden</td></tr>
+<tr><td>What can unit tests structurally not reach?</td><td>Speech responses, migration order, real microphones, multi-instance behaviour</td></tr>
+</tbody></table></div>
+<p><strong>ATDD is the QA-owned equivalent.</strong> Acceptance criteria are written as Given/When/Then before the sprint opens (Module 3.2), agreed with the developer, and become the Playwright spec. Same tests-first discipline, at the layer where QA has authority.</p>
+
+<h3>8.2 What to automate</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:34%">Candidate</th><th style="width:14%">Verdict</th><th>Reason</th></tr></thead>
+<tbody>
+<tr><td>Login, session, refresh</td><td><strong>Automate</strong></td><td>Runs on every build; deterministic; catastrophic if broken</td></tr>
+<tr><td>Attempt limit enforcement</td><td><strong>Automate</strong></td><td>Pure logic, high value, easy to assert</td></tr>
+<tr><td>Cross-school data isolation</td><td><strong>Automate</strong></td><td>SQL assertion, seconds to run, contract-critical</td></tr>
+<tr><td>API contract for all endpoints</td><td><strong>Automate</strong></td><td>Cheap, fast, catches accidental shape changes</td></tr>
+<tr><td>Scoring <em>quality</em></td><td>Nightly only</td><td>Non-deterministic and paid — band assertions against the REF corpus</td></tr>
+<tr><td>Real microphone capture</td><td><strong>Manual</strong></td><td>Cannot be automated meaningfully; needs real devices</td></tr>
+<tr><td>Visual layout polish</td><td>Manual + snapshots</td><td>Snapshot churn costs more than the bugs it finds</td></tr>
+<tr><td>Exploratory charters</td><td><strong>Never</strong></td><td>Automation cannot be surprised, and surprise is the point</td></tr>
+<tr><td>One-off migration verification</td><td><strong>Never</strong></td><td>Runs once; a script costs more than doing it</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">The test to apply</b><p>Automate when <em>frequency × consequence &gt; cost of maintenance</em>. Most flaky suites exist because someone automated something that runs twice a year.</p></div>
+
+<h3>8.3 Playwright patterns</h3>
+<div class="fn">e2e/attempts.spec.ts</div>
+<pre><b>test</b>('learner cannot exceed the attempt limit', <b>async</b> ({ page, request }) =&gt; {
+  <i>// Set up state through the API, never through the UI — 10× faster, no flake</i>
+  <b>const</b> { token } = <b>await</b> seedLearner(request, { school: 'school.edu' });
+  <b>await</b> loginWithToken(page, token);
+
+  <b>await</b> page.goto('/lessons/greetings/ex/1');
+  <b>for</b> (<b>let</b> i = 0; i &lt; 3; i++) <b>await</b> submitClip(page, 'REF-01.webm');
+
+  <i>// Assert on a role and accessible name, not a CSS class</i>
+  <b>await</b> expect(page.getByRole('button', { name: 'Record' })).toBeDisabled();
+  <b>await</b> expect(page.getByText('No attempts remaining')).toBeVisible();
+
+  <i>// Then verify at the source of truth — the UI can lie</i>
+  <b>const</b> rows = <b>await</b> db.query(
+    'SELECT count(*) FROM attempts WHERE user_id=$1 AND exercise_id=$2', [uid, eid]);
+  expect(rows[0].count).toBe(<u>'3'</u>);   <i>// pg returns bigint as string</i>
+});</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:34%">Rule</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Seed via API, assert via UI</td><td>UI setup is the single largest source of flake and runtime</td></tr>
+<tr><td>Locate by role and accessible name</td><td>Survives restyling, and doubles as an accessibility check</td></tr>
+<tr><td>Never <code>waitForTimeout</code></td><td>A fixed sleep is either flaky or slow, usually both</td></tr>
+<tr><td>One assertion theme per test</td><td>A failure should name the defect without a debugger</td></tr>
+<tr><td>Verify at the database</td><td>A green UI over a wrong row is the defect that reaches production</td></tr>
+<tr><td>Fresh data per test</td><td>Shared fixtures create order dependence, which surfaces only in CI</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">Flake policy</b>
+<p>A spec that fails intermittently is worse than no spec — it trains the team to re-run the pipeline. Quarantine on the second unexplained failure, fix within one sprint, delete if unfixed. Track flaky rate as a first-class metric.</p></div>
+
+<h3>8.4 Azure Pipelines</h3>
+<div class="fn">azure-pipelines.yml (test stages, abridged)</div>
+<pre><b>stages:</b>
+- <b>stage:</b> Build
+  <b>jobs:</b>
+  - <b>job:</b> UnitAndLint
+    <b>steps:</b>
+    - script: npm ci
+    - script: npm run lint
+    - script: npm run test:unit -- --coverage
+    - task: PublishTestResults@2
+      inputs: { testResultsFiles: '**/junit-*.xml' }
+    - task: PublishCodeCoverageResults@2      <i># gate on CHANGED lines (1.2)</i>
+
+- <b>stage:</b> Integration
+  <b>dependsOn:</b> Build
+  <b>jobs:</b>
+  - <b>job:</b> ApiTests
+    <b>services:</b> { postgres: postgres15 }   <i># real DB, not a mock</i>
+    <b>steps:</b>
+    - script: npm run migrate:up
+    - script: npm run test:api
+    - script: npm run migrate:down          <i># rollback is tested here (6.3)</i>
+
+- <b>stage:</b> E2E
+  <b>dependsOn:</b> Integration
+  <b>jobs:</b>
+  - <b>job:</b> Playwright
+    <b>steps:</b>
+    - script: npx playwright test --shard=$(idx)/4
+    - task: PublishPipelineArtifact@1       <i># traces + video on failure</i></pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Stage</th><th style="width:16%">Budget</th><th>Blocks</th></tr></thead>
+<tbody>
+<tr><td>Lint + unit</td><td>&lt; 3 min</td><td>PR merge</td></tr>
+<tr><td>API + integration</td><td>&lt; 6 min</td><td>PR merge</td></tr>
+<tr><td>E2E (sharded ×4)</td><td>&lt; 10 min</td><td>Staging deploy</td></tr>
+<tr><td>Nightly speech corpus</td><td>~20 min</td><td>Nothing — reports, alerts on band breach</td></tr>
+<tr><td>Nightly k6 load</td><td>~15 min</td><td>Nothing — trends tracked over time</td></tr>
+</tbody></table></div>
+<div class="box good"><b class="bl">Ten minutes</b><p>Keep PR feedback under ten minutes. Beyond that the author has context-switched, and the pipeline stops being feedback and starts being an obstacle to route around.</p></div>
+
+</div></details>

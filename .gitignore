@@ -1,0 +1,13 @@
+# Unpacking artefacts — the repo root IS the project.
+# These are the original zips and their extracted duplicate tree.
+files/
+files.zip
+lingotran-qa-manual.zip
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

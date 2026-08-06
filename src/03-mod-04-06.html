@@ -1,0 +1,230 @@
+<!-- ══════════ 04 ══════════ -->
+<details class="mod" id="m04">
+<summary><span class="n">04</span> Frontend testing · React<span class="pp">4 p</span></summary>
+<div class="inner">
+
+<h3>4.1 Reading a component as QA</h3>
+<div class="fn">src/features/lesson/RecordControl.tsx</div>
+<pre><b>export function</b> RecordControl({ exerciseId, maxAttempts = 3 }: Props) {
+  <b>const</b> [state, setState] = useState&lt;'idle'|'recording'|'uploading'|'scored'|'error'&gt;('idle');
+  <b>const</b> [attempts, setAttempts] = useState(0);              <i>// ① client-side counter</i>
+  <b>const</b> recorder = useRef&lt;MediaRecorder|null&gt;(null);
+
+  <b>async function</b> start() {
+    <b>const</b> stream = <b>await</b> navigator.mediaDevices.getUserMedia({ audio: true }); <i>// ② can reject</i>
+    recorder.current = <b>new</b> MediaRecorder(stream, { mimeType: <u>'audio/webm'</u> });   <i>// ③ Safari</i>
+    setState('recording');
+  }
+
+  <b>async function</b> stop() {
+    setState('uploading');
+    <b>const</b> blob = <b>await</b> collect(recorder.current!);
+    <b>try</b> {
+      <b>const</b> r = <b>await</b> api.post(`/exercises/${exerciseId}/attempts`, blob);
+      setAttempts(a =&gt; a + 1);                                 <i>// ④ only on success</i>
+      setState('scored');
+    } <b>catch</b> { setState('error'); }                           <i>// ⑤ no retry offered</i>
+  }
+  ...
+}</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:6%">#</th><th style="width:34%">What QA reads here</th><th>Test that falls out of it</th></tr></thead>
+<tbody>
+<tr><td>①</td><td>Attempt count lives in component state</td><td>Reload the page mid-exercise — does the limit reset? Server must be the authority.</td></tr>
+<tr><td>②</td><td><code>getUserMedia</code> can reject: denied, dismissed, no device, device in use</td><td>Four distinct denial paths, each needing its own message. Deny once, then re-open — most apps never recover.</td></tr>
+<tr><td>③</td><td>Hard-coded <code>audio/webm</code></td><td>Safari and iPad Safari do not produce webm. Test on real iPad — the school's actual device.</td></tr>
+<tr><td>④</td><td>Counter increments only on success</td><td>Fail the upload 5× — user gets unlimited attempts. Network throttle to trigger.</td></tr>
+<tr><td>⑤</td><td><code>catch</code> sets error, offers nothing</td><td>Dead end for the learner. A classroom of 30 hitting this generates 30 support tickets.</td></tr>
+</tbody></table></div>
+
+<h3>4.2 States every Lingotran view must handle</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:16%">State</th><th style="width:34%">How to force it</th><th>Common defect</th></tr></thead>
+<tbody>
+<tr><td>Loading</td><td>DevTools throttle to Slow 3G</td><td>Layout shift when content arrives; no skeleton</td></tr>
+<tr><td>Empty</td><td>Fresh account, no lessons</td><td>Blank panel instead of a next action</td></tr>
+<tr><td>Error</td><td>Block the endpoint in DevTools</td><td>Infinite spinner; raw error text shown</td></tr>
+<tr><td>Partial</td><td>Lesson loads, scores endpoint fails</td><td>Whole page fails when one panel could degrade</td></tr>
+<tr><td>Stale</td><td>Two tabs, edit in one</td><td>Second tab overwrites with old data</td></tr>
+<tr><td>Offline</td><td>DevTools offline mid-lesson</td><td>Progress silently lost — the highest-severity frontend class</td></tr>
+<tr><td>Slow response</td><td>Delay 8 s</td><td>Double submit; two attempts recorded</td></tr>
+</tbody></table></div>
+
+<h3>4.3 Race conditions</h3>
+<pre><i>// Learner switches lesson quickly. Response for lesson A arrives after lesson B's.</i>
+useEffect(() =&gt; {
+  <b>let</b> cancelled = <b>false</b>;                       <i>// ← the guard QA looks for</i>
+  api.get(`/lessons/${id}`).then(r =&gt; {
+    <b>if</b> (!cancelled) setLesson(r.data);
+  });
+  <b>return</b> () =&gt; { cancelled = <b>true</b>; };
+}, [id]);</pre>
+<div class="box warn"><b class="bl">If that guard is absent</b><p>Click lesson A then lesson B fast on a throttled connection: the screen shows lesson B's title with lesson A's content. Learners submit answers to the wrong exercise. Reproduce with Slow 3G and two rapid clicks — impossible to hit on a fast laptop, trivial on school wifi.</p></div>
+
+<h3>4.4 Frontend test cases · lesson player</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:10%">ID</th><th style="width:34%">Case</th><th style="width:28%">Expected</th><th style="width:12%">Layer</th></tr></thead>
+<tbody>
+<tr><td>LT-F01</td><td>Mic permission denied, then retried</td><td>Actionable message + working retry</td><td>E2E</td></tr>
+<tr><td>LT-F02</td><td>Record on iPad Safari</td><td>Clip captured and uploaded</td><td>Manual, real device</td></tr>
+<tr><td>LT-F03</td><td>Upload fails 3× consecutively</td><td>Attempt counter unchanged; retry offered</td><td>Component</td></tr>
+<tr><td>LT-F04</td><td>Submit clicked twice in 200 ms</td><td>Exactly one attempt recorded</td><td>E2E</td></tr>
+<tr><td>LT-F05</td><td>Rapid lesson switch on Slow 3G</td><td>Content always matches title</td><td>E2E</td></tr>
+<tr><td>LT-F06</td><td>Network lost mid-recording</td><td>Clip buffered or a clear loss warning — never silent</td><td>E2E</td></tr>
+<tr><td>LT-F07</td><td>Session expires while lesson open</td><td>Re-auth prompt, progress preserved</td><td>E2E</td></tr>
+<tr><td>LT-F08</td><td>Keyboard only, no mouse</td><td>Full record/submit cycle completable</td><td>a11y</td></tr>
+<tr><td>LT-F09</td><td>Browser zoom 200%</td><td>No clipping, no horizontal scroll</td><td>Manual</td></tr>
+<tr><td>LT-F10</td><td>Learner name in Devanagari</td><td>Renders correctly across all views</td><td>Component</td></tr>
+</tbody></table></div>
+
+</div></details>
+
+<!-- ══════════ 05 ══════════ -->
+<details class="mod" id="m05">
+<summary><span class="n">05</span> API testing · Node &amp; Express<span class="pp">4 p</span></summary>
+<div class="inner">
+
+<h3>5.1 Middleware order is a test case</h3>
+<div class="fn">src/routes/attempt.routes.ts</div>
+<pre>router.post('/exercises/:id/attempts',
+  rateLimit({ windowMs: 60_000, max: 10 }),   <i>// ① in-process — see 2.4</i>
+  authenticate,                                <i>// ② JWT verify</i>
+  authorize('learner'),                        <i>// ③ role</i>
+  validate(attemptSchema),                     <i>// ④ body shape</i>
+  attemptController.create
+);
+
+router.get('/exercises/:id/attempts', authenticate, attemptController.list);
+router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth — audit siblings</u></pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:6%">#</th><th>Test</th></tr></thead>
+<tbody>
+<tr><td>①</td><td>Two instances → real limit is 20/min, not 10. Verify against staging at production instance count.</td></tr>
+<tr><td>②</td><td>Expired, malformed, <code>alg:none</code>, valid token signed with the wrong key, token for a deleted user.</td></tr>
+<tr><td>③</td><td>Teacher token on a learner route → 403 not 500. Learner token on a teacher route → 403.</td></tr>
+<tr><td>④</td><td>Unknown fields stripped, not stored. Extra <code>{"role":"admin"}</code> in the body must not escalate.</td></tr>
+<tr><td>⑤</td><td><strong>Always audit sibling routes.</strong> One unguarded verb on a resource undoes the guards on the others.</td></tr>
+</tbody></table></div>
+
+<h3>5.2 Contract</h3>
+<pre>POST /api/v1/exercises/8821/attempts        <i>Authorization: Bearer &lt;jwt&gt;</i>
+                                            <i>X-Correlation-Id: 8f2c1a94-...</i>
+{ "clipUrl": "https://blob.../a12.webm", "durationMs": 4820 }
+
+<b>201</b> { "attemptId":"at_9931", "score":{"accuracy":82,"fluency":76},
+      "attemptsRemaining":2 }
+<b>422</b> { "error":{"code":"CLIP_TOO_SHORT","message":"Recording must be at least 1 second",
+                "field":"durationMs"} }
+<b>429</b> { "error":{"code":"ATTEMPT_LIMIT","retryAfter":3600} }</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:11%">Status</th><th style="width:30%">Condition</th><th>Test</th></tr></thead>
+<tbody>
+<tr><td>201</td><td>Valid clip within limits</td><td>Body matches schema exactly; no extra fields leaked</td></tr>
+<tr><td>400</td><td>Malformed JSON</td><td>Same envelope shape as every other 4xx</td></tr>
+<tr><td>401</td><td>Missing/expired token</td><td>Message identical for both — no oracle for attackers</td></tr>
+<tr><td>403</td><td>Exercise belongs to another class</td><td>403 not 404 — but confirm which the team chose, and be consistent</td></tr>
+<tr><td>404</td><td>Exercise does not exist</td><td>Must not differ in timing from 403 (see 9.2)</td></tr>
+<tr><td>409</td><td>Attempt already in flight</td><td>Idempotency under double submit</td></tr>
+<tr><td>413</td><td>Clip &gt; 5 MB</td><td>Rejected at the gateway, before the app</td></tr>
+<tr><td>422</td><td>Duration out of range</td><td>Field name present so UI can highlight it</td></tr>
+<tr><td>429</td><td>Attempt or rate limit</td><td><code>retryAfter</code> present and honest</td></tr>
+<tr><td>502</td><td>Azure AI Speech unavailable</td><td>Clip retained; learner told to retry; attempt <em>not</em> consumed</td></tr>
+</tbody></table></div>
+
+<h3>5.3 Service layer — where the rules are</h3>
+<div class="fn">src/services/attempt.service.ts</div>
+<pre><b>async function</b> create(userId: string, exerciseId: string, clip: Clip) {
+  <b>const</b> ex = <b>await</b> repo.findExercise(exerciseId);
+  <b>if</b> (!ex) <b>throw</b> new NotFound();
+  <b>if</b> (!<b>await</b> repo.userInClass(userId, ex.classId)) <b>throw</b> new Forbidden();  <i>// ① ownership</i>
+
+  <b>const</b> used = <b>await</b> repo.countAttempts(userId, exerciseId);
+  <b>if</b> (used &gt;= ex.maxAttempts) <b>throw</b> new TooMany();                        <i>// ② check…</i>
+
+  <b>const</b> score = <b>await</b> speech.assess(clip, ex.referenceText);              <i>// ③ external</i>
+  <b>return</b> repo.insertAttempt({ userId, exerciseId, score });                <i>// ④ …then write</i>
+}</pre>
+<div class="box warn"><b class="bl">Check-then-act is a race</b>
+<p>Steps ② and ④ are not atomic. Two concurrent submissions both read <code>used = 2</code>, both pass, both insert — a 4th attempt exists on a 3-attempt exercise. Only a unique constraint or a transaction with row locking fixes it. <strong>Test:</strong> fire two identical requests simultaneously and assert exactly one succeeds. Sequential testing can never find this.</p></div>
+<div class="box"><b class="bl">③ costs money and can fail</b><p>Assert that a Speech failure does not consume an attempt, does not leave an orphan row, and does not lose the learner's clip.</p></div>
+
+</div></details>
+
+<!-- ══════════ 06 ══════════ -->
+<details class="mod" id="m06">
+<summary><span class="n">06</span> Database testing · PostgreSQL<span class="pp">4 p</span></summary>
+<div class="inner">
+
+<h3>6.1 Schema QA must know</h3>
+<pre><b>CREATE TABLE</b> users (
+  id            uuid <b>PRIMARY KEY</b> <b>DEFAULT</b> gen_random_uuid(),
+  email         <u>citext</u> <b>NOT NULL UNIQUE</b>,        <i>-- case-insensitive by type</i>
+  role          text <b>NOT NULL CHECK</b> (role <b>IN</b> ('learner','teacher','admin')),
+  school_id     uuid <b>NOT NULL REFERENCES</b> schools(id),
+  deleted_at    timestamptz                    <i>-- soft delete: every query must filter</i>
+);
+
+<b>CREATE TABLE</b> attempts (
+  id            uuid <b>PRIMARY KEY</b>,
+  user_id       uuid <b>NOT NULL REFERENCES</b> users(id) <b>ON DELETE CASCADE</b>,
+  exercise_id   uuid <b>NOT NULL REFERENCES</b> exercises(id),
+  accuracy      numeric(5,2) <b>CHECK</b> (accuracy <b>BETWEEN</b> 0 <b>AND</b> 100),
+  created_at    timestamptz <b>NOT NULL DEFAULT</b> now()
+);
+<b>CREATE INDEX</b> idx_attempts_user_ex <b>ON</b> attempts(user_id, exercise_id);</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Element</th><th>Test that proves it works</th></tr></thead>
+<tbody>
+<tr><td><code>citext</code> email</td><td>Insert <code>A@school.edu</code>, then <code>a@school.edu</code> — second must be rejected, else two accounts share a login</td></tr>
+<tr><td><code>CHECK</code> on role</td><td>Direct SQL insert of <code>role='superadmin'</code> must fail — proves the DB, not just the app, enforces it</td></tr>
+<tr><td><code>ON DELETE CASCADE</code></td><td>Delete a user, confirm attempts vanish. Then ask whether that is legal under the school's data-retention contract</td></tr>
+<tr><td><code>deleted_at</code></td><td>Soft-delete a learner, then run every list endpoint — one will still return them</td></tr>
+<tr><td>Composite index</td><td><code>EXPLAIN</code> the attempt-count query on staging; must be Index Scan, not Seq Scan</td></tr>
+<tr><td><code>numeric(5,2)</code></td><td>Score of 99.999 → rounds or errors? Confirm which, and that the UI agrees</td></tr>
+</tbody></table></div>
+
+<h3>6.2 SQL validation queries</h3>
+<pre><i>-- Orphans: attempts whose exercise was hard-deleted</i>
+<b>SELECT</b> a.id <b>FROM</b> attempts a <b>LEFT JOIN</b> exercises e <b>ON</b> e.id = a.exercise_id
+<b>WHERE</b> e.id <b>IS NULL</b>;
+
+<i>-- Soft-deleted users still reachable through a join</i>
+<b>SELECT</b> u.email <b>FROM</b> users u <b>JOIN</b> attempts a <b>ON</b> a.user_id = u.id
+<b>WHERE</b> u.deleted_at <b>IS NOT NULL</b>;
+
+<i>-- Attempt-limit violations that the check-then-act race allowed through</i>
+<b>SELECT</b> user_id, exercise_id, <b>count</b>(*) <b>FROM</b> attempts
+<b>GROUP BY</b> 1,2 <b>HAVING</b> <b>count</b>(*) &gt; 3;
+
+<i>-- Cross-school leakage: a learner with attempts on another school's exercise</i>
+<b>SELECT</b> u.id <b>FROM</b> attempts a
+  <b>JOIN</b> users u <b>ON</b> u.id = a.user_id
+  <b>JOIN</b> exercises e <b>ON</b> e.id = a.exercise_id
+<b>WHERE</b> u.school_id &lt;&gt; e.school_id;                <i>-- must return zero rows, always</i>
+
+<i>-- Is the query actually using the index?</i>
+<b>EXPLAIN ANALYZE SELECT count</b>(*) <b>FROM</b> attempts
+<b>WHERE</b> user_id = $1 <b>AND</b> exercise_id = $2;</pre>
+
+<div class="box good"><b class="bl">The cross-school query is the single most valuable check in this manual</b>
+<p>Run it after any change to enrolment, class assignment, or reporting. A non-zero result means one school can see another school's learner data. That is a contract-terminating event, and it is invisible from the UI.</p></div>
+
+<h3>6.3 Migrations</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Migration type</th><th style="width:34%">Risk</th><th>QA action</th></tr></thead>
+<tbody>
+<tr><td>Add nullable column</td><td>Low</td><td>Confirm old API version still works — deploys are not atomic</td></tr>
+<tr><td>Add NOT NULL column</td><td><strong>High</strong></td><td>Requires a default or a backfill; locks the table without one</td></tr>
+<tr><td>Add index</td><td>Medium</td><td>Must be <code>CREATE INDEX CONCURRENTLY</code>, or writes block during deploy</td></tr>
+<tr><td>Rename column</td><td><strong>High</strong></td><td>Breaks the running old version mid-deploy. Expand/contract over two releases.</td></tr>
+<tr><td>Drop column</td><td><strong>High</strong></td><td>Irreversible. Confirm no code path and no report reads it.</td></tr>
+<tr><td>Change type</td><td><strong>High</strong></td><td>Full table rewrite plus lock. Test on a staging-sized copy and time it.</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Rollback is a test case, not a hope</b>
+<p>Every migration must be run <em>down</em> in staging before the release is approved. A migration without a tested rollback turns a 10-minute incident into a 4-hour one. Assert that data written after the up-migration survives the down-migration.</p></div>
+
+</div></details>

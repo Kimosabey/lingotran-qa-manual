@@ -1,0 +1,201 @@
+<!-- ══════════ 09 ══════════ -->
+<details class="mod" id="m09">
+<summary><span class="n">09</span> Performance, security, accessibility<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<h3>9.1 Performance</h3>
+<p>Lingotran's load is not uniform. It arrives in spikes shaped like a school timetable: thirty learners in one room start the same lesson within ninety seconds, four times a day.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Scenario</th><th style="width:22%">Shape</th><th>Budget</th></tr></thead>
+<tbody>
+<tr><td>Class login burst</td><td>30 users / 90 s, one NAT IP</td><td>p95 &lt; 800 ms, zero 429</td></tr>
+<tr><td>Simultaneous submission</td><td>30 clips within 60 s</td><td>p95 &lt; 4 s end to end</td></tr>
+<tr><td>Teacher opens class report</td><td>1 user, 200 learners, 12 weeks</td><td>p95 &lt; 1.5 s</td></tr>
+<tr><td>Timetable peak</td><td>40 classes concurrently</td><td>No error-rate rise; autoscale engages</td></tr>
+<tr><td>Soak</td><td>Nominal load, 4 h</td><td>Flat memory; no connection-pool leak</td></tr>
+</tbody></table></div>
+<div class="fn">k6/class-burst.js</div>
+<pre><b>export const</b> options = {
+  scenarios: { classroom: {
+    executor: 'ramping-arrival-rate', startRate: 0, timeUnit: '1s',
+    stages: [{ target: 30, duration: '90s' }, { target: 0, duration: '30s' }],
+    preAllocatedVUs: 40,
+  }},
+  thresholds: {
+    http_req_duration: ['p(95)&lt;800'],
+    http_req_failed:   ['rate&lt;0.001'],
+    <u>'http_req_failed{status:429}': ['count==0'],</u>   <i>// the NAT trap — see 10.2</i>
+  },
+};</pre>
+<div class="box warn"><b class="bl">Always load-test from a single source IP</b><p>Every learner in a school shares one NAT address. A load test that spreads across many IPs will never reproduce the failure that actually takes a school offline.</p></div>
+
+<h3>9.2 Security</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Area</th><th style="width:34%">Test</th><th>Expected</th></tr></thead>
+<tbody>
+<tr><td>Broken object access</td><td>Learner A requests learner B's attempt by ID</td><td>403/404 — the most common real-world API flaw</td></tr>
+<tr><td>Cross-tenant</td><td>Teacher at school X requests a class at school Y</td><td>Denied; SQL check in 6.2 returns zero</td></tr>
+<tr><td>Privilege escalation</td><td><code>{"role":"admin"}</code> in a profile update body</td><td>Field stripped, not persisted</td></tr>
+<tr><td>JWT tampering</td><td><code>alg:none</code>; wrong-key signature; expired</td><td>401 in all cases</td></tr>
+<tr><td>Session lifecycle</td><td>Password change with a second device active</td><td>Second device 401 on next request</td></tr>
+<tr><td>User enumeration</td><td>Login with unknown vs known email</td><td>Identical message <em>and</em> identical timing</td></tr>
+<tr><td>Rate limiting</td><td>Credential stuffing from one IP</td><td>Throttled — but not so hard a school is locked out</td></tr>
+<tr><td>Injection</td><td><code>' OR 1=1 --</code> in every text field</td><td>Parameterised; treated as literal text</td></tr>
+<tr><td>Stored XSS</td><td>Display name <code>&lt;img src=x onerror=alert(1)&gt;</code></td><td>Escaped in every view, including PDF exports</td></tr>
+<tr><td>Upload abuse</td><td>Rename an <code>.exe</code> to <code>.webm</code></td><td>Rejected on content type, not extension</td></tr>
+<tr><td>Blob URLs</td><td>Open a clip URL while signed out</td><td>Denied; URLs are short-lived and signed</td></tr>
+<tr><td>Error leakage</td><td>Force a 500</td><td>No stack trace, SQL, or version in the response</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Minors</b><p>A large share of Lingotran learners are children. Any defect exposing learner identity, audio, or progress across account boundaries is a safeguarding incident with regulatory weight — not a normal severity-2 bug. Escalate immediately and never batch it into a sprint.</p></div>
+
+<h3>9.3 Accessibility — WCAG 2.1 AA</h3>
+<p>Public-sector and education buyers procure against accessibility conformance. For Lingotran this is a sales gate, not a nicety.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Check</th><th style="width:28%">How</th><th>Lingotran-specific risk</th></tr></thead>
+<tbody>
+<tr><td>Keyboard only</td><td>Unplug the mouse; complete a full lesson</td><td>Record button is often a <code>div</code> with a click handler — unreachable</td></tr>
+<tr><td>Focus visible</td><td>Tab through every control</td><td>Custom-styled controls lose the ring</td></tr>
+<tr><td>Screen reader</td><td>NVDA / VoiceOver through one exercise</td><td>Score updates are silent — <code>aria-live</code> missing</td></tr>
+<tr><td>Contrast</td><td>axe scan + manual on brand purple</td><td>Coral on white fails; use the text-safe variants</td></tr>
+<tr><td>Non-audio path</td><td>Complete a lesson without hearing it</td><td>A speech product must still serve deaf and hard-of-hearing learners</td></tr>
+<tr><td>Timing</td><td>Recording countdowns</td><td>Fixed limits disadvantage learners with motor or speech differences; must be adjustable</td></tr>
+<tr><td>Errors</td><td>Trigger every validation message</td><td>Colour-only error states are invisible to colour-blind users</td></tr>
+<tr><td>Zoom 200%</td><td>Browser zoom</td><td>Lesson player clips or scrolls horizontally</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">Automation covers about a third</b><p>An axe scan in CI catches contrast, missing labels, and landmarks. It cannot tell you the tab order is illogical or the screen-reader announcement is meaningless. Budget manual passes for the lesson player every release.</p></div>
+
+</div></details>
+
+<!-- ══════════ 10 ══════════ -->
+<details class="mod" id="m10">
+<summary><span class="n">10</span> Defects, RCA &amp; production<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<h3>10.1 Bug report that gets fixed</h3>
+<div class="box"><b class="bl">LT-4471 · Sev-2</b>
+<p><strong>Title</strong> Attempt limit resets on page reload, allowing unlimited submissions<br>
+<strong>Environment</strong> Staging, build 2.14.3, Chrome 126, learner account at school.edu<br>
+<strong>Steps</strong> 1. Sign in as learner · 2. Open exercise with maxAttempts 3 · 3. Submit 3 clips · 4. Confirm Record is disabled · 5. Reload the page<br>
+<strong>Actual</strong> Record is enabled; a 4th attempt is accepted and stored<br>
+<strong>Expected</strong> Limit persists; 4th attempt rejected with 429<br>
+<strong>Evidence</strong> <code>SELECT count(*) FROM attempts WHERE user_id='…' AND exercise_id='…'</code> → 4<br>
+<strong>Correlation ID</strong> 8f2c1a94-…&nbsp; · &nbsp;<strong>Impact</strong> Attempt limits are unenforceable; scores are not comparable across a class, so teacher reports are unreliable<br>
+<strong>Reported by</strong> Shashi Kumar</p></div>
+<div class="tw"><table>
+<thead><tr><th style="width:30%">Element</th><th>Why it changes the outcome</th></tr></thead>
+<tbody>
+<tr><td>Impact stated in product terms</td><td>"Teacher reports unreliable" gets prioritised; "counter resets" does not</td></tr>
+<tr><td>Database evidence</td><td>Proves the defect is real data, not a rendering artefact</td></tr>
+<tr><td>Correlation ID</td><td>Turns an hour of log searching into one query</td></tr>
+<tr><td>Exact build</td><td>Prevents "cannot reproduce" on a different revision</td></tr>
+</tbody></table></div>
+
+<h3>10.2 Root cause analysis · LT-INC-0219</h3>
+<p><strong>Summary.</strong> Monday 08:47, roughly 3,400 learners across eleven schools received <code>429</code> on sign-in. Duration 26 minutes. Resolved by raising the limit and restarting both instances.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:6%">Why</th><th>Answer</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Users saw 429 — the login rate limiter rejected them.</td></tr>
+<tr><td>2</td><td>The limit is 10/min <strong>per IP</strong>, and every school presents one NAT address for all its learners.</td></tr>
+<tr><td>3</td><td>Per-IP is the middleware default; it was accepted unchanged when the limiter was added in LT-0904.</td></tr>
+<tr><td>4</td><td>The change was two lines and reviewed for correctness — nobody asked how it behaves against real customer network topology.</td></tr>
+<tr><td>5</td><td>The PR checklist covers correctness and coverage. It has no prompt about deployment topology or customer network shape.</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">Root cause</b><p>A process gap, not a coding error: security-relevant middleware is not evaluated against real customer traffic patterns.</p></div>
+<div class="tw"><table>
+<thead><tr><th style="width:16%">Horizon</th><th style="width:44%">Action</th><th>Owner</th></tr></thead>
+<tbody>
+<tr><td>Immediate</td><td>Key the limiter on IP + email rather than IP alone</td><td>Backend · same day</td></tr>
+<tr><td>Short term</td><td>Move counters to shared state so the limit stops scaling with instance count</td><td>Backend · this sprint</td></tr>
+<tr><td>Detection</td><td>Alert when 429 exceeds 1% of login traffic over 5 minutes</td><td>Shashi Kumar (QA) + SRE · this sprint</td></tr>
+<tr><td>Prevention</td><td>Add "how does this behave for 30 users behind one NAT?" to the PR checklist</td><td>QA · this sprint</td></tr>
+<tr><td>Regression</td><td>k6 class-burst scenario from a single source IP, nightly</td><td>QA · this sprint</td></tr>
+</tbody></table></div>
+
+<h3>10.3 Escape analysis</h3>
+<p>For every defect that reaches production, the useful question is not "what broke" but "which gate should have caught it".</p>
+<div class="tw"><table>
+<thead><tr><th style="width:30%">Escaped defect</th><th style="width:26%">Why it escaped</th><th>Gate to strengthen</th></tr></thead>
+<tbody>
+<tr><td>Rate limiter per-IP</td><td>Tested on one instance, many IPs</td><td>Load test from a single IP at production instance count</td></tr>
+<tr><td>Session survives password change</td><td>Needs two concurrent sessions to observe</td><td>Multi-session fixture in the E2E suite</td></tr>
+<tr><td>Missing index</td><td>Test data was 200 rows</td><td><code>EXPLAIN</code> gate on staging volumes for new queries</td></tr>
+<tr><td>Accent penalty in scoring</td><td>Only native-speaker clips tested</td><td>REF-02 in the nightly corpus with a floor assertion</td></tr>
+<tr><td>Double submit → two attempts</td><td>Manual clicking is too slow</td><td>Concurrent-request test in the API suite</td></tr>
+<tr><td>iPad recording fails</td><td>Tested on desktop Chrome only</td><td>Real-device pass on the school's actual hardware</td></tr>
+<tr><td>Soft-deleted learner in reports</td><td>Delete path never re-queried the list</td><td>Standing SQL orphan/soft-delete checks (6.2)</td></tr>
+<tr><td>Token retained after sign-out</td><td>Verified by looking at the UI</td><td>Assert token invalid at the API, not the screen</td></tr>
+</tbody></table></div>
+
+<h3>10.4 Production support</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:14%">Minute</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>0–5</td><td>Confirm scope: one learner, one school, or all? Check error rate and 429 rate in Application Insights.</td></tr>
+<tr><td>5–10</td><td>Get a correlation ID from any affected request. It joins frontend, API, database, and speech in one trace.</td></tr>
+<tr><td>10–20</td><td>Establish what changed: last deploy, last migration, last flag flip, last config edit. Almost always one of these four.</td></tr>
+<tr><td>20–30</td><td>Mitigate — roll back, flip the flag off, raise the limit. Diagnosis comes after service is restored.</td></tr>
+<tr><td>Next day</td><td>RCA with five whys, corrective actions with owners, and a regression test that would have caught it.</td></tr>
+</tbody></table></div>
+<div class="box good"><b class="bl">The rule</b><p>Mitigate first, diagnose second. A rolled-back deploy costs a sprint's pride. A 40-minute investigation while eleven schools cannot teach costs a renewal.</p></div>
+
+</div></details>
+
+<!-- ══════════ 11 ══════════ -->
+<details class="mod" id="m11">
+<summary><span class="n">11</span> AI-assisted QA<span class="pp">3 p</span></summary>
+<div class="inner">
+
+<p>AI is fast at first drafts and structurally unreliable on facts. Use it where a wrong answer is cheap and visible; never where a wrong answer is silent.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:34%">Task</th><th style="width:14%">Verdict</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Draft test cases from a story</td><td><strong>Good</strong></td><td>You review every line; omissions are obvious to you</td></tr>
+<tr><td>Explain an unfamiliar PR diff</td><td><strong>Good</strong></td><td>Orientation, then verify against the code</td></tr>
+<tr><td>Convert a manual case to Playwright</td><td><strong>Good</strong></td><td>The test either runs or it does not</td></tr>
+<tr><td>Generate SQL validation queries</td><td>Careful</td><td>Read every one before running — never against production</td></tr>
+<tr><td>Summarise a log dump</td><td>Careful</td><td>Good at patterns, will invent a plausible cause</td></tr>
+<tr><td>Decide severity or release readiness</td><td><strong>Never</strong></td><td>Needs customer and contract context the model does not have</td></tr>
+<tr><td>Assert whether a score is correct</td><td><strong>Never</strong></td><td>Only the REF corpus can answer that</td></tr>
+</tbody></table></div>
+
+<h3>11.1 Prompt library</h3>
+<div class="fn">PR review orientation</div>
+<pre>You are reviewing a pull request for Lingotran (React + Node/Express + PostgreSQL).
+Here is the diff: [paste]
+
+1. Which layers of this stack does the change touch?
+2. What behaviour could change that the diff does not make obvious?
+3. What is now testable that was not before?
+4. Which existing behaviour is most at risk of regression?
+5. List 5 test cases, each naming the layer it belongs at.
+Do not summarise the diff back to me. Only answer 1-5.</pre>
+
+<div class="fn">Test case generation</div>
+<pre>Story: [paste story + ACs]
+Context: Lingotran serves schools. Learners are often minors. A class is ~30 learners
+behind a single NAT IP on shared devices, many on iPad Safari.
+
+Generate test cases as a table: ID | Case | Expected | Layer (unit/api/e2e/manual).
+Include: happy path, boundaries, at least 3 negatives, 1 concurrency case,
+1 accessibility case, 1 case specific to a whole class doing this at once.
+Flag any AC that is ambiguous rather than guessing what it means.</pre>
+
+<div class="fn">Playwright conversion</div>
+<pre>Convert this manual test to a Playwright spec for Lingotran.
+Rules: seed state via API not UI; locate by getByRole with accessible name;
+no waitForTimeout; assert the database at the end; one assertion theme per test.
+Manual case: [paste]</pre>
+
+<div class="fn">Log triage</div>
+<pre>These are Application Insights entries around incident [ID]: [paste]
+Correlation ID: [id]
+1. Reconstruct the request timeline across frontend, API, database, speech.
+2. Identify the first anomalous event, quoting the exact line.
+3. List up to 3 hypotheses, each with the specific evidence that would confirm it.
+Mark clearly anything you inferred rather than read directly in the log.</pre>
+
+<div class="box warn"><b class="bl">Distrust list</b>
+<p>AI will confidently invent Azure service limits, PostgreSQL syntax details, Playwright APIs that do not exist, WCAG success-criterion numbers, and library version behaviour. It will also produce test cases that look thorough while omitting the concurrency case that matters. Verify anything you would put your name on, and never paste learner data, audio, credentials, or connection strings into a prompt.</p></div>
+
+</div></details>

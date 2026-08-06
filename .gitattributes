@@ -1,0 +1,13 @@
+# Normalise to LF in the repository and on checkout.
+# scripts/build.sh is a bash script — a CRLF shebang breaks it on Linux and in CI.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.py   text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+
+*.zip  binary
+*.png  binary
+*.jpg  binary

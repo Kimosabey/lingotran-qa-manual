@@ -71,6 +71,24 @@ considered and rejected, with the reasoning recorded — including the original
 
 ---
 
+## Versions and branches
+
+| Branch / tag | Role |
+|---|---|
+| `main` | **Released.** Vercel deploys this to production on every push |
+| `develop` | Working branch. Merge to `main` to release |
+| `vN.N.N` | Tagged release. `v3.0.0` is current |
+
+Revision in the hero and footer tracks the tag — bump both together.
+
+| Version | What changed |
+|---|---|
+| `v3.0.0` | Speech corrected to the browser Web Speech API; Modules 07 and 13 expanded; dev/UAT confirmed HTTP; `.claude/` toolchain shipped; cream editorial theme; WCAG 1.4.1 fixed; `verify.py` hardened |
+| `v2.0` | The 14-module field manual, rebuilt from the abandoned handbook template |
+
+Because `main` deploys straight to production, **`verify.py` must pass before merging.**
+It has caught a stale hero, four ratio breaches and a destroyed logo already.
+
 ## Deployment
 
 Static. `vercel.json` points the output directory at `dist/` and rewrites `/` to the

@@ -417,24 +417,23 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <p>Infrastructure, alerting and production monitoring have no full-time owner. QA still defines what "wrong" looks like, but somebody must be named to build the alert or it does not exist. <strong>Name a person in the RCA action, never a role.</strong> "Backend will add an alert" is how a corrective action quietly never happens (10.2).</p></div>
 
 <h3>1.5 The working day</h3>
-<p>Login is 09:30–10:00, scrum is at 18:30, logout follows it. What the gates in 1.2 look like from a desk. Times are indicative; the order is not.</p>
+<p>Login is 09:30–10:00, logout is 18:30. What the gates in 1.2 look like from a desk. Times are indicative; the order is not.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:11%">Time</th><th style="width:27%">What Shashi Kumar does</th><th style="width:23%">What it produces</th><th>The trap</th></tr></thead>
 <tbody>
 <tr><td>09:30–10:00</td><td>Log in. Read overnight signal — REF corpus bands, k6 trend, CI failures, production error and 429 rates</td><td>A list of what moved while nobody watched</td><td>Skipping it because the pipeline is green. A band breach reports; it does not block (8.4)</td></tr>
-<tr><td>10:00</td><td>Triage defects raised since yesterday — severity, owner, and whether it is class-scale</td><td>A board the PM can read</td><td>Severity from the symptom rather than the blast radius. Thirty learners is not one ticket</td></tr>
-<tr><td>10:30</td><td>PR queue. Mark the layers the diff touches, test that row and everything downstream (2.2, 12.4)</td><td>PR comments naming layers and cases</td><td>Reviewing only the diff. The sibling route with no auth guard is not in it (5.1 ⑤)</td></tr>
+<tr><td>10:00</td><td><strong>Scrum.</strong> State risk, not activity — one sentence per item at risk</td><td>The team knows what is unsafe to ship</td><td>Reporting what was tested instead of what is now unsafe</td></tr>
+<tr><td>10:15</td><td>Triage defects raised since yesterday — severity, owner, and whether it is class-scale</td><td>A board the PM can read</td><td>Severity from the symptom rather than the blast radius. Thirty learners is not one ticket</td></tr>
+<tr><td>10:45</td><td>PR queue. Mark the layers the diff touches, test that row and everything downstream (2.2, 12.4)</td><td>PR comments naming layers and cases</td><td>Reviewing only the diff. The sibling route with no auth guard is not in it (5.1 ⑤)</td></tr>
 <tr><td>12:00</td><td>Test design for the current story — techniques from 3.3, boundaries from 3.4</td><td>A case table with layers assigned</td><td>One case per AC. The ACs are the floor, not the plan</td></tr>
 <tr><td>14:00</td><td>Exploratory charter, timeboxed, on a real iPad</td><td>Charter notes, correlation IDs, cases worth automating</td><td>Letting it overrun, or running it on a fast laptop rather than the school's device</td></tr>
 <tr><td>15:30</td><td>Suite maintenance — quarantine flakes, delete dead specs, hold PR feedback under ten minutes</td><td>Flaky rate and suite runtime</td><td>Re-running a red pipeline. The second unexplained failure is a quarantine, not a retry (8.3)</td></tr>
 <tr><td>16:30</td><td>Refinement for the next sprint — the seven questions against each story (3.1)</td><td>ACs testable before code exists</td><td>Accepting an undefined edge case because the sprint is about to start</td></tr>
 <tr><td>17:30</td><td>If deploying: readiness report (12.2), then production smoke inside five minutes (12.3)</td><td>A signed statement of risk</td><td>Signing "it is fine" instead of naming what is untested</td></tr>
-<tr><td><strong>18:30</strong></td><td><strong>Scrum</strong>, then log out. State risk, not activity — one sentence per item at risk</td><td>The team knows what is unsafe to ship</td><td>See the box below. This is the structural problem with the day</td></tr>
+<tr><td><strong>18:30</strong></td><td>Log out. Anything still unsafe is written down, not carried in your head overnight</td><td>Tomorrow's 09:30 list</td><td>Leaving a blocker unsaid until tomorrow's scrum</td></tr>
 <tr><td>Any time</td><td><strong>Interrupt</strong> — production incident. Scope, correlation ID, what changed, mitigate (10.4)</td><td>A timeline, and an RCA the next day</td><td>Diagnosing before mitigating while schools cannot teach</td></tr>
 </tbody></table></div>
 
-<div class="box warn"><b class="bl">An end-of-day scrum surfaces blockers eight hours late</b>
-<p>If the standup is at 18:30, anything QA discovers at 10:30 waits all day to be said out loud — and by then the developer who could fix it is logging off too. <strong>Do not save a blocker for scrum.</strong> Raise it the moment it is real, and use scrum to confirm rather than to announce. The one exception is the release call, which genuinely belongs at the end of the day.</p></div>
 
 <h3>1.5 The testing surface</h3>
 <p>Everything Lingotran needs tested, who runs it, and how often. Lingotran has <strong>one QA engineer against roughly a dozen developers</strong> — so the last column is not aspiration, it is capacity. Anything marked <em>dev-owned</em> or <em>SME</em> that QA tries to absorb is work that silently stops happening somewhere else.</p>

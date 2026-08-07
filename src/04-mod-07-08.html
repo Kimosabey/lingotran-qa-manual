@@ -3,7 +3,7 @@
 <summary><span class="n">07</span> The speech pipeline<span class="pp">6 p</span></summary>
 <div class="inner">
 
-<p>This is the module that matters most, because it is the only part of Lingotran a competitor cannot copy from a screenshot — and the only part where "the tests pass" and "the product works" routinely disagree.</p>
+<p>The only part of Lingotran a competitor cannot copy from a screenshot, and the only part where "the tests pass" and "the product works" routinely disagree.</p>
 
 <h3>7.1 The path</h3>
 <pre>Mic ──▶ getUserMedia ──▶ MediaRecorder ──▶ Blob ──▶ POST /attempts
@@ -32,7 +32,7 @@
 </tbody></table></div>
 
 <h3>7.3 The reference clip corpus</h3>
-<p>Maintain a fixed set of recordings in blob storage. Every release is scored against them and compared to the previous release. This is the only reliable regression signal for scoring quality.</p>
+<p>A fixed set of recordings in blob storage, scored every release and compared against the last. The only reliable regression signal for scoring quality.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:12%">Clip</th><th style="width:30%">Content</th><th style="width:20%">Expected band</th><th>Catches</th></tr></thead>
 <tbody>

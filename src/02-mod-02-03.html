@@ -29,7 +29,7 @@
                             └──────────────────┘</pre>
 
 <h3>2.2 The layer trace — what QA validates at each hop</h3>
-<p>This is the core device of the manual. Any Lingotran request passes through these layers. When a PR changes one, you test that row and re-test every row below it.</p>
+<p>Every Lingotran request passes through these layers. When a PR changes one, test that row and every row below it.</p>
 
 <div class="trace">
 <div class="lyr"><div class="i">1</div><div class="l">React component<em>LessonPlayer.tsx</em></div><div class="v">Loading, empty, error and success states all render. Disabled controls during submit. No secrets in props. Keyboard reachable.</div></div>

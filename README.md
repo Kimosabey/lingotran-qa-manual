@@ -89,6 +89,18 @@ Revision in the hero and footer tracks the tag — bump both together.
 Because `main` deploys straight to production, **`verify.py` must pass before merging.**
 It has caught a stale hero, four ratio breaches and a destroyed logo already.
 
+`.github/workflows/verify.yml` enforces this on every PR and push. Three checks:
+
+| Check | Catches |
+|---|---|
+| `dist` matches a clean rebuild | Someone edited `dist/` directly, or changed `src/` without rebuilding |
+| `verify.py` | The full rule set — ratio, page ceiling, hero sync, banned sections, brand assets |
+| No credential literals | A password or connection string reaching the repo. The Claude Code hook only guards the terminal |
+
+**Recommended branch protection on `main`** (Settings → Branches):
+require a pull request, require the `verify` status check to pass, and disallow
+force-pushes. Without it the workflow reports but cannot block.
+
 ## Deployment
 
 Static. `vercel.json` points the output directory at `dist/` and rewrites `/` to the

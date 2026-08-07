@@ -1,0 +1,48 @@
+name: verify
+
+# main deploys straight to production, so this is a release gate, not a formality.
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # dist/ is generated. Rebuilding must reproduce it byte for byte —
+      # if it does not, someone edited dist/ directly or forgot to rebuild.
+      # Compared with --strip-trailing-cr on purpose. Contributors on Windows
+      # produce CRLF locally while git stores LF, so a byte comparison would
+      # pass in CI and fail on their machine — a check nobody can reproduce.
+      - name: dist is in sync with src
+        run: |
+          cp dist/lingotran-qa-field-manual.html /tmp/committed.html
+          bash scripts/build.sh
+          if ! diff -q --strip-trailing-cr /tmp/committed.html dist/lingotran-qa-field-manual.html >/dev/null; then
+            echo "::error::dist/ does not match a rebuild from src/."
+            echo "Either dist/ was edited directly, or src/ changed without running scripts/build.sh."
+            diff --strip-trailing-cr /tmp/committed.html dist/lingotran-qa-field-manual.html | head -40
+            exit 1
+          fi
+          echo "dist matches a clean rebuild"
+
+      - name: verify
+        run: python scripts/verify.py
+
+      # The hook only guards Claude Code's terminal. CI has to catch the rest.
+      - name: no credentials committed
+        run: |
+          if grep -rInE '(PGPASSWORD[[:space:]]*=[[:space:]]*[^[:space:]$]|postgres(ql)?://[^:/[:space:]]+:[^@[:space:]]{6,}@)' \
+               --include='*.html' --include='*.py' --include='*.sh' --include='*.md' --include='*.json' \
+               src scripts .claude *.md 2>/dev/null; then
+            echo "::error::a credential literal appears in the repo"
+            exit 1
+          fi
+          echo "no credential literals found"

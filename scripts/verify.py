@@ -156,6 +156,26 @@ def main():
     else:
         ok(f"Shashi Kumar in {len(re.findall('Shashi', text))} places")
 
+    # ---- brand assets ----
+    # The bar wordmark was silently destroyed once by a CSS block replacement: the
+    # element kept its box and rendered empty, and nothing here noticed. Assert each
+    # asset is present at the slot that uses it, not merely that some image exists.
+    assets = {
+        "favicon": r'rel="icon"[^>]*href="data:image/png;base64,[A-Za-z0-9+/=]{200,}"',
+        "hero logo": r'<img class="logo" alt="Lingotran" src="data:image/png;base64,[A-Za-z0-9+/=]{200,}"',
+        "bar wordmark": r'\.bar \.ico\{[^}]*background-image:url\(data:image/png;base64,[A-Za-z0-9+/=]{200,}\)',
+    }
+    missing = [n for n, pat in assets.items() if not re.search(pat, html, re.S)]
+    if missing:
+        fail(f"brand asset missing or empty: {', '.join(missing)}")
+    else:
+        ok(f"{len(assets)} brand assets embedded")
+
+    # Self-contained: every image must be inline, never a network request.
+    remote = re.findall(r'<img[^>]+src="(?!data:)[^"]+"', html)
+    if remote:
+        fail(f"{len(remote)} image(s) load from the network — the file must be self-contained")
+
     # ---- banned textbook sections (CONTEXT.md D3) ----
     # These four never appear in legitimate prose, so scan the whole document.
     for banned in ["Learning Objectives", "Why This Topic Matters",

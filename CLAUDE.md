@@ -42,7 +42,7 @@ no external JS, opens by double-click.
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~32.0. Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~33.1. Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -57,10 +57,10 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 4,516 words | 9.4 |
+| Prose | 4,744 words | 9.9 |
 | Code | 371 lines | 7.1 |
-| Tables | 463 rows | 15.4 |
-| **Total** | | **32.0** |
+| Tables | 483 rows | 16.1 |
+| **Total** | | **33.1** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
@@ -68,7 +68,7 @@ Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷
 judgement calls a table cannot hold. If a new section is mostly paragraphs, it is
 probably textbook filler — cut it or convert it.
 
-`verify.py` fails below **70%**. The mix is currently 71%, so the guard is live rather
+`verify.py` fails below **70%**. The mix is currently 70%, so the guard is live rather
 than theoretical: a prose-heavy addition will fail the build, not merely drift. Callout
 boxes count as prose — they are worth their cost when they name a failure mode, but
 three boxes and an intro paragraph will move the ratio a full point.
@@ -157,7 +157,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 14 modules, ~32.0 pages:**
+**Complete — 14 modules, ~33.1 pages:**
 
 | # | Module | Pages |
 |---|---|---|
@@ -179,7 +179,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 *(Per-module page labels in `<span class="pp">` are indicative, set by hand. The real
 total comes from `verify.py`.)*
 
-**~18 pages of headroom** against the 50 ceiling.
+**~17 pages of headroom** against the 50 ceiling.
 
 **Open / candidates for the headroom:**
 - Module 08 — Playwright fixture patterns, sharding, trace-on-failure triage.

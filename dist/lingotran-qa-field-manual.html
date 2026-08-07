@@ -507,7 +507,18 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 </tbody></table></div>
 
 
-<h3>1.5 The testing surface</h3>
+<h4>Cadence beyond the day</h4>
+<div class="tw"><table>
+<thead><tr><th style="width:15%">Rhythm</th><th style="width:37%">Activity</th><th>Why it cannot be daily</th></tr></thead>
+<tbody>
+<tr><td>Nightly</td><td>REF speech corpus; k6 class burst from a single IP</td><td>Paid and slow. Blocks nothing, alerts on a band breach</td></tr>
+<tr><td>Weekly</td><td>Publish the metrics in 12.6; review escapes against the gate that missed them</td><td>A trend needs more than one point</td></tr>
+<tr><td>Per sprint</td><td>Real-device pass on iPad; flake quarantine review</td><td>Needs hardware and a fixed decision point</td></tr>
+<tr><td>Per release</td><td>Readiness report, rollback rehearsal, migration down-run</td><td>Tied to the deploy, not the calendar</td></tr>
+<tr><td>Per incident</td><td>Five whys, owners, and a regression test that would have caught it</td><td>Event-driven, and never the same day as the incident</td></tr>
+</tbody></table></div>
+
+<h3>1.6 The testing surface</h3>
 <p>Everything Lingotran needs tested, who runs it, and how often. Lingotran has <strong>one QA engineer against roughly a dozen developers</strong> — so the last column is not aspiration, it is capacity. Anything marked <em>dev-owned</em> or <em>SME</em> that QA tries to absorb is work that silently stops happening somewhere else.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:17%">Test type</th><th style="width:36%">What it catches at Lingotran</th><th style="width:15%">Runs it</th><th>Cadence</th></tr></thead>
@@ -546,16 +557,24 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <div class="box"><b class="bl">Where the boundary sits</b>
 <p>QA does not write unit tests, does not judge whether German or Kannada reference text is linguistically correct, and does not own infrastructure. QA <em>does</em> own whether the absence of those things is stated as a risk at sign-off. Unowned is not the same as untested — say which one it is.</p></div>
 
-<h4>Cadence beyond the day</h4>
+
+<h3>1.7 Two products in one — B2B and B2C</h3>
+<p>Lingotran sells to institutions <em>and</em> direct to individuals. Almost everything in this manual was written B2B-first, because that is where the sharpest failures are. Read every risk through whichever column applies.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:15%">Rhythm</th><th style="width:37%">Activity</th><th>Why it cannot be daily</th></tr></thead>
+<thead><tr><th style="width:16%">Dimension</th><th style="width:26%">B2B · schools</th><th style="width:26%">B2C · individuals</th><th>What changes for QA</th></tr></thead>
 <tbody>
-<tr><td>Nightly</td><td>REF speech corpus; k6 class burst from a single IP</td><td>Paid and slow. Blocks nothing, alerts on a band breach</td></tr>
-<tr><td>Weekly</td><td>Publish the metrics in 12.6; review escapes against the gate that missed them</td><td>A trend needs more than one point</td></tr>
-<tr><td>Per sprint</td><td>Real-device pass on iPad; flake quarantine review</td><td>Needs hardware and a fixed decision point</td></tr>
-<tr><td>Per release</td><td>Readiness report, rollback rehearsal, migration down-run</td><td>Tied to the deploy, not the calendar</td></tr>
-<tr><td>Per incident</td><td>Five whys, owners, and a regression test that would have caught it</td><td>Event-driven, and never the same day as the incident</td></tr>
+<tr><td>Who pays</td><td>The institution — contract, seats</td><td>The learner — subscription</td><td>One B2B defect is 30 tickets and a renewal; one B2C defect is silent churn</td></tr>
+<tr><td>Network</td><td>~30 behind <strong>one NAT IP</strong></td><td>Home wifi and mobile data</td><td>Per-IP limits break B2B. B2C instead hits flaky, high-latency mobile links</td></tr>
+<tr><td>Devices</td><td>Shared iPads, classroom headsets</td><td>Personal phones, mixed Android and iOS</td><td>B2C widens the matrix and puts <strong>more users on iOS Safari</strong>, where speech is weakest (7.2)</td></tr>
+<tr><td>Load shape</td><td>Synchronised bursts on a timetable</td><td>Diffuse — evenings and weekends</td><td>Two k6 profiles. The single-IP burst does not represent B2C at all (9.1)</td></tr>
+<tr><td>Minors' consent</td><td>The school agreement is the basis</td><td><strong>Parental consent is required</strong></td><td>Same audio to Google, two different legal bases. B2C has no institution in between (7.4)</td></tr>
+<tr><td>Identity</td><td><code>school.edu</code>, provisioned by an admin</td><td>Self sign-up, any domain, unverified email</td><td>B2C adds the whole self-serve funnel — verification, reset, duplicate accounts</td></tr>
+<tr><td>Data isolation</td><td>Cross-school leak ends a contract</td><td>Cross-account leak is a safeguarding and trust failure</td><td>The same query in 6.2. Different consequence, same severity</td></tr>
+<tr><td>Commercial paths</td><td>Seat limits, 200 cap, renewal</td><td>Trial, payment failure, cancellation</td><td>B2C adds dunning and downgrade states that do not exist in B2B</td></tr>
+<tr><td>How you hear about defects</td><td>One head of department escalates</td><td>Many individual reports, thin detail</td><td>B2C surfaces defects faster but with far less to reproduce from</td></tr>
 </tbody></table></div>
+<div class="box warn"><b class="bl">The institution multiplier does not apply to B2C</b>
+<p>Weighting likelihood by class size is correct for schools and wrong for consumers. A B2C defect affects users one at a time — which makes it <em>look</em> lower severity right up until it is thousands of them, spread thin enough that nobody escalates. <strong>Score the two segments separately in 1.3</strong>, and never let a B2C issue inherit a B2B severity, or the reverse.</p></div>
 
 </div></details>
 <!-- ══════════ 02 ══════════ -->
@@ -1620,7 +1639,7 @@ Mark clearly anything you inferred rather than read directly in the log.</pre>
 
 <h3>13.1 Where it fits in the day</h3>
 <div class="tw"><table>
-<thead><tr><th style="width:16%">Slot from 1.4</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
+<thead><tr><th style="width:16%">Slot from 1.5</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
 <tbody>
 <tr><td>09:00 overnight signal</td><td>Scheduled run + <code>corpus-referee</code> subagent</td><td>Runs while nobody is watching; output is a diff against yesterday's bands</td></tr>
 <tr><td>10:00 PR queue</td><td><code>/lt-pr-trace</code> skill</td><td>The layer-trace mapping is identical every time — encode it once (2.2)</td></tr>
@@ -1808,7 +1827,25 @@ Given a spec path:
 <div class="box warn"><b class="bl">Only one of them can gate</b>
 <p>Claude Code is the only one carrying a deterministic hook — <code>.claude/hooks/guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the same rules <em>by convention only</em>. That is a real difference: their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
 
-<h3>13.8 The overnight pipeline and the morning report</h3>
+<h3>13.8 Tools still missing</h3>
+<p>The AI toolchain above is the accelerator. These are gaps in the basic kit, ordered by what is currently blocking the most.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Need</th><th style="width:22%">Tool</th><th style="width:12%">Cost</th><th>Why it is on this list</th></tr></thead>
+<tbody>
+<tr><td><strong>TLS on UAT</strong></td><td><code>mkcert</code>, or a reverse proxy that terminates TLS</td><td>Free, an afternoon</td><td><strong>Unblocks all speech testing.</strong> A self-signed certificate is enough — the browser only checks for a secure context (2.3)</td></tr>
+<tr><td><strong>A real iPad</strong></td><td>A physical device, or a device cloud</td><td>Device or subscription</td><td>The top product risk cannot be confirmed in DevTools device mode — emulation does not emulate a microphone (7.5)</td></tr>
+<tr><td>Secrets scanning</td><td><code>gitleaks</code> in the pipeline</td><td>Free</td><td>Nothing currently stops a key reaching the repo. The hook only guards the terminal</td></tr>
+<tr><td>Dependency scanning</td><td><code>npm audit</code> gate, or Dependabot</td><td>Free</td><td>Supply chain is entirely unwatched today</td></tr>
+<tr><td>Static analysis</td><td>CodeQL or SonarQube</td><td>Free tier</td><td>9.2 lists injection and XSS as manual checks; most of that is automatable</td></tr>
+<tr><td>Dynamic scanning</td><td>OWASP ZAP, baseline scan</td><td>Free</td><td>Catches headers, cookie flags and TLS config — including the HTTP problem</td></tr>
+<tr><td>Test case management</td><td>Azure DevOps Test Plans</td><td>Already licensed</td><td>Cases currently live in this manual and in one person's head</td></tr>
+<tr><td>Accessibility, live</td><td>axe DevTools extension + NVDA</td><td>Free</td><td>A static scan cannot judge tab order or an announcement (9.3)</td></tr>
+<tr><td>Test data refresh</td><td>A scripted anonymised restore</td><td>Build it</td><td>UAT is only useful at production-like volume, and nobody owns refreshing it</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">The first two are not tooling preferences</b>
+<p>Without TLS on UAT, speech cannot be tested anywhere except localhost and production. Without a real iPad, the largest product risk stays unconfirmed. <strong>Everything else on this list is an improvement; those two are the difference between testing the product and guessing at it.</strong></p></div>
+
+<h3>13.9 The overnight pipeline and the morning report</h3>
 <p>Everything that is too slow, too paid or too noisy to gate a PR runs overnight and produces one screen for 09:30 (1.5).</p>
 <div class="tw"><table>
 <thead><tr><th style="width:24%">Stage</th><th style="width:32%">Produces</th><th>Blocks</th></tr></thead>

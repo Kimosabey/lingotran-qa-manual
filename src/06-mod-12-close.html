@@ -132,7 +132,7 @@
 
 <h3>13.1 Where it fits in the day</h3>
 <div class="tw"><table>
-<thead><tr><th style="width:16%">Slot from 1.4</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
+<thead><tr><th style="width:16%">Slot from 1.5</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
 <tbody>
 <tr><td>09:00 overnight signal</td><td>Scheduled run + <code>corpus-referee</code> subagent</td><td>Runs while nobody is watching; output is a diff against yesterday's bands</td></tr>
 <tr><td>10:00 PR queue</td><td><code>/lt-pr-trace</code> skill</td><td>The layer-trace mapping is identical every time — encode it once (2.2)</td></tr>
@@ -320,7 +320,25 @@ Given a spec path:
 <div class="box warn"><b class="bl">Only one of them can gate</b>
 <p>Claude Code is the only one carrying a deterministic hook — <code>.claude/hooks/guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the same rules <em>by convention only</em>. That is a real difference: their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
 
-<h3>13.8 The overnight pipeline and the morning report</h3>
+<h3>13.8 Tools still missing</h3>
+<p>The AI toolchain above is the accelerator. These are gaps in the basic kit, ordered by what is currently blocking the most.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Need</th><th style="width:22%">Tool</th><th style="width:12%">Cost</th><th>Why it is on this list</th></tr></thead>
+<tbody>
+<tr><td><strong>TLS on UAT</strong></td><td><code>mkcert</code>, or a reverse proxy that terminates TLS</td><td>Free, an afternoon</td><td><strong>Unblocks all speech testing.</strong> A self-signed certificate is enough — the browser only checks for a secure context (2.3)</td></tr>
+<tr><td><strong>A real iPad</strong></td><td>A physical device, or a device cloud</td><td>Device or subscription</td><td>The top product risk cannot be confirmed in DevTools device mode — emulation does not emulate a microphone (7.5)</td></tr>
+<tr><td>Secrets scanning</td><td><code>gitleaks</code> in the pipeline</td><td>Free</td><td>Nothing currently stops a key reaching the repo. The hook only guards the terminal</td></tr>
+<tr><td>Dependency scanning</td><td><code>npm audit</code> gate, or Dependabot</td><td>Free</td><td>Supply chain is entirely unwatched today</td></tr>
+<tr><td>Static analysis</td><td>CodeQL or SonarQube</td><td>Free tier</td><td>9.2 lists injection and XSS as manual checks; most of that is automatable</td></tr>
+<tr><td>Dynamic scanning</td><td>OWASP ZAP, baseline scan</td><td>Free</td><td>Catches headers, cookie flags and TLS config — including the HTTP problem</td></tr>
+<tr><td>Test case management</td><td>Azure DevOps Test Plans</td><td>Already licensed</td><td>Cases currently live in this manual and in one person's head</td></tr>
+<tr><td>Accessibility, live</td><td>axe DevTools extension + NVDA</td><td>Free</td><td>A static scan cannot judge tab order or an announcement (9.3)</td></tr>
+<tr><td>Test data refresh</td><td>A scripted anonymised restore</td><td>Build it</td><td>UAT is only useful at production-like volume, and nobody owns refreshing it</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">The first two are not tooling preferences</b>
+<p>Without TLS on UAT, speech cannot be tested anywhere except localhost and production. Without a real iPad, the largest product risk stays unconfirmed. <strong>Everything else on this list is an improvement; those two are the difference between testing the product and guessing at it.</strong></p></div>
+
+<h3>13.9 The overnight pipeline and the morning report</h3>
 <p>Everything that is too slow, too paid or too noisy to gate a PR runs overnight and produces one screen for 09:30 (1.5).</p>
 <div class="tw"><table>
 <thead><tr><th style="width:24%">Stage</th><th style="width:32%">Produces</th><th>Blocks</th></tr></thead>

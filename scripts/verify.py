@@ -34,8 +34,15 @@ FORBIDDEN = [
     "Microsoft", "Amazon", "Netflix", "Atlassian", "Adobe", "Shopify",
     "Duolingo", "Babbel", "Rosetta", "Coursera", "Udemy", "Contoso", "Fabrikam",
 ]
-# "Google" is permitted only in the phrase "Google Docs" / "Google Fonts".
-GOOGLE_OK = re.compile(r"Google (?:Docs|Fonts)")
+# "Google" was previously restricted to "Google Docs" / "Google Fonts", because Google
+# was not part of the stack. It now is: Lingotran's speech runs on the browser Web Speech
+# API, which is Google-backed in Chrome. That makes Google a sub-processor we must be able
+# to name plainly — in the architecture, and especially in the privacy checks, where
+# "audio leaves the device to Google's servers" is the single most important sentence in
+# Module 07. It falls under CLAUDE.md rule 1's stack exception alongside Azure and React.
+#
+# The competing-product guard that matters is FORBIDDEN above, which still covers the
+# actual competitors (Duolingo, Babbel, Rosetta, Coursera, Udemy).
 
 BALANCED_TAGS = ["details", "table", "tr", "td", "div", "pre", "summary", "p", "script", "style"]
 
@@ -141,10 +148,7 @@ def main():
     for name in FORBIDDEN:
         if re.search(r"\b" + re.escape(name), text):
             fail(f"forbidden reference: {name}")
-    stray_google = [m for m in re.finditer(r"Google", text) if not GOOGLE_OK.match(text[m.start():m.start() + 20])]
-    if stray_google:
-        fail(f"'Google' used outside 'Google Docs/Fonts' ({len(stray_google)}x)")
-    if not any("forbidden" in f or "Google" in f for f in failures):
+    if not any("forbidden" in f for f in failures):
         ok("no competing-product references")
 
     if "Shashi Kumar" not in text:

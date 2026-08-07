@@ -131,7 +131,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <tr><td>413</td><td>Clip &gt; 5 MB</td><td>Rejected at the gateway, before the app</td></tr>
 <tr><td>422</td><td>Duration out of range</td><td>Field name present so UI can highlight it</td></tr>
 <tr><td>429</td><td>Attempt or rate limit</td><td><code>retryAfter</code> present and honest</td></tr>
-<tr><td>502</td><td>Azure AI Speech unavailable</td><td>Clip retained; learner told to retry; attempt <em>not</em> consumed</td></tr>
+<tr><td>502</td><td>Scoring failed on a transcript we did receive</td><td>Clip retained; learner told to retry; attempt <em>not</em> consumed</td></tr>
 </tbody></table></div>
 
 <h3>5.3 Service layer — where the rules are</h3>
@@ -144,7 +144,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
   <b>const</b> used = <b>await</b> repo.countAttempts(userId, exerciseId);
   <b>if</b> (used &gt;= ex.maxAttempts) <b>throw</b> new TooMany();                        <i>// ② check…</i>
 
-  <b>const</b> score = <b>await</b> speech.assess(clip, ex.referenceText);              <i>// ③ external</i>
+  <b>const</b> score = scoreTranscript(clip.transcript, ex.referenceText);      <i>// ③ our maths</i>
   <b>return</b> repo.insertAttempt({ userId, exerciseId, score });                <i>// ④ …then write</i>
 }</pre>
 <div class="box warn"><b class="bl">Check-then-act is a race</b>

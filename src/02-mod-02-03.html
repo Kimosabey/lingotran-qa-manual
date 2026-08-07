@@ -11,7 +11,9 @@
         │                 ┌───────────▼──────────────┐
         │  MediaRecorder  │  React SPA (TypeScript)  │  Azure Static Web Apps
         │  getUserMedia   │  lesson player · capture │
-        │                 └───────────┬──────────────┘
+        │                 │  <b>Web Speech API</b> ──────────▶ <u>Google ASR/STT</u>
+        │                 │  <b>speechSynthesis</b> (TTS)   │  <u>audio leaves here</u>
+        │                 └───────────┬──────────────┘   <u>— not via our API</u>
         │                        HTTPS │ JWT bearer
         │                 ┌───────────▼──────────────┐
         │                 │  Node / Express API      │  Azure App Service
@@ -19,8 +21,8 @@
         │                 └──┬────────┬───────────┬──┘
         │        ┌───────────┘        │           └────────────┐
         │  ┌─────▼──────┐   ┌─────────▼────────┐   ┌───────────▼─────────┐
-        └─▶│ Blob Store │   │ PostgreSQL 15    │   │ Azure AI Speech     │
-           │ audio clips│   │ Flexible Server  │   │ Pronunciation Assmt │
+        └─▶│ Blob Store │   │ PostgreSQL 15    │   │ Scoring — <b>ours</b>      │
+           │ audio clips│   │ Flexible Server  │   │ transcript vs text  │
            └────────────┘   └──────────────────┘   └─────────────────────┘
                                      │
                             ┌────────▼─────────┐
@@ -76,7 +78,7 @@
 <div class="tw"><table>
 <thead><tr><th style="width:26%">Flag</th><th style="width:16%">Default</th><th>QA obligation</th></tr></thead>
 <tbody>
-<tr><td><code>phoneme_scoring_v2</code></td><td>Off</td><td>Test both states. Off is what most schools run; on is what the demo shows.</td></tr>
+<tr><td><code>transcript_scoring_v2</code></td><td>Off</td><td>Test both states. Off is what most schools run; on is what the demo shows.</td></tr>
 <tr><td><code>keep_signed_in</code></td><td>Off</td><td>Test the transition — a session created while off, then read while on.</td></tr>
 <tr><td><code>offline_lesson_cache</code></td><td>Off</td><td>Flag flipped mid-session must not corrupt stored progress.</td></tr>
 </tbody></table></div>

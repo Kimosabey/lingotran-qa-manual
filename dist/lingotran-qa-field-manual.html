@@ -451,7 +451,9 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
         │                 ┌───────────▼──────────────┐
         │  MediaRecorder  │  React SPA (TypeScript)  │  Azure Static Web Apps
         │  getUserMedia   │  lesson player · capture │
-        │                 └───────────┬──────────────┘
+        │                 │  <b>Web Speech API</b> ──────────▶ <u>Google ASR/STT</u>
+        │                 │  <b>speechSynthesis</b> (TTS)   │  <u>audio leaves here</u>
+        │                 └───────────┬──────────────┘   <u>— not via our API</u>
         │                        HTTPS │ JWT bearer
         │                 ┌───────────▼──────────────┐
         │                 │  Node / Express API      │  Azure App Service
@@ -459,8 +461,8 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
         │                 └──┬────────┬───────────┬──┘
         │        ┌───────────┘        │           └────────────┐
         │  ┌─────▼──────┐   ┌─────────▼────────┐   ┌───────────▼─────────┐
-        └─▶│ Blob Store │   │ PostgreSQL 15    │   │ Azure AI Speech     │
-           │ audio clips│   │ Flexible Server  │   │ Pronunciation Assmt │
+        └─▶│ Blob Store │   │ PostgreSQL 15    │   │ Scoring — <b>ours</b>      │
+           │ audio clips│   │ Flexible Server  │   │ transcript vs text  │
            └────────────┘   └──────────────────┘   └─────────────────────┘
                                      │
                             ┌────────▼─────────┐
@@ -516,7 +518,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <div class="tw"><table>
 <thead><tr><th style="width:26%">Flag</th><th style="width:16%">Default</th><th>QA obligation</th></tr></thead>
 <tbody>
-<tr><td><code>phoneme_scoring_v2</code></td><td>Off</td><td>Test both states. Off is what most schools run; on is what the demo shows.</td></tr>
+<tr><td><code>transcript_scoring_v2</code></td><td>Off</td><td>Test both states. Off is what most schools run; on is what the demo shows.</td></tr>
 <tr><td><code>keep_signed_in</code></td><td>Off</td><td>Test the transition — a session created while off, then read while on.</td></tr>
 <tr><td><code>offline_lesson_cache</code></td><td>Off</td><td>Flag flipped mid-session must not corrupt stored progress.</td></tr>
 </tbody></table></div>
@@ -725,7 +727,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <tr><td>413</td><td>Clip &gt; 5 MB</td><td>Rejected at the gateway, before the app</td></tr>
 <tr><td>422</td><td>Duration out of range</td><td>Field name present so UI can highlight it</td></tr>
 <tr><td>429</td><td>Attempt or rate limit</td><td><code>retryAfter</code> present and honest</td></tr>
-<tr><td>502</td><td>Azure AI Speech unavailable</td><td>Clip retained; learner told to retry; attempt <em>not</em> consumed</td></tr>
+<tr><td>502</td><td>Scoring failed on a transcript we did receive</td><td>Clip retained; learner told to retry; attempt <em>not</em> consumed</td></tr>
 </tbody></table></div>
 
 <h3>5.3 Service layer — where the rules are</h3>
@@ -738,7 +740,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
   <b>const</b> used = <b>await</b> repo.countAttempts(userId, exerciseId);
   <b>if</b> (used &gt;= ex.maxAttempts) <b>throw</b> new TooMany();                        <i>// ② check…</i>
 
-  <b>const</b> score = <b>await</b> speech.assess(clip, ex.referenceText);              <i>// ③ external</i>
+  <b>const</b> score = scoreTranscript(clip.transcript, ex.referenceText);      <i>// ③ our maths</i>
   <b>return</b> repo.insertAttempt({ userId, exerciseId, score });                <i>// ④ …then write</i>
 }</pre>
 <div class="box warn"><b class="bl">Check-then-act is a race</b>
@@ -827,65 +829,78 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <summary><span class="n">07</span> The speech pipeline<span class="pp">6 p</span></summary>
 <div class="inner">
 
-<p>The only part of Lingotran a competitor cannot copy from a screenshot, and the only part where "the tests pass" and "the product works" routinely disagree.</p>
+<p>The heart of the product, and the part where "the tests pass" and "the product works" most often disagree.</p>
+
+<div class="box warn"><b class="bl">What we actually run today</b>
+<p>Lingotran uses the <strong>browser Web Speech API</strong> — Google-backed ASR and STT in Chrome, plus <code>speechSynthesis</code> for TTS. We do <strong>not</strong> use a paid pronunciation-assessment service. That single fact drives everything below, and most of it is uncomfortable.</p></div>
 
 <h3>7.1 The path</h3>
-<pre>Mic ──▶ getUserMedia ──▶ MediaRecorder ──▶ Blob ──▶ POST /attempts
-                                                        │
-                              ┌─────────────────────────┘
-                              ▼
-                   Azure AI Speech · Pronunciation Assessment
-                   (reference text + audio → accuracy, fluency,
-                    completeness, per-phoneme scores)
-                              │
-                              ▼
-              Service maps raw scores → learner-facing feedback
-                              │
-                              ▼
-                        attempts table ──▶ progress report ──▶ teacher dashboard</pre>
+<pre>Mic ──▶ getUserMedia ──▶ <b>Web Speech API</b> (runs in the browser)
+                               │
+                               │  <u>audio leaves the device to Google's servers</u>
+                               ▼
+                    transcript + confidence
+                               │
+                    POST /attempts { transcript, referenceText }
+                               ▼
+              Service <b>compares transcript to reference text</b>
+              (text similarity — this is where the "score" is invented)
+                               ▼
+              attempts table ──▶ progress report ──▶ teacher dashboard
 
-<h3>7.2 Why this pipeline is unusually hard to test</h3>
+TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
+
+<h3>7.2 What this means for testing</h3>
+<p>A speech-scoring service would hand us accuracy, fluency and per-phoneme numbers. The Web Speech API hands us a line of text. Everything else we build ourselves, so every scoring bug is ours.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:26%">Property</th><th>Consequence for QA</th></tr></thead>
+<thead><tr><th style="width:24%">Property</th><th>What it means for QA</th></tr></thead>
 <tbody>
-<tr><td><strong>Non-deterministic</strong></td><td>The same clip can score 81 then 83. Assertions must use tolerance bands, never equality.</td></tr>
-<tr><td><strong>External and paid</strong></td><td>CI cannot call it on every run. Stub in CI; use a small real-audio suite nightly.</td></tr>
-<tr><td><strong>Device-dependent</strong></td><td>A laptop mic, an iPad mic, and a classroom headset produce materially different scores from the same speaker.</td></tr>
-<tr><td><strong>Accent-sensitive</strong></td><td>The failure mode is systematic, not random — see 7.3. This is the defect class most likely to reach production unnoticed.</td></tr>
-<tr><td><strong>Silently degrading</strong></td><td>If the service returns a default or partial payload, the app shows a plausible score. Nothing looks broken.</td></tr>
+<tr><td><strong>No real scoring</strong></td><td>There is no accuracy or phoneme score to trust. The score is our own text comparison, so test <em>our</em> maths, not a vendor's.</td></tr>
+<tr><td><strong>Not on every browser</strong></td><td><code>SpeechRecognition</code> is a Chrome and Edge feature. <strong>iPad Safari is unreliable or missing.</strong> See the box below — this is the biggest risk in the manual.</td></tr>
+<tr><td><strong>Audio leaves the device</strong></td><td>The browser sends learner speech to Google to transcribe. Learners are children. This is a data-protection question, not a technical one (7.4).</td></tr>
+<tr><td><strong>Needs the network</strong></td><td>No connection, no transcript. School wifi drops mid-lesson all the time.</td></tr>
+<tr><td><strong>Not deterministic</strong></td><td>The same speech can transcribe two ways. Never assert an exact string.</td></tr>
+<tr><td><strong>No contract, no quota page</strong></td><td>It is a free browser feature. Limits are undocumented and can change without warning.</td></tr>
+<tr><td><strong>Fails quietly</strong></td><td>An empty or partial transcript still produces a number. The learner sees a plausible score that means nothing.</td></tr>
 </tbody></table></div>
+
+<div class="box warn"><b class="bl">The iPad problem — read this first</b>
+<p>Schools run iPads. Speech recognition in the browser is a Chrome feature; on iPad Safari it is missing or unreliable. So the main thing Lingotran does may simply not work on the main device our customers own. <strong>Test this before anything else, on a real iPad, on school wifi.</strong> If it does not work, that is a product decision, not a bug — and QA's job is to say so plainly and early, not to file it as a defect and wait.</p></div>
 
 <h3>7.3 The reference clip corpus</h3>
-<p>A fixed set of recordings in blob storage, scored every release and compared against the last. The only reliable regression signal for scoring quality.</p>
+<p>A fixed set of recordings we replay every release and compare against the last run. Because we invent the score ourselves, this is the only way to notice it changing.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:12%">Clip</th><th style="width:30%">Content</th><th style="width:20%">Expected band</th><th>Catches</th></tr></thead>
+<thead><tr><th style="width:11%">Clip</th><th style="width:29%">What is on it</th><th style="width:26%">What we expect</th><th>What it catches</th></tr></thead>
 <tbody>
-<tr><td>REF-01</td><td>Native speaker, clean audio, correct</td><td>90–100</td><td>Baseline drift</td></tr>
-<tr><td>REF-02</td><td>Learner, accented, correct words</td><td>70–90</td><td><strong>Accent penalty</strong> — the critical one</td></tr>
-<tr><td>REF-03</td><td>Correct words, heavy classroom noise</td><td>60–85</td><td>Noise robustness</td></tr>
-<tr><td>REF-04</td><td>Wrong words, fluent delivery</td><td>0–30</td><td>Scoring fluency instead of accuracy</td></tr>
-<tr><td>REF-05</td><td>Half the sentence only</td><td>completeness &lt; 60</td><td>Completeness ignored</td></tr>
-<tr><td>REF-06</td><td>Silence</td><td>Rejected before billing</td><td>Wasting paid API calls</td></tr>
-<tr><td>REF-07</td><td>A different language entirely</td><td>Low + no crash</td><td>Unhandled service response</td></tr>
-<tr><td>REF-08</td><td>60 s at the duration limit</td><td>Scored, no timeout</td><td>Gateway timeout on long clips</td></tr>
+<tr><td>REF-01</td><td>Native speaker, clean audio, correct words</td><td>Transcript matches; score high</td><td>Baseline drift</td></tr>
+<tr><td>REF-02</td><td>Learner, strong accent, <strong>correct words</strong></td><td>Transcript still matches</td><td><strong>Accent failure</strong> — the critical one</td></tr>
+<tr><td>REF-03</td><td>Correct words, noisy classroom</td><td>Transcript mostly matches</td><td>Noise handling</td></tr>
+<tr><td>REF-04</td><td>Wrong words, said fluently</td><td>Low score</td><td>Rewarding confidence over correctness</td></tr>
+<tr><td>REF-05</td><td>Half the sentence only</td><td>Low completeness</td><td>Partial speech scored as complete</td></tr>
+<tr><td>REF-06</td><td>Silence</td><td>Rejected, no attempt used</td><td>Empty transcript scored as a fail</td></tr>
+<tr><td>REF-07</td><td>A different language</td><td>Low score, no crash</td><td>Unhandled empty result</td></tr>
+<tr><td>REF-08</td><td>60 s, at the length limit</td><td>Handled, no cut-off</td><td>Recognition stopping early on long speech</td></tr>
 </tbody></table></div>
 
-<div class="box warn"><b class="bl">Known defect class · systematic false negatives</b>
-<p>Lingotran's pronunciation feedback has historically penalised accented-but-correct speech, marking REF-02-type clips as errors. The learners most affected are exactly Lingotran's core users. This will never show up in a test suite that uses only native-speaker clips or stubbed responses — the stub always returns a good score. <strong>REF-02 must be in the nightly real-audio run, with a floor assertion, permanently.</strong></p></div>
+<div class="box warn"><b class="bl">REF-02 · the defect that matters most</b>
+<p>Our learners have accents. Speech recognition is weakest on accented speech. So the recogniser mishears a learner who said the words <em>correctly</em>, our comparison sees a mismatch, and the learner is marked wrong.</p>
+<p>Read that again: <strong>the learner is punished for the recogniser's mistake, not their own.</strong> It looks exactly like a learner who is getting worse. It will never appear in a test suite built on clean native-speaker audio or a stub, because both always return the right words. <strong>REF-02 belongs in the nightly run permanently, with a floor assertion.</strong></p></div>
 
-<h3>7.4 Failure handling</h3>
+<h3>7.4 When it goes wrong</h3>
 <div class="tw"><table>
-<thead><tr><th style="width:26%">Speech service behaviour</th><th style="width:26%">Correct app behaviour</th><th>Test</th></tr></thead>
+<thead><tr><th style="width:26%">What happens</th><th style="width:28%">What the app should do</th><th>How to force it</th></tr></thead>
 <tbody>
-<tr><td>Timeout</td><td>Retain clip, do not consume attempt, offer retry</td><td>Block the endpoint mid-flight</td></tr>
-<tr><td>429 quota exceeded</td><td>Queue or degrade gracefully, never a raw error</td><td>Exhaust the staging quota deliberately</td></tr>
-<tr><td>Partial payload (no phonemes)</td><td>Show overall score, hide phoneme panel</td><td>Stub a response with fields removed</td></tr>
-<tr><td>Malformed JSON</td><td>502 to the client, alert raised</td><td>Stub garbage</td></tr>
-<tr><td>Latency &gt; 10 s</td><td>Progress indicator, no double submit</td><td>Delay the stub by 15 s</td></tr>
+<tr><td>Browser does not support it</td><td>Say so up front and offer another way through the lesson — never a dead end</td><td>Open on iPad Safari</td></tr>
+<tr><td>Mic permission denied</td><td>A clear message and a working retry</td><td>Deny, then reopen (4.1 ②)</td></tr>
+<tr><td>Network drops mid-speech</td><td>Keep the attempt, do not use one up, offer retry</td><td>Go offline in DevTools</td></tr>
+<tr><td>Empty transcript</td><td>Ask the learner to try again. <strong>Never score it as zero</strong></td><td>Submit silence (REF-06)</td></tr>
+<tr><td>Recognition ends early</td><td>Keep what was heard, tell the learner it stopped</td><td>Pause mid-sentence for several seconds</td></tr>
+<tr><td>TTS voice missing</td><td>Fall back gracefully; never silent with no explanation</td><td>Use a device with no German voice installed</td></tr>
 </tbody></table></div>
 
-<div class="box"><b class="bl">Privacy — a standing check</b>
-<p>Learner audio is personal data, and a large share of Lingotran's learners are minors. For any change touching capture or upload, confirm: audio goes only to the contracted Azure region, retention matches the school agreement, clips are deleted when a learner is removed, and no third-party endpoint appears in the network tab. Browser-native speech APIs in particular may transmit audio to servers outside the contracted sub-processor list — verify in DevTools, not in documentation.</p></div>
+<div class="box warn"><b class="bl">Privacy — the standing check, and it is now the main one</b>
+<p>The browser sends learner speech to Google to be transcribed. Many Lingotran learners are children. Before any change touching capture, confirm all of these: the school agreement actually permits it, Google is named as a sub-processor, parents and schools have been told, and nothing is retained that we have not disclosed.</p>
+<p>This used to be a footnote about browser APIs. With the Web Speech API it is the architecture. <strong>Check it in DevTools and in the signed agreement — not in documentation.</strong> If the two disagree, stop and escalate; do not open a ticket and continue.</p></div>
 
 <h3>7.5 Devices, browsers, and what they actually capture</h3>
 <p>Scores are compared across a class as though the audio were equivalent. It is not. The same learner reading the same sentence scores differently on three devices in the same room, and the device is invisible in the attempts table unless someone chose to record it.</p>
@@ -903,52 +918,39 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <div class="box warn"><b class="bl">The Bluetooth downgrade</b>
 <p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
 
-<h3>7.6 Quota and throttling</h3>
-<p>The institution multiplier lands harder here than anywhere else in the stack. Thirty learners press submit inside the same minute, and every one of those becomes a paid, rate-limited call to an external service.</p>
+<h3>7.6 Limits we do not control</h3>
+<p>There is no bill and no quota page, so it is tempting to assume there is no limit. There is — we just cannot see it. Thirty learners in one room speak at the same time, through one school connection.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:24%">Limit</th><th style="width:30%">Where it bites first</th><th>Test</th></tr></thead>
+<thead><tr><th style="width:24%">Limit</th><th style="width:30%">Where it shows up first</th><th>How to test it</th></tr></thead>
 <tbody>
-<tr><td>Concurrent requests per resource</td><td>One class submitting together — not total daily volume</td><td>Fire 30 assessments simultaneously against staging; assert no 5xx reaches a learner</td></tr>
-<tr><td>Transactions per second</td><td>Timetable peak, several classes at once</td><td>Overlap two class-burst scenarios (9.1)</td></tr>
-<tr><td>Monthly quota</td><td>Late in the billing period, silently</td><td>Confirm the alert fires approaching the cap, not on hitting it</td></tr>
-<tr><td>Per-request duration</td><td>REF-08, at the 60 s boundary</td><td>Assert the gateway timeout exceeds the longest permitted clip</td></tr>
+<tr><td>Undocumented throttling</td><td>A whole class speaking at once from one network</td><td>Run 30 real browsers on one connection. A lab of one laptop proves nothing</td></tr>
+<tr><td>Recognition stops on silence</td><td>A learner who pauses to think mid-sentence</td><td>Pause 3–5 s mid-sentence and check what is kept</td></tr>
+<tr><td>Speech length cap</td><td>Long sentences, REF-08</td><td>Read for the full 60 s and check nothing is cut</td></tr>
+<tr><td>Behaviour changes without notice</td><td>Any day, with no release of ours</td><td>The nightly REF run is the only warning we get</td></tr>
 </tbody></table></div>
 
-<div class="fn">test/speech/quota.spec.ts</div>
-<pre><i>// 30 learners, one classroom, one minute — the shape that actually breaks it</i>
-<b>test</b>('a full class submitting together degrades, never errors', <b>async</b> () =&gt; {
-  <b>const</b> results = <b>await</b> Promise.all(
-    Array.from({ length: 30 }, () =&gt; assess(REF_01, referenceText))
-  );
+<div class="box warn"><b class="bl">Nobody owes us an SLA</b>
+<p>This is a free browser feature, not a contracted service. It can change or throttle with no notice and no support ticket to raise. That is a real product risk and it belongs in the release conversation, not just in a test plan. The nightly REF corpus is our only early warning — <strong>if it is not running, we find out from a school.</strong></p></div>
 
-  <i>// Throttling is acceptable. A raw failure reaching the learner is not.</i>
-  <b>for</b> (<b>const</b> r <b>of</b> results) {
-    expect(r.status).not.toBe(500);
-    <b>if</b> (r.status === 429) expect(r.headers['retry-after']).toBeDefined();
-  }
-
-  <i>// And a throttled call must never consume one of the learner's three attempts</i>
-  expect(<b>await</b> countAttempts(uid, eid)).toBe(<u>results.filter(r =&gt; r.ok).length</u>);
-});</pre>
-
-<div class="box warn"><b class="bl">Retries amplify the burst</b>
-<p>A client that retries on 429 without backoff turns thirty requests into ninety against a service already refusing them, and the class never recovers inside the lesson period. Assert that retry is capped and jittered, and that a throttled attempt is not counted against the learner.</p></div>
-
-<h3>7.7 The phoneme feedback panel</h3>
-<p>The overall score is one number and easy to check. The panel beneath it renders one marker per phoneme, and is where payload and UI most often disagree.</p>
+<h3>7.7 The feedback panel</h3>
+<p>We have no phoneme data, so the panel can only show what we do have: which words the recogniser heard and which it did not. Being honest about that is the whole design problem.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:28%">Case</th><th style="width:28%">Expected</th><th>Why it breaks</th></tr></thead>
+<thead><tr><th style="width:26%">Case</th><th style="width:28%">What should happen</th><th>Why it breaks</th></tr></thead>
 <tbody>
-<tr><td>Payload omits <code>phonemes</code></td><td>Overall score shown, panel hidden</td><td>Partial responses are normal under load, and a missing array reads as <code>undefined.map</code></td></tr>
-<tr><td>Phoneme count ≠ words spoken</td><td>Panel aligns to what was assessed, not the reference text</td><td>Partial speech (REF-05) returns fewer phonemes than the sentence contains</td></tr>
-<tr><td>Score exactly on a colour threshold</td><td>One documented bucket, deterministic</td><td>60.0 rendering as "needs work" in one view and "good" in another</td></tr>
-<tr><td>Non-Latin reference text</td><td>Renders and aligns correctly</td><td>Devanagari and Tamil clusters span several code units; naive per-character mapping misaligns every marker (3.4)</td></tr>
-<tr><td>Long sentence at the 60 s limit</td><td>Wraps or scrolls inside the panel</td><td>Fixed-width rows clip silently on iPad portrait — the school's device again</td></tr>
-<tr><td>Second attempt after a first</td><td>Panel resets completely</td><td>Stale markers from the previous attempt persist beneath the new score</td></tr>
+<tr><td>Transcript comes back empty</td><td>Ask them to try again — do not show 0%</td><td>An empty string compares as "everything wrong"</td></tr>
+<tr><td>Recogniser heard a similar word</td><td>Treat near-matches kindly, or say we are unsure</td><td>"ship" for "sheep" is a recogniser limit, not a learner error</td></tr>
+<tr><td>Learner said more than asked</td><td>Score the required words only</td><td>Extra words drag a text-similarity score down unfairly</td></tr>
+<tr><td>Word counts do not line up</td><td>Align to what was heard, not to the reference</td><td>Partial speech (REF-05) returns fewer words than the sentence has</td></tr>
+<tr><td>Score sits exactly on a threshold</td><td>One documented bucket everywhere</td><td>The same 60% shown as "needs work" in one view and "good" in another</td></tr>
+<tr><td>Non-Latin reference text</td><td>Words split and align correctly</td><td>Splitting on spaces or characters breaks scripts that do not work that way (3.4)</td></tr>
+<tr><td>Second attempt</td><td>Panel clears completely</td><td>Old words linger under the new score</td></tr>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">Colour alone is not feedback</b>
-<p>Phoneme quality is almost always rendered red / amber / green. To a colour-blind learner that panel carries no information, and a screen reader announces a row of meaningless spans. Every marker needs a text or shape equivalent and an accessible name. This is the accessibility defect most likely to survive an axe scan, because the contrast passes and the markup is technically valid (9.3).</p></div>
+<p>Right and wrong words are almost always shown in red and green. A colour-blind learner gets nothing from that, and a screen reader reads out a row of meaningless words. Every marker needs text or a shape as well as colour, plus an accessible name. This is the accessibility defect most likely to pass an axe scan, because the contrast is fine and the markup is valid (9.3).</p></div>
+
+<div class="box"><b class="bl">Say "we could not hear you", not "you were wrong"</b>
+<p>Because the transcript is the only evidence we have, we genuinely cannot tell a mispronounced word from a misheard one. The wording of the feedback has to respect that. A child told they are wrong when they were right stops trusting the product, and a class of thirty stops together. <strong>Test the wording, not only the number.</strong></p></div>
 
 </div></details>
 
@@ -1354,7 +1356,7 @@ Mark clearly anything you inferred rather than read directly in the log.</pre>
 
 <h3>12.1 Test plan — one page, no more</h3>
 <pre><b>Release:</b> 2.15 · <b>QA owner:</b> Shashi Kumar · <b>Dates:</b> …
-<b>In scope:</b>    LT-1187 extended sessions · LT-1201 phoneme panel
+<b>In scope:</b>    LT-1187 extended sessions · LT-1201 feedback panel
 <b>Out of scope:</b> billing, marketing site  — and why
 <b>Risk order:</b>  1 session handling  2 scoring quality  3 class reports
 <b>Environments:</b> staging (2 instances, 2M rows, real Speech)

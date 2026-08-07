@@ -25,19 +25,24 @@ no external JS, opens by double-click.
 ## 2. Hard rules — do not violate
 
 1. **Lingotran is the only product discussed.** Every example, scenario, user, domain,
-   table, endpoint, bug, and incident is Lingotran. Never introduce Microsoft, Google,
-   Amazon, Netflix, Atlassian, Adobe, Shopify, Duolingo, Babbel, Rosetta Stone, or any
-   other company as *subject matter*.
+   table, endpoint, bug, and incident is Lingotran. Never introduce Microsoft, Amazon,
+   Netflix, Atlassian, Adobe, Shopify, Duolingo, Babbel, Rosetta Stone, or any other
+   company as *subject matter*.
    - **Allowed exception:** tool and platform names that make up the stack — React,
      Node, Express, PostgreSQL, Azure, Azure DevOps, Playwright, Postman, Bruno, k6,
      JMeter, axe, NVDA, VoiceOver. These are the environment, not competing products.
+   - **Google is now in that exception.** Speech runs on the browser Web Speech API,
+     which is Google-backed. Google is a real sub-processor for learner audio, so it
+     must be nameable — plainly, in the architecture and in the privacy checks. It was
+     previously banned outright; that restriction was correct only while Google was not
+     part of the stack.
 2. **Shashi Kumar** is the standing QA engineer in every worked example. No other
    invented tester names.
 3. **Spelling is `Lingotran`** — lowercase `t`. Never `LingoTran`. The only lowercase
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~27.8 Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~28.4 Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -52,10 +57,10 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 3,516 words | 7.3 |
-| Code | 375 lines | 7.2 |
-| Tables | 399 rows | 13.3 |
-| **Total** | | **27.8** |
+| Prose | 3,840 words | 8.0 |
+| Code | 363 lines | 7.0 |
+| Tables | 403 rows | 13.4 |
+| **Total** | | **28.4** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
@@ -63,7 +68,7 @@ Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷
 judgement calls a table cannot hold. If a new section is mostly paragraphs, it is
 probably textbook filler — cut it or convert it.
 
-`verify.py` fails below **70%**. The mix is currently 74%, so the guard is live rather
+`verify.py` fails below **70%**. The mix is currently 72%, so the guard is live rather
 than theoretical: a prose-heavy addition will fail the build, not merely drift. Callout
 boxes count as prose — they are worth their cost when they name a failure mode, but
 three boxes and an intro paragraph will move the ratio a full point.
@@ -153,7 +158,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 14 modules, ~27.8 pages:**
+**Complete — 14 modules, ~28.4 pages:**
 
 | # | Module | Pages |
 |---|---|---|
@@ -191,7 +196,9 @@ total comes from `verify.py`.)*
 
 - **Stack:** React + TypeScript SPA (Azure Static Web Apps) · Node/Express API (Azure App
   Service, **2 instances**) · PostgreSQL 15 Flexible Server · Azure Blob for audio ·
-  Azure AI Speech Pronunciation Assessment · Application Insights · Azure DevOps.
+  **browser Web Speech API** (Google-backed ASR/STT, plus `speechSynthesis` for TTS —
+  runs client-side, so learner audio leaves the device to Google, not via our API) ·
+  Application Insights · Azure DevOps.
 - **The institution multiplier:** ~30 learners per class share **one NAT IP** on shared
   devices, many on iPad Safari. This drives the rate-limiter incident, the k6 single-IP
   load profile, and the risk scoring. It is the single most important contextual fact.

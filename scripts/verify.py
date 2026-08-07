@@ -85,6 +85,13 @@ def main():
         return report()
     body = re.sub(r"<(style|script).*?</\1>", "", body_m.group(0), flags=re.S)
 
+    # Inline SVG diagrams are structured content, not prose. Every one of them ships
+    # with a <pre class="flowprint"> fallback for print, and that pre is already counted
+    # as code — so counting the SVG's own labels as prose would count the same diagram
+    # twice, once correctly and once against the ratio. Converting an ASCII diagram to
+    # SVG must not read as "drifting to prose" when no prose was written.
+    body = re.sub(r"<svg.*?</svg>", "", body, flags=re.S)
+
     # ---- module wiring ----
     mods = re.findall(r'<details class="mod" id="(m\d+)"', html)
     toc = re.findall(r'href="#(m\d+)"', html)

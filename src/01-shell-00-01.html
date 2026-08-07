@@ -284,6 +284,11 @@ pre u{color:var(--coral-text);text-decoration:underline;text-decoration-style:do
 .flow .box.agent rect{fill:var(--code-bg)}
 .flow .box.gate rect{fill:var(--lilac);stroke:var(--brand-purple);stroke-width:2}
 .flow .box.human rect{fill:#EDFAF6;stroke:var(--success-text);stroke-width:2}
+/* external — data leaving our control. Coral is display-only, so it is a fill and
+   a dashed stroke, never the label colour (WCAG 1.4.1). */
+.flow .box.ext rect{fill:#FFF3EF;stroke:var(--coral-text);stroke-width:2;stroke-dasharray:5 3}
+.flow .pulse.ext{stroke:var(--coral-text)}
+.flow .conn.ext{stroke:var(--coral-text);stroke-opacity:.45;stroke-dasharray:5 3}
 .flow text{font-family:var(--sans);font-weight:700;fill:var(--ink)}
 .flow .t{font-size:14px}
 .flow .s{font-size:11.5px;font-weight:600;fill:var(--caption-safe)}

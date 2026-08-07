@@ -42,7 +42,7 @@ no external JS, opens by double-click.
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~33.1. Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~33.3. Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -57,10 +57,10 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 4,744 words | 9.9 |
+| Prose | 4,788 words | 10.0 |
 | Code | 371 lines | 7.1 |
-| Tables | 483 rows | 16.1 |
-| **Total** | | **33.1** |
+| Tables | 486 rows | 16.2 |
+| **Total** | | **33.3** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
@@ -157,7 +157,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 14 modules, ~33.1 pages:**
+**Complete — 14 modules, ~33.3 pages:**
 
 | # | Module | Pages |
 |---|---|---|

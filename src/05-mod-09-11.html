@@ -160,7 +160,7 @@
 </tbody></table></div>
 
 <h3>11.1 Where the recurring prompts live</h3>
-<p>Anything explained twice belongs in a skill, not retyped. These exist as files in <code>.claude/skills/</code> and travel with the repo, so every engineer gets the same standard (13.2).</p>
+<p>Anything explained twice belongs in a skill. These exist as files in <code>.claude/skills/</code> and travel with the repo, so every engineer gets the same standard (13.2).</p>
 <div class="tw"><table>
 <thead><tr><th style="width:26%">When you are…</th><th style="width:26%">Skill</th><th>What it enforces that a typed prompt forgets</th></tr></thead>
 <tbody>
@@ -176,7 +176,7 @@
 <p>A prompt in a document is copied, edited and drifts. A skill in the repo is reviewed like code and applies identically for everyone. The worked examples below stay because they teach the <em>shape</em> of a framework, which a skill cannot.</p></div>
 
 <h3>11.2 Choosing a prompt framework</h3>
-<p>Each framework makes one field mandatory, and that field is what stops the task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
+<p>Each framework makes one field mandatory. That field is what stops the task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:13%">Framework</th><th style="width:24%">Load-bearing field</th><th style="width:29%">Use at Lingotran for</th><th>Do not use for</th></tr></thead>
 <tbody>
@@ -189,7 +189,7 @@
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">TAG is the one that bites</b>
-<p>The fastest to type, and the only one with no guard rail — no Restriction to keep a command off production, no Evaluation to make the model check itself. Fine for a local repro, dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies.</p></div>
+<p>The fastest to type, and the only one with no guard rail. No Restriction to keep a command off production. No Evaluation to make the model check itself. Fine for a local repro, dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong. It is a plausible one nobody verifies.</p></div>
 
 <h3>11.3 The frameworks, written for Lingotran</h3>
 <div class="fn">TREF · standing SQL validation, UAT only</div>
@@ -259,6 +259,6 @@
 <b>GOAL</b>   Show the response and the row count. Local database only.</pre>
 
 <div class="box warn"><b class="bl">Distrust list</b>
-<p>AI will confidently invent Azure service limits, PostgreSQL syntax details, Playwright APIs that do not exist, WCAG success-criterion numbers, and library version behaviour. It will also produce test cases that look thorough while omitting the concurrency case that matters. Verify anything you would put your name on, and never paste learner data, audio, credentials, or connection strings into a prompt.</p></div>
+<p>AI will confidently invent Azure limits, PostgreSQL syntax, Playwright APIs that do not exist, WCAG criterion numbers and library behaviour. It will also write test cases that look thorough while missing the concurrency case that matters. Verify anything you would put your name on. Never paste learner data, audio, credentials or connection strings into a prompt.</p></div>
 
 </div></details>

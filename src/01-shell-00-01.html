@@ -241,6 +241,26 @@ pre u{color:var(--coral-text);text-decoration:underline;text-decoration-style:do
   background-size:contain;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2341009A' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E")}
 
+/* ---- infographic: meters, stat tiles ---- */
+.meter{display:block;height:6px;border-radius:3px;background:var(--lilac);overflow:hidden;margin-top:4px;max-width:120px}
+.meter i{display:block;height:100%;border-radius:3px;width:var(--v);
+  background:linear-gradient(90deg,var(--brand-purple),var(--violet));
+  animation:meterin 1s cubic-bezier(.2,.8,.2,1) both}
+.meter.hot i{background:linear-gradient(90deg,#B3003C,var(--coral-text))}
+@keyframes meterin{from{width:0}}
+
+.stats{display:grid;gap:10px;margin:14px 0;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+.stat{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px 15px;
+  animation:statin .6s cubic-bezier(.2,.8,.2,1) both}
+.stat:nth-child(2){animation-delay:.07s}.stat:nth-child(3){animation-delay:.14s}
+.stat:nth-child(4){animation-delay:.21s}.stat:nth-child(5){animation-delay:.28s}
+.stat b{display:block;font-size:27px;font-weight:800;color:var(--brand-purple);line-height:1.05;
+  font-variant-numeric:tabular-nums}
+.stat em{font-style:normal;font-size:12.5px;font-weight:800;color:var(--ink);display:block;margin-top:3px}
+.stat span{display:block;font-size:11.5px;color:var(--caption-safe);font-weight:600;margin-top:2px;line-height:1.35}
+@keyframes statin{from{opacity:0;transform:translateY(8px)}}
+
 /* ---- animated flow diagram ---- */
 .flowwrap{margin:12px 0;overflow-x:auto}
 .flow{width:100%;min-width:760px;height:auto;display:block}
@@ -330,6 +350,14 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <div class="inner">
 
 <p>A reference, not a course. Filter from the top bar; nothing here is read front to back.</p>
+
+<div class="stats">
+  <div class="stat"><b>~30</b><em>learners per class</em><span>one NAT IP, shared devices</span></div>
+  <div class="stat"><b>1</b><em>QA engineer</em><span>against ~12 who write code</span></div>
+  <div class="stat"><b>2</b><em>API instances</em><span>every in-process limit doubles</span></div>
+  <div class="stat"><b>0</b><em>speech on UAT</em><span>http blocks the mic entirely</span></div>
+  <div class="stat"><b>REF-02</b><em>the critical check</em><span>accented but correct</span></div>
+</div>
 
 <h4>Route by what is in front of you</h4>
 <div class="tw"><table>
@@ -430,13 +458,13 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <div class="tw"><table>
 <thead><tr><th>Lingotran area</th><th style="width:10%">Impact</th><th style="width:10%">Likelihood</th><th style="width:9%">Score</th><th>Why</th></tr></thead>
 <tbody>
-<tr><td>Login &amp; session</td><td>5</td><td>4</td><td><strong>20</strong></td><td>Total lockout for a whole school; changes often</td></tr>
-<tr><td>Speech capture &amp; scoring</td><td>5</td><td>4</td><td><strong>20</strong></td><td>The product's reason to exist; browser and device variance is huge</td></tr>
-<tr><td>Lesson progress persistence</td><td>5</td><td>3</td><td><strong>15</strong></td><td>Lost progress destroys trust and is unrecoverable</td></tr>
-<tr><td>Teacher class reports</td><td>4</td><td>3</td><td><strong>12</strong></td><td>Drives renewal conversations with institutions</td></tr>
-<tr><td>Role-based access</td><td>5</td><td>2</td><td><strong>10</strong></td><td>A student seeing another class's data is a safeguarding incident</td></tr>
-<tr><td>Billing &amp; seat counts</td><td>4</td><td>2</td><td><strong>8</strong></td><td>Contractual exposure, but changes rarely</td></tr>
-<tr><td>Marketing pages</td><td>1</td><td>3</td><td><strong>3</strong></td><td>Embarrassing, not damaging</td></tr>
+<tr><td>Login &amp; session</td><td>5</td><td>4</td><td><strong>20</strong><span class="meter hot"><i style="--v:100%"></i></span></td><td>Total lockout for a whole school; changes often</td></tr>
+<tr><td>Speech capture &amp; scoring</td><td>5</td><td>4</td><td><strong>20</strong><span class="meter hot"><i style="--v:100%"></i></span></td><td>The product's reason to exist; browser and device variance is huge</td></tr>
+<tr><td>Lesson progress persistence</td><td>5</td><td>3</td><td><strong>15</strong><span class="meter hot"><i style="--v:75%"></i></span></td><td>Lost progress destroys trust and is unrecoverable</td></tr>
+<tr><td>Teacher class reports</td><td>4</td><td>3</td><td><strong>12</strong><span class="meter"><i style="--v:60%"></i></span></td><td>Drives renewal conversations with institutions</td></tr>
+<tr><td>Role-based access</td><td>5</td><td>2</td><td><strong>10</strong><span class="meter"><i style="--v:50%"></i></span></td><td>A student seeing another class's data is a safeguarding incident</td></tr>
+<tr><td>Billing &amp; seat counts</td><td>4</td><td>2</td><td><strong>8</strong><span class="meter"><i style="--v:40%"></i></span></td><td>Contractual exposure, but changes rarely</td></tr>
+<tr><td>Marketing pages</td><td>1</td><td>3</td><td><strong>3</strong><span class="meter"><i style="--v:15%"></i></span></td><td>Embarrassing, not damaging</td></tr>
 </tbody></table></div>
 
 <div class="box"><b class="bl">The institution multiplier</b>

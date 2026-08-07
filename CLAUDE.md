@@ -37,7 +37,7 @@ no external JS, opens by double-click.
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~26.5. Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~27.8 Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -52,10 +52,10 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 3,320 words | 6.9 |
+| Prose | 3,516 words | 7.3 |
 | Code | 375 lines | 7.2 |
-| Tables | 372 rows | 12.4 |
-| **Total** | | **26.5** |
+| Tables | 399 rows | 13.3 |
+| **Total** | | **27.8** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
@@ -153,12 +153,12 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 14 modules, ~26.5 pages:**
+**Complete — 14 modules, ~27.8 pages:**
 
 | # | Module | Pages |
 |---|---|---|
 | 00 | How to use this manual | 1 |
-| 01 | The QA operating model | 4 |
+| 01 | The QA operating model | 6 |
 | 02 | Lingotran architecture & the layer trace | 5 |
 | 03 | Requirements to test design | 4 |
 | 04 | Frontend testing · React | 4 |
@@ -175,7 +175,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 *(Per-module page labels in `<span class="pp">` are indicative, set by hand. The real
 total comes from `verify.py`.)*
 
-**~24 pages of headroom** against the 50 ceiling.
+**~22 pages of headroom** against the 50 ceiling.
 
 **Open / candidates for the headroom:**
 - Module 08 — Playwright fixture patterns, sharding, trace-on-failure triage.

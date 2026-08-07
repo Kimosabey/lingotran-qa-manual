@@ -325,8 +325,7 @@ Given a spec path:
 <div class="tw"><table>
 <thead><tr><th style="width:20%">Need</th><th style="width:22%">Tool</th><th style="width:12%">Cost</th><th>Why it is on this list</th></tr></thead>
 <tbody>
-<tr><td><strong>TLS on UAT</strong></td><td><code>mkcert</code>, or a reverse proxy that terminates TLS</td><td>Free, an afternoon</td><td><strong>Unblocks all speech testing.</strong> A self-signed certificate is enough — the browser only checks for a secure context (2.3)</td></tr>
-<tr><td><strong>A real iPad</strong></td><td>Physical device — the Mac Mini's iOS Simulator covers the yes/no first</td><td>Device</td><td>Simulator answers whether speech exists on iPad Safari at all; only hardware confirms mic quality, Bluetooth and school wifi (7.5)</td></tr>
+<tr><td><strong>A secure origin</strong></td><td>An HTTPS tunnel today; <code>mkcert</code> or a TLS proxy on UAT for the durable fix</td><td>Minutes, then an afternoon</td><td><strong>The single blocker.</strong> The device lab already exists — without HTTPS none of it can test speech (7.5)</td></tr>
 <tr><td>Secrets scanning</td><td><code>gitleaks</code> in the pipeline</td><td>Free</td><td>Nothing currently stops a key reaching the repo. The hook only guards the terminal</td></tr>
 <tr><td>Dependency scanning</td><td><code>npm audit</code> gate, or Dependabot</td><td>Free</td><td>Supply chain is entirely unwatched today</td></tr>
 <tr><td>Static analysis</td><td>CodeQL or SonarQube</td><td>Free tier</td><td>9.2 lists injection and XSS as manual checks; most of that is automatable</td></tr>

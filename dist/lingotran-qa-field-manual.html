@@ -381,7 +381,7 @@ footer{text-align:center;padding:34px 22px 48px;color:var(--body);font-size:12px
 <div class="tw"><table>
 <thead><tr><th style="width:28%">Establish</th><th style="width:34%">How</th><th>Why it comes first</th></tr></thead>
 <tbody>
-<tr><td><strong>Does speech work on a real iPad?</strong></td><td>Borrow one. Open a lesson on school-grade wifi. Record</td><td>If it does not, the core feature is unavailable on the customer's main device. Everything else is secondary (7.2)</td></tr>
+<tr><td><strong>Does speech work on a real iPad?</strong></td><td>The office has one. Serve over HTTPS first, or it cannot answer (7.5)</td><td>If it does not, the core feature is unavailable on the customer's main device. Everything else is secondary (7.2)</td></tr>
 <tr><td><strong>Is Google a named sub-processor?</strong></td><td>Read the signed school agreement, not the marketing page</td><td>Children's audio leaves the device. If the paperwork does not cover it, that is a legal exposure, not a defect (7.4)</td></tr>
 <tr><td><strong>Is UAT on HTTPS?</strong></td><td>Open it and look at the scheme</td><td>On HTTP the mic and speech APIs are blocked outright — no speech testing is possible there (2.3)</td></tr>
 <tr><td>Does UAT match production?</td><td>Row counts, and the API instance count</td><td>A one-instance UAT cannot reproduce the rate-limiter class of defect at all (2.3, 2.4)</td></tr>
@@ -391,7 +391,7 @@ footer{text-align:center;padding:34px 22px 48px;color:var(--body);font-size:12px
 <tr><td>Baseline the pipeline</td><td>Duration, failure rate, which specs re-run green</td><td>Flaky rate is a metric from day one, not something to start measuring later (12.6)</td></tr>
 <tr><td>Find the escalation route</td><td>Ask who to call, same day, for a safeguarding issue</td><td>You need this before the incident, never during it (9.2)</td></tr>
 <tr><td>Find what was promised</td><td>Ask sales what schools were told</td><td>Severity is meaningless without the contractual stake</td></tr>
-<tr><td>Confirm device access</td><td>Real iPad, a headset, a Bluetooth pair</td><td>Half the defects in Module 07 are unreproducible without them</td></tr>
+<tr><td>Confirm a headset and a Bluetooth pair</td><td>iPad, iPhone and Android are already in the office</td><td>The Bluetooth narrowband downgrade needs real hardware to reproduce (7.5)</td></tr>
 </tbody></table></div>
 <div class="box warn"><b class="bl">Discovery output is a risk list, not a test plan</b>
 <p>End the pass with what you now know to be untrue, unavailable or unowned — and say it out loud before writing a single case. A test plan built on unchecked assumptions tests the assumptions, not the product.</p></div>
@@ -1077,15 +1077,27 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 <div class="box warn"><b class="bl">The Bluetooth downgrade</b>
 <p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
 
-<h4>What the two machines already cover</h4>
+<h4>The kit that already exists</h4>
 <div class="tw"><table>
-<thead><tr><th style="width:20%">Machine</th><th style="width:34%">Covers</th><th>Still cannot tell you</th></tr></thead>
+<thead><tr><th style="width:20%">Available now</th><th style="width:34%">Covers</th><th>Cannot tell you</th></tr></thead>
 <tbody>
 <tr><td><strong>Windows</strong></td><td>Chrome and Edge — where speech actually works. NVDA for screen-reader passes (9.3)</td><td>Anything Safari or iOS</td></tr>
-<tr><td><strong>Mac Mini</strong></td><td>Desktop Safari, VoiceOver, and <strong>iOS Simulator via Xcode</strong> — which does reach iPad Safari and can borrow the host microphone</td><td>Real iPad mic hardware, Bluetooth profile switching, and school wifi</td></tr>
+<tr><td><strong>Mac Mini</strong></td><td>Desktop Safari, VoiceOver, and iOS Simulator via Xcode</td><td>Real microphone hardware and real network conditions</td></tr>
+<tr><td><strong>iPad</strong> — physical</td><td><strong>The device schools actually use.</strong> Real mic, real Safari, real touch</td><td>Nothing. This is the one that settles it</td></tr>
+<tr><td><strong>iPhone</strong> — physical</td><td>iOS Safari for B2C, the segment most exposed to the speech gap (1.7)</td><td>—</td></tr>
+<tr><td><strong>Android</strong> — physical</td><td>Chrome on mobile — where B2C speech should work</td><td>—</td></tr>
 </tbody></table></div>
-<div class="box good"><b class="bl">The Simulator answers the blocking question free</b>
-<p>Does <code>SpeechRecognition</code> exist at all in iPad Safari? That yes/no needs no hardware. A physical iPad is still needed to <em>confirm quality</em> — just no longer to <em>discover the blocker</em>.</p></div>
+
+<div class="box warn"><b class="bl">The devices are here. HTTP is now the only thing in the way</b>
+<p>A physical iPad cannot use the <code>localhost</code> exemption — that applies only to the machine serving the page. Pointed at an HTTP dev or UAT host, the iPad gets <strong>no microphone and no speech API at all</strong> (2.3). So the device lab, which should have settled the biggest open risk, currently cannot.</p>
+<p>Three ways to test speech on real hardware <em>today</em>, in order of effort:</p></div>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Route</th><th style="width:30%">What it gives</th><th>Cost</th></tr></thead>
+<tbody>
+<tr><td><strong>HTTPS tunnel to a dev machine</strong></td><td>A real secure origin the iPad can reach. Unblocks everything today</td><td>Minutes, no infrastructure change</td></tr>
+<tr><td>TLS on UAT</td><td>The durable fix. Self-signed is enough; install the local CA on each device</td><td>An afternoon</td></tr>
+<tr><td>Production, canary account</td><td>Real proof, but read-only smoke only — never exploratory (2.3)</td><td>Free, and limited</td></tr>
+</tbody></table></div>
 
 <h3>7.6 Limits we do not control</h3>
 <p>There is no bill and no quota page, so it is tempting to assume there is no limit. There is — we just cannot see it. Thirty learners in one room speak at the same time, through one school connection.</p>
@@ -1845,8 +1857,7 @@ Given a spec path:
 <div class="tw"><table>
 <thead><tr><th style="width:20%">Need</th><th style="width:22%">Tool</th><th style="width:12%">Cost</th><th>Why it is on this list</th></tr></thead>
 <tbody>
-<tr><td><strong>TLS on UAT</strong></td><td><code>mkcert</code>, or a reverse proxy that terminates TLS</td><td>Free, an afternoon</td><td><strong>Unblocks all speech testing.</strong> A self-signed certificate is enough — the browser only checks for a secure context (2.3)</td></tr>
-<tr><td><strong>A real iPad</strong></td><td>Physical device — the Mac Mini's iOS Simulator covers the yes/no first</td><td>Device</td><td>Simulator answers whether speech exists on iPad Safari at all; only hardware confirms mic quality, Bluetooth and school wifi (7.5)</td></tr>
+<tr><td><strong>A secure origin</strong></td><td>An HTTPS tunnel today; <code>mkcert</code> or a TLS proxy on UAT for the durable fix</td><td>Minutes, then an afternoon</td><td><strong>The single blocker.</strong> The device lab already exists — without HTTPS none of it can test speech (7.5)</td></tr>
 <tr><td>Secrets scanning</td><td><code>gitleaks</code> in the pipeline</td><td>Free</td><td>Nothing currently stops a key reaching the repo. The hook only guards the terminal</td></tr>
 <tr><td>Dependency scanning</td><td><code>npm audit</code> gate, or Dependabot</td><td>Free</td><td>Supply chain is entirely unwatched today</td></tr>
 <tr><td>Static analysis</td><td>CodeQL or SonarQube</td><td>Free tier</td><td>9.2 lists injection and XSS as manual checks; most of that is automatable</td></tr>

@@ -92,15 +92,27 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 <div class="box warn"><b class="bl">The Bluetooth downgrade</b>
 <p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
 
-<h4>What the two machines already cover</h4>
+<h4>The kit that already exists</h4>
 <div class="tw"><table>
-<thead><tr><th style="width:20%">Machine</th><th style="width:34%">Covers</th><th>Still cannot tell you</th></tr></thead>
+<thead><tr><th style="width:20%">Available now</th><th style="width:34%">Covers</th><th>Cannot tell you</th></tr></thead>
 <tbody>
 <tr><td><strong>Windows</strong></td><td>Chrome and Edge — where speech actually works. NVDA for screen-reader passes (9.3)</td><td>Anything Safari or iOS</td></tr>
-<tr><td><strong>Mac Mini</strong></td><td>Desktop Safari, VoiceOver, and <strong>iOS Simulator via Xcode</strong> — which does reach iPad Safari and can borrow the host microphone</td><td>Real iPad mic hardware, Bluetooth profile switching, and school wifi</td></tr>
+<tr><td><strong>Mac Mini</strong></td><td>Desktop Safari, VoiceOver, and iOS Simulator via Xcode</td><td>Real microphone hardware and real network conditions</td></tr>
+<tr><td><strong>iPad</strong> — physical</td><td><strong>The device schools actually use.</strong> Real mic, real Safari, real touch</td><td>Nothing. This is the one that settles it</td></tr>
+<tr><td><strong>iPhone</strong> — physical</td><td>iOS Safari for B2C, the segment most exposed to the speech gap (1.7)</td><td>—</td></tr>
+<tr><td><strong>Android</strong> — physical</td><td>Chrome on mobile — where B2C speech should work</td><td>—</td></tr>
 </tbody></table></div>
-<div class="box good"><b class="bl">The Simulator answers the blocking question free</b>
-<p>Does <code>SpeechRecognition</code> exist at all in iPad Safari? That yes/no needs no hardware. A physical iPad is still needed to <em>confirm quality</em> — just no longer to <em>discover the blocker</em>.</p></div>
+
+<div class="box warn"><b class="bl">The devices are here. HTTP is now the only thing in the way</b>
+<p>A physical iPad cannot use the <code>localhost</code> exemption — that applies only to the machine serving the page. Pointed at an HTTP dev or UAT host, the iPad gets <strong>no microphone and no speech API at all</strong> (2.3). So the device lab, which should have settled the biggest open risk, currently cannot.</p>
+<p>Three ways to test speech on real hardware <em>today</em>, in order of effort:</p></div>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Route</th><th style="width:30%">What it gives</th><th>Cost</th></tr></thead>
+<tbody>
+<tr><td><strong>HTTPS tunnel to a dev machine</strong></td><td>A real secure origin the iPad can reach. Unblocks everything today</td><td>Minutes, no infrastructure change</td></tr>
+<tr><td>TLS on UAT</td><td>The durable fix. Self-signed is enough; install the local CA on each device</td><td>An afternoon</td></tr>
+<tr><td>Production, canary account</td><td>Real proof, but read-only smoke only — never exploratory (2.3)</td><td>Free, and limited</td></tr>
+</tbody></table></div>
 
 <h3>7.6 Limits we do not control</h3>
 <p>There is no bill and no quota page, so it is tempting to assume there is no limit. There is — we just cannot see it. Thirty learners in one room speak at the same time, through one school connection.</p>

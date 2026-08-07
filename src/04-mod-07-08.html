@@ -39,7 +39,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">The iPad problem — read this first</b>
-<p>Schools run iPads. Speech recognition in the browser is a Chrome feature; on iPad Safari it is missing or unreliable. So the main thing Lingotran does may simply not work on the main device our customers own. <strong>Test this before anything else, on a real iPad, on school wifi.</strong> If it does not work, that is a product decision, not a bug — and QA's job is to say so plainly and early, not to file it as a defect and wait.</p></div>
+<p>Schools run iPads, and browser speech recognition is a Chrome feature — on iPad Safari it is missing or unreliable. The main thing Lingotran does may not work on the main device our customers own. <strong>Test this before anything else, on a real iPad, on school wifi.</strong> If it fails, that is a product decision, not a bug: say so early rather than filing it and waiting.</p></div>
 
 <h3>7.3 The reference clip corpus</h3>
 <p>A fixed set of recordings we replay every release and compare against the last run. Because we invent the score ourselves, this is the only way to notice it changing.</p>
@@ -90,7 +90,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">The Bluetooth downgrade</b>
-<p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
+<p>The moment a Bluetooth microphone opens, most stacks drop the link to a narrowband voice profile — roughly 8 kHz mono. That strips the consonant detail recognition depends on, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing and looks exactly like a learner getting worse. <strong>Record input device and sample rate on every attempt</strong> — without them this defect is unfalsifiable.</p></div>
 
 <h4>The kit that already exists</h4>
 <div class="tw"><table>
@@ -143,7 +143,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">Colour alone is not feedback</b>
-<p>Right and wrong words are almost always shown in red and green. A colour-blind learner gets nothing from that, and a screen reader reads out a row of meaningless words. Every marker needs text or a shape as well as colour, plus an accessible name. This is the accessibility defect most likely to pass an axe scan, because the contrast is fine and the markup is valid (9.3).</p></div>
+<p>Right and wrong words are almost always red and green. A colour-blind learner gets nothing from that, and a screen reader reads a row of meaningless words. Every marker needs text or shape as well as colour. This is the a11y defect most likely to pass an axe scan — the contrast is fine and the markup is valid (9.3).</p></div>
 
 <div class="box"><b class="bl">Say "we could not hear you", not "you were wrong"</b>
 <p>Because the transcript is the only evidence we have, we genuinely cannot tell a mispronounced word from a misheard one. The wording of the feedback has to respect that. A child told they are wrong when they were right stops trusting the product, and a class of thirty stops together. <strong>Test the wording, not only the number.</strong></p></div>

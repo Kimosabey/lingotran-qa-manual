@@ -566,7 +566,7 @@ footer{text-align:center;padding:clamp(26px,3vw,40px) var(--gutter) clamp(34px,4
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">One QA cannot run this table by hand</b>
-<p>Count the rows marked QA. The only way a single engineer covers that surface is by refusing to do it manually: the pipeline runs regression, contract, isolation and load without asking; the nightly corpus watches scoring; and the fan-out subagents in Module 13 widen PR review. <strong>What must stay manual is exactly what automation cannot do</strong> — exploratory, real devices, and the judgement call at sign-off. If manual effort is going anywhere else, something automatable has been left undone.</p></div>
+<p>Count the rows marked QA. One engineer covers that surface only by refusing to do it manually — the pipeline runs regression, contract, isolation and load without asking. <strong>What stays manual is what automation cannot do:</strong> exploratory, real devices, and the judgement at sign-off. Manual effort anywhere else means something automatable was left undone.</p></div>
 
 <div class="box"><b class="bl">Where the boundary sits</b>
 <p>QA does not write unit tests, does not judge whether German or Kannada reference text is linguistically correct, and does not own infrastructure. QA <em>does</em> own whether the absence of those things is stated as a risk at sign-off. Unowned is not the same as untested — say which one it is.</p></div>

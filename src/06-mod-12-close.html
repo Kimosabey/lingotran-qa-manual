@@ -318,7 +318,7 @@ Given a spec path:
 <tr><td><strong>Antigravity</strong></td><td>Driving a real browser, capturing evidence, exploratory support</td><td>Anything trusted without a human reading it</td><td>Point it at <code>AGENTS.md</code></td></tr>
 </tbody></table></div>
 <div class="box warn"><b class="bl">Only one of them can gate</b>
-<p>Claude Code is the only one carrying a deterministic hook — <code>.claude/hooks/guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the same rules <em>by convention only</em>. That is a real difference: their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
+<p>Only Claude Code carries a deterministic hook — <code>guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the rules <em>by convention only</em>. Their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
 
 <h3>13.8 Tools still missing</h3>
 <p>The AI toolchain above is the accelerator. These are gaps in the basic kit, ordered by what is currently blocking the most.</p>
@@ -368,7 +368,7 @@ FIRST ACTION    REF-02 breach. The flag flip is the obvious suspect — check it
 <p>A failure is loud. A job that silently did not run looks exactly like a clean night. The report states every check including the zeros, and says plainly when something is missing — <strong>"cross-school rows: 0" and "cross-school check: DID NOT RUN" must never be confusable.</strong></p></div>
 
 <div class="box warn"><b class="bl">The governing rule</b>
-<p>Agents propose; deterministic checks dispose. Every gate in this manual — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that either holds or does not, and none of them may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. Never let it decide severity, readiness, or whether a score is correct (Module 11). The moment an agent can turn a gate green, the gate has stopped being one.</p></div>
+<p>Agents propose; deterministic checks dispose. Every gate here — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that holds or does not, and none may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. <strong>The moment an agent can turn a gate green, the gate has stopped being one.</strong></p></div>
 
 <div class="box"><b class="bl">Before pasting anything</b>
 <p>Never put learner audio, learner names, credentials, connection strings, or a production log excerpt into a prompt. Learners are minors and the audio is personal data under the school agreement (7.4). Redact to IDs and correlation IDs — they are enough to reconstruct a timeline and carry nothing about a child.</p></div>

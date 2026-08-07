@@ -566,7 +566,7 @@ footer{text-align:center;padding:clamp(26px,3vw,40px) var(--gutter) clamp(34px,4
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">One QA cannot run this table by hand</b>
-<p>Count the rows marked QA. The only way a single engineer covers that surface is by refusing to do it manually: the pipeline runs regression, contract, isolation and load without asking; the nightly corpus watches scoring; and the fan-out subagents in Module 13 widen PR review. <strong>What must stay manual is exactly what automation cannot do</strong> — exploratory, real devices, and the judgement call at sign-off. If manual effort is going anywhere else, something automatable has been left undone.</p></div>
+<p>Count the rows marked QA. One engineer covers that surface only by refusing to do it manually — the pipeline runs regression, contract, isolation and load without asking. <strong>What stays manual is what automation cannot do:</strong> exploratory, real devices, and the judgement at sign-off. Manual effort anywhere else means something automatable was left undone.</p></div>
 
 <div class="box"><b class="bl">Where the boundary sits</b>
 <p>QA does not write unit tests, does not judge whether German or Kannada reference text is linguistically correct, and does not own infrastructure. QA <em>does</em> own whether the absence of those things is stated as a risk at sign-off. Unowned is not the same as untested — say which one it is.</p></div>
@@ -668,7 +668,7 @@ footer{text-align:center;padding:clamp(26px,3vw,40px) var(--gutter) clamp(34px,4
 <p><strong>A UAT sign-off on anything speech-related is currently worth nothing</strong> — the feature cannot execute. Fix it with TLS on UAT (a self-signed certificate suffices; the browser only checks for a secure context), or record it as accepted risk at every release (12.1).</p></div>
 
 <div class="box warn"><b class="bl">UAT is doing the work of two environments</b>
-<p>With no separate performance environment, UAT is simultaneously where people click around and where load tests run. Those two uses fight: a k6 class-burst while someone is doing acceptance testing invalidates both. <strong>Book it.</strong> Load runs go nightly when nobody is in it, and the results are only meaningful if UAT matches production on the two things that bite — <strong>data volume and instance count</strong>. A single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>
+<p>UAT is both where people click around and where load tests run, and those uses fight — a k6 burst during acceptance testing invalidates both. <strong>Book it, and run load nightly.</strong> Results only mean anything if UAT matches production on <strong>data volume and instance count</strong>; a single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>
 
 <div class="box warn"><b class="bl">The 200-row lie</b>
 <p>PostgreSQL will happily seq-scan 200 rows faster than it uses an index, so a missing index is invisible locally and in CI. It appears as gradually rising latency in production, then a timeout cliff. Any query added in a PR must be checked with <code>EXPLAIN</code> against UAT volumes, not local.</p></div>
@@ -1035,7 +1035,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">The iPad problem — read this first</b>
-<p>Schools run iPads. Speech recognition in the browser is a Chrome feature; on iPad Safari it is missing or unreliable. So the main thing Lingotran does may simply not work on the main device our customers own. <strong>Test this before anything else, on a real iPad, on school wifi.</strong> If it does not work, that is a product decision, not a bug — and QA's job is to say so plainly and early, not to file it as a defect and wait.</p></div>
+<p>Schools run iPads, and browser speech recognition is a Chrome feature — on iPad Safari it is missing or unreliable. The main thing Lingotran does may not work on the main device our customers own. <strong>Test this before anything else, on a real iPad, on school wifi.</strong> If it fails, that is a product decision, not a bug: say so early rather than filing it and waiting.</p></div>
 
 <h3>7.3 The reference clip corpus</h3>
 <p>A fixed set of recordings we replay every release and compare against the last run. Because we invent the score ourselves, this is the only way to notice it changing.</p>
@@ -1086,7 +1086,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">The Bluetooth downgrade</b>
-<p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
+<p>The moment a Bluetooth microphone opens, most stacks drop the link to a narrowband voice profile — roughly 8 kHz mono. That strips the consonant detail recognition depends on, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing and looks exactly like a learner getting worse. <strong>Record input device and sample rate on every attempt</strong> — without them this defect is unfalsifiable.</p></div>
 
 <h4>The kit that already exists</h4>
 <div class="tw"><table>
@@ -1139,7 +1139,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">Colour alone is not feedback</b>
-<p>Right and wrong words are almost always shown in red and green. A colour-blind learner gets nothing from that, and a screen reader reads out a row of meaningless words. Every marker needs text or a shape as well as colour, plus an accessible name. This is the accessibility defect most likely to pass an axe scan, because the contrast is fine and the markup is valid (9.3).</p></div>
+<p>Right and wrong words are almost always red and green. A colour-blind learner gets nothing from that, and a screen reader reads a row of meaningless words. Every marker needs text or shape as well as colour. This is the a11y defect most likely to pass an axe scan — the contrast is fine and the markup is valid (9.3).</p></div>
 
 <div class="box"><b class="bl">Say "we could not hear you", not "you were wrong"</b>
 <p>Because the transcript is the only evidence we have, we genuinely cannot tell a mispronounced word from a misheard one. The wording of the feedback has to respect that. A child told they are wrong when they were right stops trusting the product, and a class of thirty stops together. <strong>Test the wording, not only the number.</strong></p></div>
@@ -1405,7 +1405,7 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 <summary><span class="n">11</span> AI-assisted QA<span class="pp">6 p</span></summary>
 <div class="inner">
 
-<p>AI is fast at first drafts and structurally unreliable on facts. Use it where a wrong answer is cheap and visible; never where a wrong answer is silent.</p>
+<p>Fast at first drafts, unreliable on facts. Use it where a wrong answer is cheap and visible; never where it is silent.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:34%">Task</th><th style="width:14%">Verdict</th><th>Why</th></tr></thead>
 <tbody>
@@ -1418,44 +1418,24 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 <tr><td>Assert whether a score is correct</td><td><strong>Never</strong></td><td>Only the REF corpus can answer that</td></tr>
 </tbody></table></div>
 
-<h3>11.1 Prompt library</h3>
-<div class="fn">PR review orientation</div>
-<pre>You are reviewing a pull request for Lingotran (React + Node/Express + PostgreSQL).
-Here is the diff: [paste]
-
-1. Which layers of this stack does the change touch?
-2. What behaviour could change that the diff does not make obvious?
-3. What is now testable that was not before?
-4. Which existing behaviour is most at risk of regression?
-5. List 5 test cases, each naming the layer it belongs at.
-Do not summarise the diff back to me. Only answer 1-5.</pre>
-
-<div class="fn">Test case generation</div>
-<pre>Story: [paste story + ACs]
-Context: Lingotran serves schools. Learners are often minors. A class is ~30 learners
-behind a single NAT IP on shared devices, many on iPad Safari.
-
-Generate test cases as a table: ID | Case | Expected | Layer (unit/api/e2e/manual).
-Include: happy path, boundaries, at least 3 negatives, 1 concurrency case,
-1 accessibility case, 1 case specific to a whole class doing this at once.
-Flag any AC that is ambiguous rather than guessing what it means.</pre>
-
-<div class="fn">Playwright conversion</div>
-<pre>Convert this manual test to a Playwright spec for Lingotran.
-Rules: seed state via API not UI; locate by getByRole with accessible name;
-no waitForTimeout; assert the database at the end; one assertion theme per test.
-Manual case: [paste]</pre>
-
-<div class="fn">Log triage</div>
-<pre>These are Application Insights entries around incident [ID]: [paste]
-Correlation ID: [id]
-1. Reconstruct the request timeline across frontend, API, database, speech.
-2. Identify the first anomalous event, quoting the exact line.
-3. List up to 3 hypotheses, each with the specific evidence that would confirm it.
-Mark clearly anything you inferred rather than read directly in the log.</pre>
+<h3>11.1 Where the recurring prompts live</h3>
+<p>Anything explained twice belongs in a skill, not retyped. These exist as files in <code>.claude/skills/</code> and travel with the repo, so every engineer gets the same standard (13.2).</p>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">When you are…</th><th style="width:26%">Skill</th><th>What it enforces that a typed prompt forgets</th></tr></thead>
+<tbody>
+<tr><td>Reading a pull request</td><td><code>/lt-pr-trace</code></td><td>Downstream layers, sibling routes, check-then-act, in-process state</td></tr>
+<tr><td>Handed a story</td><td><code>/lt-story-interrogate</code></td><td>The seven questions, and a refusal to guess at an ambiguous AC</td></tr>
+<tr><td>Writing test cases</td><td><code>/lt-testgen</code></td><td>The mandatory concurrency, whole-class, a11y and non-Latin rows</td></tr>
+<tr><td>Automating a case</td><td><code>/lt-playwright</code></td><td>All six house rules, and that a pass before the feature exists is a broken assertion</td></tr>
+<tr><td>Writing validation SQL</td><td><code>/lt-sql-guard</code></td><td>SELECT-only, never production, never executed unprompted</td></tr>
+<tr><td>In an incident</td><td><code>/lt-incident-timeline</code></td><td>Mitigate first; mark what was inferred rather than read</td></tr>
+<tr><td>Starting the day</td><td><code>/lt-morning-report</code></td><td>Ranked by consequence, and says loudly when a job did not run</td></tr>
+</tbody></table></div>
+<div class="box"><b class="bl">Why not keep the prompts here</b>
+<p>A prompt in a document is copied, edited and drifts. A skill in the repo is reviewed like code and applies identically for everyone. The worked examples below stay because they teach the <em>shape</em> of a framework, which a skill cannot.</p></div>
 
 <h3>11.2 Choosing a prompt framework</h3>
-<p>A framework is not decoration. Each one makes a different field mandatory, and the field it forces you to write is the one that stops that task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
+<p>Each framework makes one field mandatory, and that field is what stops the task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:13%">Framework</th><th style="width:24%">Load-bearing field</th><th style="width:29%">Use at Lingotran for</th><th>Do not use for</th></tr></thead>
 <tbody>
@@ -1468,7 +1448,7 @@ Mark clearly anything you inferred rather than read directly in the log.</pre>
 </tbody></table></div>
 
 <div class="box warn"><b class="bl">TAG is the one that bites</b>
-<p>It is the fastest to type and the only one with no guard rail — no Restriction field to keep a command off production, no Evaluation field to make the model check its own output. That is fine for a local repro and dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies. Every framework above except TAG forces a field that catches exactly that.</p></div>
+<p>The fastest to type, and the only one with no guard rail — no Restriction to keep a command off production, no Evaluation to make the model check itself. Fine for a local repro, dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies.</p></div>
 
 <h3>11.3 The frameworks, written for Lingotran</h3>
 <div class="fn">TREF · standing SQL validation, UAT only</div>
@@ -1861,7 +1841,7 @@ Given a spec path:
 <tr><td><strong>Antigravity</strong></td><td>Driving a real browser, capturing evidence, exploratory support</td><td>Anything trusted without a human reading it</td><td>Point it at <code>AGENTS.md</code></td></tr>
 </tbody></table></div>
 <div class="box warn"><b class="bl">Only one of them can gate</b>
-<p>Claude Code is the only one carrying a deterministic hook — <code>.claude/hooks/guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the same rules <em>by convention only</em>. That is a real difference: their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
+<p>Only Claude Code carries a deterministic hook — <code>guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the rules <em>by convention only</em>. Their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
 
 <h3>13.8 Tools still missing</h3>
 <p>The AI toolchain above is the accelerator. These are gaps in the basic kit, ordered by what is currently blocking the most.</p>
@@ -1911,7 +1891,7 @@ FIRST ACTION    REF-02 breach. The flag flip is the obvious suspect — check it
 <p>A failure is loud. A job that silently did not run looks exactly like a clean night. The report states every check including the zeros, and says plainly when something is missing — <strong>"cross-school rows: 0" and "cross-school check: DID NOT RUN" must never be confusable.</strong></p></div>
 
 <div class="box warn"><b class="bl">The governing rule</b>
-<p>Agents propose; deterministic checks dispose. Every gate in this manual — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that either holds or does not, and none of them may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. Never let it decide severity, readiness, or whether a score is correct (Module 11). The moment an agent can turn a gate green, the gate has stopped being one.</p></div>
+<p>Agents propose; deterministic checks dispose. Every gate here — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that holds or does not, and none may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. <strong>The moment an agent can turn a gate green, the gate has stopped being one.</strong></p></div>
 
 <div class="box"><b class="bl">Before pasting anything</b>
 <p>Never put learner audio, learner names, credentials, connection strings, or a production log excerpt into a prompt. Learners are minors and the audio is personal data under the school agreement (7.4). Redact to IDs and correlation IDs — they are enough to reconstruct a timeline and carry nothing about a child.</p></div>

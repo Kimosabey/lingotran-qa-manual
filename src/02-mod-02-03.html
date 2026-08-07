@@ -75,7 +75,7 @@
 <p><strong>A UAT sign-off on anything speech-related is currently worth nothing</strong> — the feature cannot execute. Fix it with TLS on UAT (a self-signed certificate suffices; the browser only checks for a secure context), or record it as accepted risk at every release (12.1).</p></div>
 
 <div class="box warn"><b class="bl">UAT is doing the work of two environments</b>
-<p>With no separate performance environment, UAT is simultaneously where people click around and where load tests run. Those two uses fight: a k6 class-burst while someone is doing acceptance testing invalidates both. <strong>Book it.</strong> Load runs go nightly when nobody is in it, and the results are only meaningful if UAT matches production on the two things that bite — <strong>data volume and instance count</strong>. A single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>
+<p>UAT is both where people click around and where load tests run, and those uses fight — a k6 burst during acceptance testing invalidates both. <strong>Book it, and run load nightly.</strong> Results only mean anything if UAT matches production on <strong>data volume and instance count</strong>; a single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>
 
 <div class="box warn"><b class="bl">The 200-row lie</b>
 <p>PostgreSQL will happily seq-scan 200 rows faster than it uses an index, so a missing index is invisible locally and in CI. It appears as gradually rising latency in production, then a timeout cliff. Any query added in a PR must be checked with <code>EXPLAIN</code> against UAT volumes, not local.</p></div>

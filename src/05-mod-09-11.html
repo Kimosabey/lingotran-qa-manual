@@ -143,7 +143,7 @@
 
 <!-- ══════════ 11 ══════════ -->
 <details class="mod" id="m11">
-<summary><span class="n">11</span> AI-assisted QA<span class="pp">3 p</span></summary>
+<summary><span class="n">11</span> AI-assisted QA<span class="pp">6 p</span></summary>
 <div class="inner">
 
 <p>AI is fast at first drafts and structurally unreliable on facts. Use it where a wrong answer is cheap and visible; never where a wrong answer is silent.</p>
@@ -194,6 +194,89 @@ Correlation ID: [id]
 2. Identify the first anomalous event, quoting the exact line.
 3. List up to 3 hypotheses, each with the specific evidence that would confirm it.
 Mark clearly anything you inferred rather than read directly in the log.</pre>
+
+<h3>11.2 Choosing a prompt framework</h3>
+<p>A framework is not decoration. Each one makes a different field mandatory, and the field it forces you to write is the one that stops that task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:13%">Framework</th><th style="width:24%">Load-bearing field</th><th style="width:29%">Use at Lingotran for</th><th>Do not use for</th></tr></thead>
+<tbody>
+<tr><td><strong>TREF</strong><br><em>Task · Restriction · Explanation · Format</em></td><td><strong>Restriction</strong> — what must not be touched</td><td>Anything near learner data, production, or the database: SQL generation, log handling, blob access</td><td>Open-ended design; the restrictions crowd out the thinking</td></tr>
+<tr><td><strong>TRACE</strong><br><em>Task · Request · Action · Context · Evaluation</em></td><td><strong>Evaluation</strong> — the model must run something and judge itself</td><td>ATDD. Given/When/Then → Playwright spec → run → iterate (8.1). The QA-owned loop</td><td>Anything with no runnable check; Evaluation degrades into a wish</td></tr>
+<tr><td><strong>CIDAM</strong><br><em>Context · Intent · Details · Actions · Method</em></td><td><strong>Method</strong> — the order of operations</td><td>Multi-file suite refactors: fixture restructuring, moving seeding from UI to API across many specs</td><td>Single-file edits; the ceremony costs more than the change</td></tr>
+<tr><td><strong>CO-STAR</strong><br><em>Context · Objective · Style · Tone · Audience · Response</em></td><td><strong>Audience</strong></td><td>Two things — house style on generated specs, and the readiness report written for a head of department (12.2)</td><td>Work where correctness matters more than register</td></tr>
+<tr><td><strong>RISE</strong><br><em>Role · Input · Steps · Expectation</em></td><td><strong>Steps</strong> — the scaffold shape</td><td>Generating a new k6 scenario, a fixture, or a corpus runner from an existing pattern</td><td>Work where the steps are the thing you are trying to discover</td></tr>
+<tr><td><strong>TAG</strong><br><em>Task · Action · Goal</em></td><td>Speed. Nothing else.</td><td>Reproducing a defect locally, a one-off terminal command, a throwaway query</td><td><strong>Anything touching data or shipping.</strong> No restriction field, no evaluation field</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">TAG is the one that bites</b>
+<p>It is the fastest to type and the only one with no guard rail — no Restriction field to keep a command off production, no Evaluation field to make the model check its own output. That is fine for a local repro and dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies. Every framework above except TAG forces a field that catches exactly that.</p></div>
+
+<h3>11.3 The frameworks, written for Lingotran</h3>
+<div class="fn">TREF · standing SQL validation, staging only</div>
+<pre><b>TASK</b>        Write the SQL proving no learner holds attempts on another school's
+            exercise, against the Lingotran schema in 6.1.
+<b>RESTRICTION</b> Read-only. SELECT only — no INSERT, UPDATE, DELETE, DDL or
+            transaction control. Never reference a production connection string.
+            Do not execute anything; output SQL only. If a check would need a
+            write to be meaningful, say so instead of writing one.
+<b>EXPLANATION</b> For each query state what a non-zero result means in product terms,
+            and who has to be told.
+<b>FORMAT</b>      One SQL block per check, each preceded by a one-line comment naming
+            the defect it detects.</pre>
+
+<div class="fn">TRACE · acceptance criteria to a green spec</div>
+<pre><b>TASK</b>       Turn the agreed Given/When/Then for LT-1187 into a Playwright spec.
+<b>REQUEST</b>    Cover all three scenarios in 3.2, including student exclusion.
+<b>ACTION</b>     Write e2e/extended-session.spec.ts, then run it.
+<b>CONTEXT</b>    House rules: seed via API not UI; getByRole with accessible name;
+           no waitForTimeout; assert the database at the end; one assertion
+           theme per test. Teacher and learner fixtures already exist.
+<b>EVALUATION</b> Run `npx playwright test extended-session`. Iterate until green.
+           <u>If a test passes on the first run before the feature exists, treat</u>
+           <u>that as a broken assertion and say so — do not report success.</u></pre>
+
+<div class="fn">CIDAM · move suite-wide seeding from UI to API</div>
+<pre><b>CONTEXT</b>  e2e/ holds 40 specs. Around half authenticate and build state through
+         the UI, the largest single source of flake and runtime (8.3).
+<b>INTENT</b>   Bring PR feedback under ten minutes and remove UI-setup flake.
+<b>DETAILS</b>  Keep every assertion exactly as written — this is a setup change,
+         not a coverage change. Helpers seedLearner and seedTeacher exist.
+         Data stays per-test; no shared fixtures (they create order dependence).
+<b>ACTIONS</b>  1. List every spec that authenticates through the UI.
+         2. Convert one file at a time.
+         3. Run the suite after each file, not at the end.
+<b>METHOD</b>   One commit per spec so a regression bisects to a single file. Report
+         runtime before and after. Stop and ask if any spec's assertions would
+         have to change for the conversion to work.</pre>
+
+<div class="fn">CO-STAR · readiness stated for a non-engineering reader</div>
+<pre><b>CONTEXT</b>   Lingotran release 2.15. Inputs: readiness table (12.2), open defects,
+          REF corpus report, k6 summary.
+<b>OBJECTIVE</b> One page of risk a head of department can act on.
+<b>STYLE</b>     Plain English. Every claim traceable to one of the inputs.
+<b>TONE</b>      Neutral. Do not reassure and do not alarm.
+<b>AUDIENCE</b>  A school's head of department. No knowledge of the stack; cares
+          whether lessons run on Monday morning.
+<b>RESPONSE</b>  Three sections — what changed, what is untested and accepted as risk,
+          what to watch in week one. Never write "it is fine". <u>Do not recommend</u>
+          <u>go or no-go; that decision is not yours.</u></pre>
+
+<div class="fn">RISE · scaffold a new k6 scenario</div>
+<pre><b>ROLE</b>        You scaffold load tests for Lingotran, following k6/class-burst.js.
+<b>INPUT</b>       New scenario: a teacher opening a class report for 200 learners over
+            12 weeks, at timetable peak with 40 classes concurrent.
+<b>STEPS</b>       1. Mirror the structure of class-burst.js.
+            2. Use ramping-arrival-rate.
+            3. Take thresholds from the budget table in 9.1.
+            4. Drive all traffic from a single source IP.
+<b>EXPECTATION</b> A runnable file plus the command to run it. Do not invent k6 APIs —
+            if unsure a function exists, say so rather than guess.</pre>
+
+<div class="fn">TAG · local repro only, and note what it still restricts</div>
+<pre><b>TASK</b>   Reproduce LT-4471 on my machine.
+<b>ACTION</b> Run the API locally, seed a learner with 3 attempts on exercise 8821,
+       then submit a 4th.
+<b>GOAL</b>   Show the response and the row count. Local database only.</pre>
 
 <div class="box warn"><b class="bl">Distrust list</b>
 <p>AI will confidently invent Azure service limits, PostgreSQL syntax details, Playwright APIs that do not exist, WCAG success-criterion numbers, and library version behaviour. It will also produce test cases that look thorough while omitting the concurrency case that matters. Verify anything you would put your name on, and never paste learner data, audio, credentials, or connection strings into a prompt.</p></div>

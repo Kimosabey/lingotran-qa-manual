@@ -21,8 +21,25 @@
 html{scroll-behavior:smooth;scroll-padding-top:72px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 :focus-visible{outline:3px solid var(--brand-purple);outline-offset:2px;border-radius:4px}
+html{background:var(--off-white)}
 body{margin:0;font-family:var(--sans);font-weight:500;font-size:15.5px;line-height:1.55;
-  color:var(--body);background:var(--off-white);-webkit-font-smoothing:antialiased}
+  color:var(--body);background:transparent;-webkit-font-smoothing:antialiased}
+
+/* ---- ambient background · light only, motion-guarded, print-suppressed ---- */
+.bgfx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bgfx i{position:absolute;display:block;border-radius:50%;filter:blur(64px);will-change:transform}
+.bgfx i:nth-child(1){width:46vw;height:46vw;left:-13vw;top:-12vw;
+  background:radial-gradient(circle,rgba(240,230,255,.85) 0%,rgba(240,230,255,0) 70%);
+  animation:drift1 34s ease-in-out infinite}
+.bgfx i:nth-child(2){width:38vw;height:38vw;right:-11vw;top:24vh;
+  background:radial-gradient(circle,rgba(250,246,240,.9) 0%,rgba(250,246,240,0) 70%);
+  animation:drift2 43s ease-in-out infinite}
+.bgfx i:nth-child(3){width:32vw;height:32vw;left:28vw;bottom:-14vh;
+  background:radial-gradient(circle,rgba(124,77,255,.14) 0%,rgba(124,77,255,0) 70%);
+  animation:drift3 38s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,4vh,0) scale(1.12)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-5vw,6vh,0) scale(1.08)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(4vw,-5vh,0) scale(1.1)}}
 
 /* ---- top bar ---- */
 .bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
@@ -38,7 +55,15 @@ body{margin:0;font-family:var(--sans);font-weight:500;font-size:15.5px;line-heig
 #count{font-size:12px;color:var(--caption-safe);font-weight:600;white-space:nowrap}
 
 /* ---- hero ---- */
-.hero{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%);color:#fff;padding:40px 26px 34px;text-align:center}
+.hero{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 50%,#41009A 100%);background-size:220% 220%;
+  color:#fff;padding:40px 26px 34px;text-align:center;position:relative;overflow:hidden;
+  animation:heroShift 26s ease-in-out infinite}
+.hero>*{position:relative;z-index:1}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 78% 8%,rgba(255,255,255,.18),transparent 46%);
+  animation:heroGlow 19s ease-in-out infinite}
+@keyframes heroShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes heroGlow{0%,100%{opacity:.65;transform:translate3d(0,0,0)}50%{opacity:1;transform:translate3d(-4%,3%,0)}}
 .hero h1{font-weight:800;font-size:clamp(26px,4.4vw,40px);line-height:1.1;letter-spacing:-.8px;margin:0 0 8px}
 .hero p{max-width:620px;margin:0 auto;font-size:15px;color:rgba(255,255,255,.9);line-height:1.55}
 .hero .kicker{font-weight:700;font-size:11px;letter-spacing:1.7px;text-transform:uppercase;
@@ -133,7 +158,9 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 /* ---- print / Google Docs paste ---- */
 @media print{
-  .bar,.toc{display:none}
+  .bar,.toc,.bgfx{display:none}
+  .hero{animation:none;background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%)}
+  .hero::after{display:none}
   .mod{break-inside:avoid;border:0;border-top:2px solid var(--brand-purple);border-radius:0;margin:0}
   .mod>summary::after{display:none}
   .inner{display:block!important;padding:0}
@@ -145,6 +172,8 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 </style>
 </head>
 <body>
+
+<div class="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <div class="bar">
   <div class="mark">Lingotran<span> · QA Field Manual</span></div>
@@ -158,7 +187,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
   <div class="kicker">Internal engineering manual · Revision 2.0</div>
   <h1>QA Engineering Field Manual</h1>
   <p>Everything a Lingotran QA engineer needs at the desk — how the stack fails, what to test at each layer, and the checklists that catch it before a school does.</p>
-  <div class="facts"><span>React · Node · PostgreSQL · Azure</span><span>13 modules</span><span>~20 pages</span><span>Built to be searched, not read</span></div>
+  <div class="facts"><span>React · Node · PostgreSQL · Azure</span><span>14 modules</span><span>~26 pages</span><span>Built to be searched, not read</span></div>
 </header>
 
 <div class="wrap">
@@ -179,6 +208,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
     <li><a href="#m10"><b>10</b> Defects, RCA &amp; production</a></li>
     <li><a href="#m11"><b>11</b> AI-assisted QA</a></li>
     <li><a href="#m12"><b>12</b> Templates &amp; checklists</a></li>
+    <li><a href="#m13"><b>13</b> Claude Code · skills, subagents &amp; the QA pipeline</a></li>
   </ol>
 </nav>
 
@@ -210,7 +240,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 <!-- ══════════ 01 ══════════ -->
 <details class="mod" id="m01">
-<summary><span class="n">01</span> The QA operating model<span class="pp">3 p</span></summary>
+<summary><span class="n">01</span> The QA operating model<span class="pp">4 p</span></summary>
 <div class="inner">
 
 <p>QA at Lingotran is not a phase at the end of a sprint. It is a set of gates, each with an owner and an exit condition. If you cannot name the gate a piece of work is sitting at, you cannot say whether it is ready.</p>
@@ -260,6 +290,34 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 <div class="box"><b class="bl">The institution multiplier</b>
 <p>Lingotran sells to schools, not individuals. Every defect is multiplied by class size before anyone notices it. A bug affecting one learner is a ticket; the same bug on a shared classroom network is thirty simultaneous tickets and an escalation to the head of department. Weight likelihood accordingly.</p></div>
+
+<h3>1.4 The working day</h3>
+<p>What the gates in 1.2 look like from a desk. The times are indicative; the order is not. Overnight signal is read first because it is the only input that arrived while nobody was watching.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:9%">Time</th><th style="width:28%">What Shashi Kumar does</th><th style="width:24%">What it produces</th><th>The trap</th></tr></thead>
+<tbody>
+<tr><td>09:00</td><td>Read overnight signal — REF corpus bands, k6 trend, CI failures, production error and 429 rates</td><td>A list of what moved while nobody watched</td><td>Skipping it because the pipeline is green. A band breach reports; it does not block (8.4)</td></tr>
+<tr><td>09:20</td><td>Triage defects raised since yesterday — severity, owner, and whether it is class-scale</td><td>A board a PO can read</td><td>Severity set from the symptom rather than the blast radius. Thirty learners is not one ticket</td></tr>
+<tr><td>09:35</td><td>Standup — state risk, not activity</td><td>One sentence per item at risk</td><td>Reporting what was tested instead of what is now unsafe to ship</td></tr>
+<tr><td>10:00</td><td>PR queue. Mark the layers the diff touches, test that row and everything downstream (2.2, 12.4)</td><td>PR comments naming layers and cases</td><td>Reviewing only the diff. The sibling route with no auth guard is not in it (5.1 ⑤)</td></tr>
+<tr><td>11:00</td><td>Test design for the current story — techniques from 3.3, boundaries from 3.4</td><td>A case table with layers assigned</td><td>One case per AC. The ACs are the floor, not the plan</td></tr>
+<tr><td>13:30</td><td>Exploratory charter, timeboxed, on a real device</td><td>Charter notes, correlation IDs, cases worth automating</td><td>Letting it overrun, or running it on a fast laptop rather than the school's iPad</td></tr>
+<tr><td>14:30</td><td>Suite maintenance — quarantine flakes, delete dead specs, hold PR feedback under ten minutes</td><td>Flaky rate and suite runtime</td><td>Re-running a red pipeline. The second unexplained failure is a quarantine, not a retry (8.3)</td></tr>
+<tr><td>15:30</td><td>Refinement for next sprint — the seven questions against each story (3.1)</td><td>ACs testable before code exists</td><td>Accepting an undefined edge case because the sprint is about to start</td></tr>
+<tr><td>16:30</td><td>If deploying: readiness report (12.2), then production smoke inside five minutes (12.3)</td><td>A signed statement of risk</td><td>Signing "it is fine" instead of naming what is untested</td></tr>
+<tr><td>Any time</td><td><strong>Interrupt</strong> — production incident. Scope, correlation ID, what changed, mitigate (10.4)</td><td>A timeline, and an RCA the next day</td><td>Diagnosing before mitigating while schools cannot teach</td></tr>
+</tbody></table></div>
+
+<h4>Cadence beyond the day</h4>
+<div class="tw"><table>
+<thead><tr><th style="width:15%">Rhythm</th><th style="width:37%">Activity</th><th>Why it cannot be daily</th></tr></thead>
+<tbody>
+<tr><td>Nightly</td><td>REF speech corpus; k6 class burst from a single IP</td><td>Paid and slow. Blocks nothing, alerts on a band breach</td></tr>
+<tr><td>Weekly</td><td>Publish the metrics in 12.6; review escapes against the gate that missed them</td><td>A trend needs more than one point</td></tr>
+<tr><td>Per sprint</td><td>Real-device pass on iPad; flake quarantine review</td><td>Needs hardware and a fixed decision point</td></tr>
+<tr><td>Per release</td><td>Readiness report, rollback rehearsal, migration down-run</td><td>Tied to the deploy, not the calendar</td></tr>
+<tr><td>Per incident</td><td>Five whys, owners, and a regression test that would have caught it</td><td>Event-driven, and never the same day as the incident</td></tr>
+</tbody></table></div>
 
 </div></details>
 <!-- ══════════ 02 ══════════ -->
@@ -1032,7 +1090,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 
 <!-- ══════════ 11 ══════════ -->
 <details class="mod" id="m11">
-<summary><span class="n">11</span> AI-assisted QA<span class="pp">3 p</span></summary>
+<summary><span class="n">11</span> AI-assisted QA<span class="pp">6 p</span></summary>
 <div class="inner">
 
 <p>AI is fast at first drafts and structurally unreliable on facts. Use it where a wrong answer is cheap and visible; never where a wrong answer is silent.</p>
@@ -1083,6 +1141,89 @@ Correlation ID: [id]
 2. Identify the first anomalous event, quoting the exact line.
 3. List up to 3 hypotheses, each with the specific evidence that would confirm it.
 Mark clearly anything you inferred rather than read directly in the log.</pre>
+
+<h3>11.2 Choosing a prompt framework</h3>
+<p>A framework is not decoration. Each one makes a different field mandatory, and the field it forces you to write is the one that stops that task's failure mode. Choose by what goes wrong, not by what the task is called.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:13%">Framework</th><th style="width:24%">Load-bearing field</th><th style="width:29%">Use at Lingotran for</th><th>Do not use for</th></tr></thead>
+<tbody>
+<tr><td><strong>TREF</strong><br><em>Task · Restriction · Explanation · Format</em></td><td><strong>Restriction</strong> — what must not be touched</td><td>Anything near learner data, production, or the database: SQL generation, log handling, blob access</td><td>Open-ended design; the restrictions crowd out the thinking</td></tr>
+<tr><td><strong>TRACE</strong><br><em>Task · Request · Action · Context · Evaluation</em></td><td><strong>Evaluation</strong> — the model must run something and judge itself</td><td>ATDD. Given/When/Then → Playwright spec → run → iterate (8.1). The QA-owned loop</td><td>Anything with no runnable check; Evaluation degrades into a wish</td></tr>
+<tr><td><strong>CIDAM</strong><br><em>Context · Intent · Details · Actions · Method</em></td><td><strong>Method</strong> — the order of operations</td><td>Multi-file suite refactors: fixture restructuring, moving seeding from UI to API across many specs</td><td>Single-file edits; the ceremony costs more than the change</td></tr>
+<tr><td><strong>CO-STAR</strong><br><em>Context · Objective · Style · Tone · Audience · Response</em></td><td><strong>Audience</strong></td><td>Two things — house style on generated specs, and the readiness report written for a head of department (12.2)</td><td>Work where correctness matters more than register</td></tr>
+<tr><td><strong>RISE</strong><br><em>Role · Input · Steps · Expectation</em></td><td><strong>Steps</strong> — the scaffold shape</td><td>Generating a new k6 scenario, a fixture, or a corpus runner from an existing pattern</td><td>Work where the steps are the thing you are trying to discover</td></tr>
+<tr><td><strong>TAG</strong><br><em>Task · Action · Goal</em></td><td>Speed. Nothing else.</td><td>Reproducing a defect locally, a one-off terminal command, a throwaway query</td><td><strong>Anything touching data or shipping.</strong> No restriction field, no evaluation field</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">TAG is the one that bites</b>
+<p>It is the fastest to type and the only one with no guard rail — no Restriction field to keep a command off production, no Evaluation field to make the model check its own output. That is fine for a local repro and dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies. Every framework above except TAG forces a field that catches exactly that.</p></div>
+
+<h3>11.3 The frameworks, written for Lingotran</h3>
+<div class="fn">TREF · standing SQL validation, staging only</div>
+<pre><b>TASK</b>        Write the SQL proving no learner holds attempts on another school's
+            exercise, against the Lingotran schema in 6.1.
+<b>RESTRICTION</b> Read-only. SELECT only — no INSERT, UPDATE, DELETE, DDL or
+            transaction control. Never reference a production connection string.
+            Do not execute anything; output SQL only. If a check would need a
+            write to be meaningful, say so instead of writing one.
+<b>EXPLANATION</b> For each query state what a non-zero result means in product terms,
+            and who has to be told.
+<b>FORMAT</b>      One SQL block per check, each preceded by a one-line comment naming
+            the defect it detects.</pre>
+
+<div class="fn">TRACE · acceptance criteria to a green spec</div>
+<pre><b>TASK</b>       Turn the agreed Given/When/Then for LT-1187 into a Playwright spec.
+<b>REQUEST</b>    Cover all three scenarios in 3.2, including student exclusion.
+<b>ACTION</b>     Write e2e/extended-session.spec.ts, then run it.
+<b>CONTEXT</b>    House rules: seed via API not UI; getByRole with accessible name;
+           no waitForTimeout; assert the database at the end; one assertion
+           theme per test. Teacher and learner fixtures already exist.
+<b>EVALUATION</b> Run `npx playwright test extended-session`. Iterate until green.
+           <u>If a test passes on the first run before the feature exists, treat</u>
+           <u>that as a broken assertion and say so — do not report success.</u></pre>
+
+<div class="fn">CIDAM · move suite-wide seeding from UI to API</div>
+<pre><b>CONTEXT</b>  e2e/ holds 40 specs. Around half authenticate and build state through
+         the UI, the largest single source of flake and runtime (8.3).
+<b>INTENT</b>   Bring PR feedback under ten minutes and remove UI-setup flake.
+<b>DETAILS</b>  Keep every assertion exactly as written — this is a setup change,
+         not a coverage change. Helpers seedLearner and seedTeacher exist.
+         Data stays per-test; no shared fixtures (they create order dependence).
+<b>ACTIONS</b>  1. List every spec that authenticates through the UI.
+         2. Convert one file at a time.
+         3. Run the suite after each file, not at the end.
+<b>METHOD</b>   One commit per spec so a regression bisects to a single file. Report
+         runtime before and after. Stop and ask if any spec's assertions would
+         have to change for the conversion to work.</pre>
+
+<div class="fn">CO-STAR · readiness stated for a non-engineering reader</div>
+<pre><b>CONTEXT</b>   Lingotran release 2.15. Inputs: readiness table (12.2), open defects,
+          REF corpus report, k6 summary.
+<b>OBJECTIVE</b> One page of risk a head of department can act on.
+<b>STYLE</b>     Plain English. Every claim traceable to one of the inputs.
+<b>TONE</b>      Neutral. Do not reassure and do not alarm.
+<b>AUDIENCE</b>  A school's head of department. No knowledge of the stack; cares
+          whether lessons run on Monday morning.
+<b>RESPONSE</b>  Three sections — what changed, what is untested and accepted as risk,
+          what to watch in week one. Never write "it is fine". <u>Do not recommend</u>
+          <u>go or no-go; that decision is not yours.</u></pre>
+
+<div class="fn">RISE · scaffold a new k6 scenario</div>
+<pre><b>ROLE</b>        You scaffold load tests for Lingotran, following k6/class-burst.js.
+<b>INPUT</b>       New scenario: a teacher opening a class report for 200 learners over
+            12 weeks, at timetable peak with 40 classes concurrent.
+<b>STEPS</b>       1. Mirror the structure of class-burst.js.
+            2. Use ramping-arrival-rate.
+            3. Take thresholds from the budget table in 9.1.
+            4. Drive all traffic from a single source IP.
+<b>EXPECTATION</b> A runnable file plus the command to run it. Do not invent k6 APIs —
+            if unsure a function exists, say so rather than guess.</pre>
+
+<div class="fn">TAG · local repro only, and note what it still restricts</div>
+<pre><b>TASK</b>   Reproduce LT-4471 on my machine.
+<b>ACTION</b> Run the API locally, seed a learner with 3 attempts on exercise 8821,
+       then submit a 4th.
+<b>GOAL</b>   Show the response and the row count. Local database only.</pre>
 
 <div class="box warn"><b class="bl">Distrust list</b>
 <p>AI will confidently invent Azure service limits, PostgreSQL syntax details, Playwright APIs that do not exist, WCAG success-criterion numbers, and library version behaviour. It will also produce test cases that look thorough while omitting the concurrency case that matters. Verify anything you would put your name on, and never paste learner data, audio, credentials, or connection strings into a prompt.</p></div>
@@ -1187,6 +1328,144 @@ Mark clearly anything you inferred rather than read directly in the log.</pre>
 <tr><td><strong>REF corpus</strong></td><td>The fixed reference clips in 7.3 — Lingotran's only scoring-quality regression signal.</td></tr>
 <tr><td><strong>Expand/contract</strong></td><td>Two-release pattern for renames so old and new code run together safely.</td></tr>
 </tbody></table></div>
+
+</div></details>
+
+<!-- ══════════ 13 ══════════ -->
+<details class="mod" id="m13">
+<summary><span class="n">13</span> Claude Code · skills, subagents &amp; the QA pipeline<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<p>Module 11 covers judgement — where AI helps and where it must never decide. This module is the mechanics: what to build once so the judgement is applied the same way every time, by every engineer, without retyping it.</p>
+
+<h3>13.1 Where it fits in the day</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:16%">Slot from 1.4</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
+<tbody>
+<tr><td>09:00 overnight signal</td><td>Scheduled run + <code>corpus-referee</code> subagent</td><td>Runs while nobody is watching; output is a diff against yesterday's bands</td></tr>
+<tr><td>10:00 PR queue</td><td><code>/lt-pr-trace</code> skill</td><td>The layer-trace mapping is identical every time — encode it once (2.2)</td></tr>
+<tr><td>11:00 test design</td><td><code>/lt-testgen</code> skill</td><td>Forces the concurrency, a11y and class-scale cases a human forgets under time pressure</td></tr>
+<tr><td>13:30 exploratory</td><td>Nothing</td><td>Automation cannot be surprised, and surprise is the point (8.2)</td></tr>
+<tr><td>14:30 suite maintenance</td><td><code>flake-hunter</code> subagent</td><td>Re-running one spec 30× is fan-out work that should not occupy your context</td></tr>
+<tr><td>15:30 refinement</td><td><code>/lt-story-interrogate</code> skill</td><td>The seven questions in 3.1, applied before anyone writes code</td></tr>
+<tr><td>Incident</td><td><code>/lt-incident-timeline</code> skill</td><td>Correlation ID to reconstructed timeline in one step, while mitigating (10.4)</td></tr>
+</tbody></table></div>
+
+<h3>13.2 Skills worth creating</h3>
+<p>A skill is the right home for anything you have now explained twice. It lives in the repo, so the standard travels with the codebase rather than with whoever wrote the prompt.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Skill</th><th style="width:34%">What it encodes</th><th>Framework it wraps</th></tr></thead>
+<tbody>
+<tr><td><code>lt-story-interrogate</code></td><td>The seven questions (3.1), plus a refusal to invent answers to ambiguous ACs</td><td>TREF</td></tr>
+<tr><td><code>lt-pr-trace</code></td><td>Diff → layers touched → tests for that row and everything downstream</td><td>CIDAM</td></tr>
+<tr><td><code>lt-testgen</code></td><td>Story → case table; mandatory concurrency, a11y and whole-class cases</td><td>TREF</td></tr>
+<tr><td><code>lt-playwright</code></td><td>Manual case → spec under the six house rules in 8.3</td><td>CO-STAR</td></tr>
+<tr><td><code>lt-sql-guard</code></td><td>Validation SQL, SELECT-only, staging connection only, never executed unprompted</td><td>TREF</td></tr>
+<tr><td><code>lt-incident-timeline</code></td><td>Correlation ID + logs → timeline, first anomaly, ranked hypotheses</td><td>TREF</td></tr>
+<tr><td><code>lt-release-report</code></td><td>Pipeline artifacts → the readiness statement, in plain English</td><td>CO-STAR</td></tr>
+</tbody></table></div>
+
+<h3>13.3 A skill, in full</h3>
+<div class="fn">.claude/skills/lt-pr-trace/SKILL.md</div>
+<pre><i>---</i>
+<b>name:</b> lt-pr-trace
+<b>description:</b> Map a Lingotran PR diff onto the layer trace and list the tests
+  each touched layer requires. Use when reviewing any pull request.
+<i>---</i>
+
+Read the diff. Do not summarise it back.
+
+1. For every file changed, name the layer it sits at, using the eleven rows of
+   the layer trace (LessonPlayer.tsx ... JSON envelope ... React render).
+2. Output the layers touched, <b>plus every layer downstream of them</b>. A change
+   at layer 9 can break all ten above it; a change at layer 7 cannot break layer 1.
+3. For each layer in that set, list the concrete tests this diff requires.
+4. Flag explicitly, as separate lines:
+   - a new route whose <b>sibling verbs</b> were not also checked for auth
+   - any new query with no <b>EXPLAIN</b> against staging volumes
+   - any <b>check-then-act</b> sequence (read, decide, write) — needs a concurrency test
+   - any state held <b>in process memory</b> — behaves differently at 2 instances
+5. End with what you could <b>not</b> determine from the diff alone.
+
+<u>Never state that a change is safe. Report what it touches and what that requires.</u></pre>
+
+<h3>13.4 Subagents</h3>
+<p>A subagent has its own context. Use one when the work is wide rather than deep — many files, many reruns, many specs — so the search does not crowd out the thread you are actually holding.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Subagent</th><th style="width:26%">Scope</th><th style="width:20%">Tools</th><th>Model</th></tr></thead>
+<tbody>
+<tr><td><code>pr-triage</code></td><td>Read a diff, map layers, propose cases</td><td>Read, Grep, Glob</td><td>sonnet</td></tr>
+<tr><td><code>flake-hunter</code></td><td>Re-run one spec N times, classify each failure, recommend quarantine</td><td>Bash, Read</td><td>sonnet</td></tr>
+<tr><td><code>sql-validator</code></td><td>Run the standing checks in 6.2 against staging</td><td>Bash, Read</td><td>haiku</td></tr>
+<tr><td><code>a11y-sweep</code></td><td>axe plus the keyboard checklist over changed views</td><td>Bash, Read</td><td>sonnet</td></tr>
+<tr><td><code>corpus-referee</code></td><td>Score the REF clips, compare to bands, judge a breach</td><td>Bash, Read</td><td>opus</td></tr>
+</tbody></table></div>
+
+<div class="fn">.claude/agents/flake-hunter.md</div>
+<pre><i>---</i>
+<b>name:</b> flake-hunter
+<b>description:</b> Re-run a single Playwright spec repeatedly and classify whether
+  it is flaky, genuinely failing, or order-dependent.
+<b>tools:</b> Bash, Read, Grep
+<b>model:</b> sonnet
+<i>---</i>
+
+Given a spec path:
+
+1. Run it 30 times in isolation. Record pass and fail counts.
+2. Run it 10 times with <b>--shuffle</b> alongside the rest of the suite.
+3. Classify:
+   - fails 30/30 isolated        -> a real defect, not flake
+   - passes isolated, fails shuffled -> <b>order dependence</b>, usually a shared fixture
+   - intermittent in both        -> genuine flake; capture the trace for each failure
+4. Quote the actual failing assertion. Never paraphrase it.
+5. Recommend: fix, quarantine, or delete — with the reason.
+
+<u>Do not modify the spec. Diagnose only.</u></pre>
+
+<h3>13.5 The PR review workflow</h3>
+<pre>PR opened
+    │
+    ├─▶ pr-triage ──────▶ layers touched + required tests
+    ├─▶ a11y-sweep ─────▶ violations on changed views          } run in parallel,
+    ├─▶ sql-validator ──▶ standing checks still return zero    }  own contexts
+    │
+    ▼
+ collected, de-duplicated
+    │
+    ▼
+ QA reads it, keeps what is real, discards the rest
+    │
+    ▼
+ PR comment ── written by Shashi Kumar, not by the agent
+    │
+    ▼
+ <b>Gate: the deterministic pipeline (8.4).</b> Agents never gate.</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Stage</th><th style="width:22%">Who decides</th><th>What it may not do</th></tr></thead>
+<tbody>
+<tr><td>Fan-out agents</td><td>Nobody — they only gather</td><td>Write to the repo, touch production, or post anything itself</td></tr>
+<tr><td>De-duplication</td><td>Plain code, not a model</td><td>Drop a finding silently; the count must be reported</td></tr>
+<tr><td>Triage of findings</td><td><strong>QA</strong></td><td>Be skipped because the list looked short</td></tr>
+<tr><td>Merge gate</td><td>The pipeline in 8.4</td><td>Consult a model. Green is a deterministic fact</td></tr>
+</tbody></table></div>
+
+<h3>13.6 What belongs in the repo, not in a prompt</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Surface</th><th style="width:30%">Put here</th><th>Because</th></tr></thead>
+<tbody>
+<tr><td><code>CLAUDE.md</code></td><td>Stack facts, the institution multiplier, ID conventions, <code>school.edu</code>, house test rules</td><td>Re-read every session, so the constraints survive a context reset. A long pasted prompt does not</td></tr>
+<tr><td><code>.claude/skills/</code></td><td>Anything explained twice</td><td>Travels with the codebase, so every engineer gets the same standard</td></tr>
+<tr><td><code>.claude/agents/</code></td><td>Wide, repetitive, context-hungry work</td><td>Keeps the main thread on the problem you are actually holding</td></tr>
+<tr><td>Hooks in <code>settings.json</code></td><td>Deterministic gates — lint, the SELECT-only check, secret scanning</td><td>A hook runs whether or not the model cooperates. That is the entire point</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">The governing rule</b>
+<p>Agents propose; deterministic checks dispose. Every gate in this manual — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that either holds or does not, and none of them may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. Never let it decide severity, readiness, or whether a score is correct (Module 11). The moment an agent can turn a gate green, the gate has stopped being one.</p></div>
+
+<div class="box"><b class="bl">Before pasting anything</b>
+<p>Never put learner audio, learner names, credentials, connection strings, or a production log excerpt into a prompt. Learners are minors and the audio is personal data under the school agreement (7.4). Redact to IDs and correlation IDs — they are enough to reconstruct a timeline and carry nothing about a child.</p></div>
 
 </div></details>
 

@@ -37,7 +37,7 @@ no external JS, opens by double-click.
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~21.2. Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~26.3. Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -52,10 +52,10 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 2,797 words | 5.8 |
-| Code | 263 lines | 5.1 |
-| Tables | 308 rows | 10.3 |
-| **Total** | | **21.2** |
+| Prose | 3,340 words | 7.0 |
+| Code | 375 lines | 7.2 |
+| Tables | 364 rows | 12.1 |
+| **Total** | | **26.3** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
@@ -63,7 +63,7 @@ Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷
 judgement calls a table cannot hold. If a new section is mostly paragraphs, it is
 probably textbook filler — cut it or convert it.
 
-`verify.py` fails below **70%**. The mix is currently 72%, so the guard is live rather
+`verify.py` fails below **70%**. The mix is currently 74%, so the guard is live rather
 than theoretical: a prose-heavy addition will fail the build, not merely drift. Callout
 boxes count as prose — they are worth their cost when they name a failure mode, but
 three boxes and an intro paragraph will move the ratio a full point.
@@ -110,8 +110,12 @@ Reuse these. Do not invent new ones without reason.
 | Table | `.tw > table` | Default for everything |
 | Pill | `.pill` | Inline tags |
 
-**Module IDs are `m00`–`m12`** and must stay in sync with the `.toc` list and the module
-count in the hero.
+**Module IDs are `m00`–`m13`** and must stay in sync with the `.toc` list and the module
+count in the hero. `verify.py` enforces all three.
+
+**Background motion.** The `.bgfx` layer (three blurred drifting blobs) and the hero
+gradient shift are CSS-only. They inherit the global `prefers-reduced-motion` kill switch
+and are suppressed in `@media print`. Keep both properties for anything new.
 
 ---
 
@@ -149,12 +153,12 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 13 modules, ~21.2 pages:**
+**Complete — 14 modules, ~26.3 pages:**
 
 | # | Module | Pages |
 |---|---|---|
 | 00 | How to use this manual | 1 |
-| 01 | The QA operating model | 3 |
+| 01 | The QA operating model | 4 |
 | 02 | Lingotran architecture & the layer trace | 5 |
 | 03 | Requirements to test design | 4 |
 | 04 | Frontend testing · React | 4 |
@@ -164,18 +168,22 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 | 08 | Automation · ATDD to pipeline | 5 |
 | 09 | Performance, security, accessibility | 5 |
 | 10 | Defects, RCA & production | 5 |
-| 11 | AI-assisted QA | 3 |
+| 11 | AI-assisted QA | 6 |
 | 12 | Templates & checklists | 4 |
+| 13 | Claude Code · skills, subagents & the QA pipeline | 5 |
 
 *(Per-module page labels in `<span class="pp">` are indicative, set by hand. The real
 total comes from `verify.py`.)*
 
-**~29 pages of headroom** against the 50 ceiling.
+**~24 pages of headroom** against the 50 ceiling.
 
 **Open / candidates for the headroom:**
 - Module 08 — Playwright fixture patterns, sharding, trace-on-failure triage.
-- A Module 13 on teacher/institution admin and reporting, currently thin.
+- Teacher and institution admin — class management, enrolment, seat limits, role
+  boundaries, progress reports. Still thin, and where renewal is decided. Note the
+  `m13` slot is now taken by the Claude Code module; this would be `m14`.
 - Real screenshots of the lesson player (none present; all diagrams are ASCII/CSS).
+- Replace the ASCII architecture diagram in 2.1 with inline SVG using brand tokens.
 
 ---
 

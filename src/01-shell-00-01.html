@@ -21,8 +21,25 @@
 html{scroll-behavior:smooth;scroll-padding-top:72px}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 :focus-visible{outline:3px solid var(--brand-purple);outline-offset:2px;border-radius:4px}
+html{background:var(--off-white)}
 body{margin:0;font-family:var(--sans);font-weight:500;font-size:15.5px;line-height:1.55;
-  color:var(--body);background:var(--off-white);-webkit-font-smoothing:antialiased}
+  color:var(--body);background:transparent;-webkit-font-smoothing:antialiased}
+
+/* ---- ambient background · light only, motion-guarded, print-suppressed ---- */
+.bgfx{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bgfx i{position:absolute;display:block;border-radius:50%;filter:blur(64px);will-change:transform}
+.bgfx i:nth-child(1){width:46vw;height:46vw;left:-13vw;top:-12vw;
+  background:radial-gradient(circle,rgba(240,230,255,.85) 0%,rgba(240,230,255,0) 70%);
+  animation:drift1 34s ease-in-out infinite}
+.bgfx i:nth-child(2){width:38vw;height:38vw;right:-11vw;top:24vh;
+  background:radial-gradient(circle,rgba(250,246,240,.9) 0%,rgba(250,246,240,0) 70%);
+  animation:drift2 43s ease-in-out infinite}
+.bgfx i:nth-child(3){width:32vw;height:32vw;left:28vw;bottom:-14vh;
+  background:radial-gradient(circle,rgba(124,77,255,.14) 0%,rgba(124,77,255,0) 70%);
+  animation:drift3 38s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,4vh,0) scale(1.12)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-5vw,6vh,0) scale(1.08)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(4vw,-5vh,0) scale(1.1)}}
 
 /* ---- top bar ---- */
 .bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
@@ -38,7 +55,15 @@ body{margin:0;font-family:var(--sans);font-weight:500;font-size:15.5px;line-heig
 #count{font-size:12px;color:var(--caption-safe);font-weight:600;white-space:nowrap}
 
 /* ---- hero ---- */
-.hero{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%);color:#fff;padding:40px 26px 34px;text-align:center}
+.hero{background:linear-gradient(135deg,#41009A 0%,#7C4DFF 50%,#41009A 100%);background-size:220% 220%;
+  color:#fff;padding:40px 26px 34px;text-align:center;position:relative;overflow:hidden;
+  animation:heroShift 26s ease-in-out infinite}
+.hero>*{position:relative;z-index:1}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 78% 8%,rgba(255,255,255,.18),transparent 46%);
+  animation:heroGlow 19s ease-in-out infinite}
+@keyframes heroShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes heroGlow{0%,100%{opacity:.65;transform:translate3d(0,0,0)}50%{opacity:1;transform:translate3d(-4%,3%,0)}}
 .hero h1{font-weight:800;font-size:clamp(26px,4.4vw,40px);line-height:1.1;letter-spacing:-.8px;margin:0 0 8px}
 .hero p{max-width:620px;margin:0 auto;font-size:15px;color:rgba(255,255,255,.9);line-height:1.55}
 .hero .kicker{font-weight:700;font-size:11px;letter-spacing:1.7px;text-transform:uppercase;
@@ -133,7 +158,9 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 /* ---- print / Google Docs paste ---- */
 @media print{
-  .bar,.toc{display:none}
+  .bar,.toc,.bgfx{display:none}
+  .hero{animation:none;background:linear-gradient(135deg,#41009A 0%,#7C4DFF 100%)}
+  .hero::after{display:none}
   .mod{break-inside:avoid;border:0;border-top:2px solid var(--brand-purple);border-radius:0;margin:0}
   .mod>summary::after{display:none}
   .inner{display:block!important;padding:0}
@@ -145,6 +172,8 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 </style>
 </head>
 <body>
+
+<div class="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <div class="bar">
   <div class="mark">Lingotran<span> · QA Field Manual</span></div>
@@ -158,7 +187,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
   <div class="kicker">Internal engineering manual · Revision 2.0</div>
   <h1>QA Engineering Field Manual</h1>
   <p>Everything a Lingotran QA engineer needs at the desk — how the stack fails, what to test at each layer, and the checklists that catch it before a school does.</p>
-  <div class="facts"><span>React · Node · PostgreSQL · Azure</span><span>13 modules</span><span>~20 pages</span><span>Built to be searched, not read</span></div>
+  <div class="facts"><span>React · Node · PostgreSQL · Azure</span><span>14 modules</span><span>~26 pages</span><span>Built to be searched, not read</span></div>
 </header>
 
 <div class="wrap">
@@ -179,6 +208,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
     <li><a href="#m10"><b>10</b> Defects, RCA &amp; production</a></li>
     <li><a href="#m11"><b>11</b> AI-assisted QA</a></li>
     <li><a href="#m12"><b>12</b> Templates &amp; checklists</a></li>
+    <li><a href="#m13"><b>13</b> Claude Code · skills, subagents &amp; the QA pipeline</a></li>
   </ol>
 </nav>
 
@@ -210,7 +240,7 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 <!-- ══════════ 01 ══════════ -->
 <details class="mod" id="m01">
-<summary><span class="n">01</span> The QA operating model<span class="pp">3 p</span></summary>
+<summary><span class="n">01</span> The QA operating model<span class="pp">4 p</span></summary>
 <div class="inner">
 
 <p>QA at Lingotran is not a phase at the end of a sprint. It is a set of gates, each with an owner and an exit condition. If you cannot name the gate a piece of work is sitting at, you cannot say whether it is ready.</p>
@@ -260,5 +290,33 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 
 <div class="box"><b class="bl">The institution multiplier</b>
 <p>Lingotran sells to schools, not individuals. Every defect is multiplied by class size before anyone notices it. A bug affecting one learner is a ticket; the same bug on a shared classroom network is thirty simultaneous tickets and an escalation to the head of department. Weight likelihood accordingly.</p></div>
+
+<h3>1.4 The working day</h3>
+<p>What the gates in 1.2 look like from a desk. The times are indicative; the order is not. Overnight signal is read first because it is the only input that arrived while nobody was watching.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:9%">Time</th><th style="width:28%">What Shashi Kumar does</th><th style="width:24%">What it produces</th><th>The trap</th></tr></thead>
+<tbody>
+<tr><td>09:00</td><td>Read overnight signal — REF corpus bands, k6 trend, CI failures, production error and 429 rates</td><td>A list of what moved while nobody watched</td><td>Skipping it because the pipeline is green. A band breach reports; it does not block (8.4)</td></tr>
+<tr><td>09:20</td><td>Triage defects raised since yesterday — severity, owner, and whether it is class-scale</td><td>A board a PO can read</td><td>Severity set from the symptom rather than the blast radius. Thirty learners is not one ticket</td></tr>
+<tr><td>09:35</td><td>Standup — state risk, not activity</td><td>One sentence per item at risk</td><td>Reporting what was tested instead of what is now unsafe to ship</td></tr>
+<tr><td>10:00</td><td>PR queue. Mark the layers the diff touches, test that row and everything downstream (2.2, 12.4)</td><td>PR comments naming layers and cases</td><td>Reviewing only the diff. The sibling route with no auth guard is not in it (5.1 ⑤)</td></tr>
+<tr><td>11:00</td><td>Test design for the current story — techniques from 3.3, boundaries from 3.4</td><td>A case table with layers assigned</td><td>One case per AC. The ACs are the floor, not the plan</td></tr>
+<tr><td>13:30</td><td>Exploratory charter, timeboxed, on a real device</td><td>Charter notes, correlation IDs, cases worth automating</td><td>Letting it overrun, or running it on a fast laptop rather than the school's iPad</td></tr>
+<tr><td>14:30</td><td>Suite maintenance — quarantine flakes, delete dead specs, hold PR feedback under ten minutes</td><td>Flaky rate and suite runtime</td><td>Re-running a red pipeline. The second unexplained failure is a quarantine, not a retry (8.3)</td></tr>
+<tr><td>15:30</td><td>Refinement for next sprint — the seven questions against each story (3.1)</td><td>ACs testable before code exists</td><td>Accepting an undefined edge case because the sprint is about to start</td></tr>
+<tr><td>16:30</td><td>If deploying: readiness report (12.2), then production smoke inside five minutes (12.3)</td><td>A signed statement of risk</td><td>Signing "it is fine" instead of naming what is untested</td></tr>
+<tr><td>Any time</td><td><strong>Interrupt</strong> — production incident. Scope, correlation ID, what changed, mitigate (10.4)</td><td>A timeline, and an RCA the next day</td><td>Diagnosing before mitigating while schools cannot teach</td></tr>
+</tbody></table></div>
+
+<h4>Cadence beyond the day</h4>
+<div class="tw"><table>
+<thead><tr><th style="width:15%">Rhythm</th><th style="width:37%">Activity</th><th>Why it cannot be daily</th></tr></thead>
+<tbody>
+<tr><td>Nightly</td><td>REF speech corpus; k6 class burst from a single IP</td><td>Paid and slow. Blocks nothing, alerts on a band breach</td></tr>
+<tr><td>Weekly</td><td>Publish the metrics in 12.6; review escapes against the gate that missed them</td><td>A trend needs more than one point</td></tr>
+<tr><td>Per sprint</td><td>Real-device pass on iPad; flake quarantine review</td><td>Needs hardware and a fixed decision point</td></tr>
+<tr><td>Per release</td><td>Readiness report, rollback rehearsal, migration down-run</td><td>Tied to the deploy, not the calendar</td></tr>
+<tr><td>Per incident</td><td>Five whys, owners, and a regression test that would have caught it</td><td>Event-driven, and never the same day as the incident</td></tr>
+</tbody></table></div>
 
 </div></details>

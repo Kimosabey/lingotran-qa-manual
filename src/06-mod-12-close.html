@@ -100,6 +100,144 @@
 
 </div></details>
 
+<!-- ══════════ 13 ══════════ -->
+<details class="mod" id="m13">
+<summary><span class="n">13</span> Claude Code · skills, subagents &amp; the QA pipeline<span class="pp">5 p</span></summary>
+<div class="inner">
+
+<p>Module 11 covers judgement — where AI helps and where it must never decide. This module is the mechanics: what to build once so the judgement is applied the same way every time, by every engineer, without retyping it.</p>
+
+<h3>13.1 Where it fits in the day</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:16%">Slot from 1.4</th><th style="width:26%">What to reach for</th><th>Why that surface</th></tr></thead>
+<tbody>
+<tr><td>09:00 overnight signal</td><td>Scheduled run + <code>corpus-referee</code> subagent</td><td>Runs while nobody is watching; output is a diff against yesterday's bands</td></tr>
+<tr><td>10:00 PR queue</td><td><code>/lt-pr-trace</code> skill</td><td>The layer-trace mapping is identical every time — encode it once (2.2)</td></tr>
+<tr><td>11:00 test design</td><td><code>/lt-testgen</code> skill</td><td>Forces the concurrency, a11y and class-scale cases a human forgets under time pressure</td></tr>
+<tr><td>13:30 exploratory</td><td>Nothing</td><td>Automation cannot be surprised, and surprise is the point (8.2)</td></tr>
+<tr><td>14:30 suite maintenance</td><td><code>flake-hunter</code> subagent</td><td>Re-running one spec 30× is fan-out work that should not occupy your context</td></tr>
+<tr><td>15:30 refinement</td><td><code>/lt-story-interrogate</code> skill</td><td>The seven questions in 3.1, applied before anyone writes code</td></tr>
+<tr><td>Incident</td><td><code>/lt-incident-timeline</code> skill</td><td>Correlation ID to reconstructed timeline in one step, while mitigating (10.4)</td></tr>
+</tbody></table></div>
+
+<h3>13.2 Skills worth creating</h3>
+<p>A skill is the right home for anything you have now explained twice. It lives in the repo, so the standard travels with the codebase rather than with whoever wrote the prompt.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Skill</th><th style="width:34%">What it encodes</th><th>Framework it wraps</th></tr></thead>
+<tbody>
+<tr><td><code>lt-story-interrogate</code></td><td>The seven questions (3.1), plus a refusal to invent answers to ambiguous ACs</td><td>TREF</td></tr>
+<tr><td><code>lt-pr-trace</code></td><td>Diff → layers touched → tests for that row and everything downstream</td><td>CIDAM</td></tr>
+<tr><td><code>lt-testgen</code></td><td>Story → case table; mandatory concurrency, a11y and whole-class cases</td><td>TREF</td></tr>
+<tr><td><code>lt-playwright</code></td><td>Manual case → spec under the six house rules in 8.3</td><td>CO-STAR</td></tr>
+<tr><td><code>lt-sql-guard</code></td><td>Validation SQL, SELECT-only, staging connection only, never executed unprompted</td><td>TREF</td></tr>
+<tr><td><code>lt-incident-timeline</code></td><td>Correlation ID + logs → timeline, first anomaly, ranked hypotheses</td><td>TREF</td></tr>
+<tr><td><code>lt-release-report</code></td><td>Pipeline artifacts → the readiness statement, in plain English</td><td>CO-STAR</td></tr>
+</tbody></table></div>
+
+<h3>13.3 A skill, in full</h3>
+<div class="fn">.claude/skills/lt-pr-trace/SKILL.md</div>
+<pre><i>---</i>
+<b>name:</b> lt-pr-trace
+<b>description:</b> Map a Lingotran PR diff onto the layer trace and list the tests
+  each touched layer requires. Use when reviewing any pull request.
+<i>---</i>
+
+Read the diff. Do not summarise it back.
+
+1. For every file changed, name the layer it sits at, using the eleven rows of
+   the layer trace (LessonPlayer.tsx ... JSON envelope ... React render).
+2. Output the layers touched, <b>plus every layer downstream of them</b>. A change
+   at layer 9 can break all ten above it; a change at layer 7 cannot break layer 1.
+3. For each layer in that set, list the concrete tests this diff requires.
+4. Flag explicitly, as separate lines:
+   - a new route whose <b>sibling verbs</b> were not also checked for auth
+   - any new query with no <b>EXPLAIN</b> against staging volumes
+   - any <b>check-then-act</b> sequence (read, decide, write) — needs a concurrency test
+   - any state held <b>in process memory</b> — behaves differently at 2 instances
+5. End with what you could <b>not</b> determine from the diff alone.
+
+<u>Never state that a change is safe. Report what it touches and what that requires.</u></pre>
+
+<h3>13.4 Subagents</h3>
+<p>A subagent has its own context. Use one when the work is wide rather than deep — many files, many reruns, many specs — so the search does not crowd out the thread you are actually holding.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:20%">Subagent</th><th style="width:26%">Scope</th><th style="width:20%">Tools</th><th>Model</th></tr></thead>
+<tbody>
+<tr><td><code>pr-triage</code></td><td>Read a diff, map layers, propose cases</td><td>Read, Grep, Glob</td><td>sonnet</td></tr>
+<tr><td><code>flake-hunter</code></td><td>Re-run one spec N times, classify each failure, recommend quarantine</td><td>Bash, Read</td><td>sonnet</td></tr>
+<tr><td><code>sql-validator</code></td><td>Run the standing checks in 6.2 against staging</td><td>Bash, Read</td><td>haiku</td></tr>
+<tr><td><code>a11y-sweep</code></td><td>axe plus the keyboard checklist over changed views</td><td>Bash, Read</td><td>sonnet</td></tr>
+<tr><td><code>corpus-referee</code></td><td>Score the REF clips, compare to bands, judge a breach</td><td>Bash, Read</td><td>opus</td></tr>
+</tbody></table></div>
+
+<div class="fn">.claude/agents/flake-hunter.md</div>
+<pre><i>---</i>
+<b>name:</b> flake-hunter
+<b>description:</b> Re-run a single Playwright spec repeatedly and classify whether
+  it is flaky, genuinely failing, or order-dependent.
+<b>tools:</b> Bash, Read, Grep
+<b>model:</b> sonnet
+<i>---</i>
+
+Given a spec path:
+
+1. Run it 30 times in isolation. Record pass and fail counts.
+2. Run it 10 times with <b>--shuffle</b> alongside the rest of the suite.
+3. Classify:
+   - fails 30/30 isolated        -> a real defect, not flake
+   - passes isolated, fails shuffled -> <b>order dependence</b>, usually a shared fixture
+   - intermittent in both        -> genuine flake; capture the trace for each failure
+4. Quote the actual failing assertion. Never paraphrase it.
+5. Recommend: fix, quarantine, or delete — with the reason.
+
+<u>Do not modify the spec. Diagnose only.</u></pre>
+
+<h3>13.5 The PR review workflow</h3>
+<pre>PR opened
+    │
+    ├─▶ pr-triage ──────▶ layers touched + required tests
+    ├─▶ a11y-sweep ─────▶ violations on changed views          } run in parallel,
+    ├─▶ sql-validator ──▶ standing checks still return zero    }  own contexts
+    │
+    ▼
+ collected, de-duplicated
+    │
+    ▼
+ QA reads it, keeps what is real, discards the rest
+    │
+    ▼
+ PR comment ── written by Shashi Kumar, not by the agent
+    │
+    ▼
+ <b>Gate: the deterministic pipeline (8.4).</b> Agents never gate.</pre>
+
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Stage</th><th style="width:22%">Who decides</th><th>What it may not do</th></tr></thead>
+<tbody>
+<tr><td>Fan-out agents</td><td>Nobody — they only gather</td><td>Write to the repo, touch production, or post anything itself</td></tr>
+<tr><td>De-duplication</td><td>Plain code, not a model</td><td>Drop a finding silently; the count must be reported</td></tr>
+<tr><td>Triage of findings</td><td><strong>QA</strong></td><td>Be skipped because the list looked short</td></tr>
+<tr><td>Merge gate</td><td>The pipeline in 8.4</td><td>Consult a model. Green is a deterministic fact</td></tr>
+</tbody></table></div>
+
+<h3>13.6 What belongs in the repo, not in a prompt</h3>
+<div class="tw"><table>
+<thead><tr><th style="width:26%">Surface</th><th style="width:30%">Put here</th><th>Because</th></tr></thead>
+<tbody>
+<tr><td><code>CLAUDE.md</code></td><td>Stack facts, the institution multiplier, ID conventions, <code>school.edu</code>, house test rules</td><td>Re-read every session, so the constraints survive a context reset. A long pasted prompt does not</td></tr>
+<tr><td><code>.claude/skills/</code></td><td>Anything explained twice</td><td>Travels with the codebase, so every engineer gets the same standard</td></tr>
+<tr><td><code>.claude/agents/</code></td><td>Wide, repetitive, context-hungry work</td><td>Keeps the main thread on the problem you are actually holding</td></tr>
+<tr><td>Hooks in <code>settings.json</code></td><td>Deterministic gates — lint, the SELECT-only check, secret scanning</td><td>A hook runs whether or not the model cooperates. That is the entire point</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">The governing rule</b>
+<p>Agents propose; deterministic checks dispose. Every gate in this manual — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that either holds or does not, and none of them may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. Never let it decide severity, readiness, or whether a score is correct (Module 11). The moment an agent can turn a gate green, the gate has stopped being one.</p></div>
+
+<div class="box"><b class="bl">Before pasting anything</b>
+<p>Never put learner audio, learner names, credentials, connection strings, or a production log excerpt into a prompt. Learners are minors and the audio is personal data under the school agreement (7.4). Redact to IDs and correlation IDs — they are enough to reconstruct a timeline and carry nothing about a child.</p></div>
+
+</div></details>
+
 </div><!-- /wrap -->
 
 <footer>Lingotran · QA Engineering Field Manual · Revision 2.0 · Internal engineering documentation<br>

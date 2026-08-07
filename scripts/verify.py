@@ -18,6 +18,16 @@ WORDS_PER_PAGE = 480
 CODE_LINES_PER_PAGE = 52
 TABLE_ROWS_PER_PAGE = 30
 
+# CONTEXT.md D2 targets ~75% tables and code. The floor sat at 0.60, which left a
+# 15-point corridor the manual could drift down while every build still printed ok.
+# 0.70 keeps a little slack for a prose-heavy edit without licensing a slow slide
+# back into a textbook.
+STRUCTURED_FLOOR = 0.70
+
+# Hero page figure is written "~20 pages" by hand. Allow drift, catch staleness —
+# it read "~40 pages" against a real 19.5 for an entire revision.
+HERO_PAGE_TOLERANCE = 5
+
 # Companies that must never appear as subject matter.
 # Stack tools (React, Node, Azure, Playwright, ...) are allowed and not listed.
 FORBIDDEN = [
@@ -96,10 +106,30 @@ def main():
         ok(f"page count {total:.1f} / {PAGE_CEILING}")
 
     structured_share = (p_code + p_table) / total if total else 0
-    if structured_share < 0.60:
-        fail(f"only {structured_share:.0%} tables+code — target ~75%, manual is drifting to prose")
+    if structured_share < STRUCTURED_FLOOR:
+        fail(f"only {structured_share:.0%} tables+code — target ~75%, floor "
+             f"{STRUCTURED_FLOOR:.0%}; manual is drifting to prose")
     else:
         ok(f"{structured_share:.0%} tables+code")
+
+    # ---- hero facts must match reality (CLAUDE.md 5) ----
+    facts = re.search(r'<div class="facts">(.*?)</div>', body, re.S)
+    if not facts:
+        fail("hero .facts block not found")
+    else:
+        ftext = re.sub(r"<[^>]+>", " ", facts.group(1))
+        m_mod = re.search(r"(\d+)\s+modules", ftext)
+        if not m_mod:
+            fail("hero does not state a module count")
+        elif int(m_mod.group(1)) != len(mods):
+            fail(f"hero says {m_mod.group(1)} modules, document has {len(mods)}")
+        m_pg = re.search(r"~?\s*(\d+)\s+pages", ftext)
+        if not m_pg:
+            fail("hero does not state a page count")
+        elif abs(int(m_pg.group(1)) - total) > HERO_PAGE_TOLERANCE:
+            fail(f"hero says ~{m_pg.group(1)} pages, real count is {total:.1f}")
+        if not any("hero" in f for f in failures):
+            ok(f"hero facts match ({len(mods)} modules, {total:.0f} pages)")
 
     # ---- content rules ----
     if re.search(r"LingoTran", html):
@@ -122,11 +152,24 @@ def main():
     else:
         ok(f"Shashi Kumar in {len(re.findall('Shashi', text))} places")
 
-    # ---- banned textbook sections ----
+    # ---- banned textbook sections (CONTEXT.md D3) ----
+    # These four never appear in legitimate prose, so scan the whole document.
     for banned in ["Learning Objectives", "Why This Topic Matters",
                    "Chapter Summary", "Knowledge Check"]:
         if banned.lower() in text.lower():
             fail(f"banned section reintroduced: {banned}")
+
+    # The rest of D3 is banned only *as its own section*. Scan headings alone —
+    # "Equivalence partitioning" is legitimate as a technique row in 3.3, and a
+    # document-wide scan would fail the build on correct content.
+    heads = re.findall(r"<(?:h[1-6]|summary)\b[^>]*>(.*?)</(?:h[1-6]|summary)>", body, re.S)
+    head_text = " | ".join(re.sub(r"<[^>]+>", " ", h) for h in heads)
+    for banned in ["Business Perspective", "Developer Perspective",
+                   "Step-by-Step Process", "Equivalence Partitioning"]:
+        if banned.lower() in head_text.lower():
+            fail(f"banned section reintroduced as a heading: {banned}")
+    if not any("banned" in f for f in failures):
+        ok("no banned textbook sections")
 
     # ---- accessibility guards ----
     if "prefers-reduced-motion" not in html:

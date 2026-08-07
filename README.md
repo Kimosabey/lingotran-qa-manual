@@ -19,8 +19,8 @@ JS, opens by double-click and prints straight into a doc.
 | | |
 |---|---|
 | Modules | 13 (`m00`–`m12`) |
-| Length | 19.5 pages against a 50-page ceiling |
-| Content mix | 74% tables and code |
+| Length | 21.2 pages against a 50-page ceiling |
+| Content mix | 72% tables and code |
 | Theme | Light only, Nunito, brand tokens from `assets/` |
 
 ---
@@ -57,7 +57,8 @@ python3 scripts/verify.py  # gate — must pass clean before shipping
 |---|---|
 | Tag balance across 10 tag types | A single unclosed `<div>` silently breaks the filter |
 | Page count under 50 | An unread manual has zero quality impact |
-| Structured content ≥ 60% | Prose drift turns a field manual back into a textbook |
+| Structured content ≥ 70% | Prose drift turns a field manual back into a textbook |
+| Hero facts match reality | The module and page counts in the hero silently went stale once |
 | `LingoTran` spelling | Lowercase `t`, always |
 | Competing-product references | Every example is Lingotran |
 | Shashi Kumar present | The standing QA engineer in worked examples |

@@ -1,6 +1,6 @@
 <!-- ══════════ 07 ══════════ -->
 <details class="mod" id="m07">
-<summary><span class="n">07</span> The speech pipeline<span class="pp">3 p</span></summary>
+<summary><span class="n">07</span> The speech pipeline<span class="pp">6 p</span></summary>
 <div class="inner">
 
 <p>This is the module that matters most, because it is the only part of Lingotran a competitor cannot copy from a screenshot — and the only part where "the tests pass" and "the product works" routinely disagree.</p>
@@ -27,7 +27,7 @@
 <tr><td><strong>Non-deterministic</strong></td><td>The same clip can score 81 then 83. Assertions must use tolerance bands, never equality.</td></tr>
 <tr><td><strong>External and paid</strong></td><td>CI cannot call it on every run. Stub in CI; use a small real-audio suite nightly.</td></tr>
 <tr><td><strong>Device-dependent</strong></td><td>A laptop mic, an iPad mic, and a classroom headset produce materially different scores from the same speaker.</td></tr>
-<tr><td><strong>Accent-sensitive</strong></td><td>The failure mode is systematic, not random — see 7.4. This is the defect class most likely to reach production unnoticed.</td></tr>
+<tr><td><strong>Accent-sensitive</strong></td><td>The failure mode is systematic, not random — see 7.3. This is the defect class most likely to reach production unnoticed.</td></tr>
 <tr><td><strong>Silently degrading</strong></td><td>If the service returns a default or partial payload, the app shows a plausible score. Nothing looks broken.</td></tr>
 </tbody></table></div>
 
@@ -62,6 +62,69 @@
 
 <div class="box"><b class="bl">Privacy — a standing check</b>
 <p>Learner audio is personal data, and a large share of Lingotran's learners are minors. For any change touching capture or upload, confirm: audio goes only to the contracted Azure region, retention matches the school agreement, clips are deleted when a learner is removed, and no third-party endpoint appears in the network tab. Browser-native speech APIs in particular may transmit audio to servers outside the contracted sub-processor list — verify in DevTools, not in documentation.</p></div>
+
+<h3>7.5 Devices, browsers, and what they actually capture</h3>
+<p>Scores are compared across a class as though the audio were equivalent. It is not. The same learner reading the same sentence scores differently on three devices in the same room, and the device is invisible in the attempts table unless someone chose to record it.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:22%">Device in real classrooms</th><th style="width:24%">What it actually produces</th><th>Failure mode to force</th></tr></thead>
+<tbody>
+<tr><td>Desktop Chrome, built-in mic</td><td>webm/opus, 48 kHz</td><td>Baseline. Also picks up the learner at the next desk — completeness scores inflate on a sentence that was never finished.</td></tr>
+<tr><td><strong>iPad Safari</strong> — the school's actual device</td><td>mp4/aac. <strong>Never webm.</strong></td><td>A hard-coded <code>mimeType</code> throws on construction, so recording never starts and the UI shows nothing (4.1 ③).</td></tr>
+<tr><td>Bluetooth headset</td><td>Drops to ~8 kHz narrowband the moment the mic opens</td><td>Same speaker, same words, scores collapse. See the box below.</td></tr>
+<tr><td>USB classroom headset</td><td>16 kHz mono — the best case</td><td>Shared between classes and rarely checked. Test a physically damaged mic, not only a working one.</td></tr>
+<tr><td>Windows laptop, automatic gain control</td><td>Level pumps between phrases</td><td>Quiet learners are amplified along with the room; fluency drops mid-sentence for reasons the learner cannot hear.</td></tr>
+<tr><td>Any device, mic already held</td><td>Nothing — <code>NotReadableError</code></td><td>A second tab, a video call, or the previous lesson left the stream open. Distinct from permission denial and needs its own message.</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">The Bluetooth downgrade</b>
+<p>A Bluetooth headset plays audio at high quality, but the moment its microphone opens most stacks switch the link to a narrowband voice profile — roughly 8 kHz mono. Pronunciation assessment on 8 kHz audio has lost most of the consonant detail it scores against, so the learner is marked down for their headset rather than their speech. It reproduces on any pairing, looks exactly like a learner getting worse, and is invisible in the attempts table. <strong>Record input device and sample rate alongside every attempt</strong> — without them this defect is unfalsifiable.</p></div>
+
+<h3>7.6 Quota and throttling</h3>
+<p>The institution multiplier lands harder here than anywhere else in the stack. Thirty learners press submit inside the same minute, and every one of those becomes a paid, rate-limited call to an external service.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Limit</th><th style="width:30%">Where it bites first</th><th>Test</th></tr></thead>
+<tbody>
+<tr><td>Concurrent requests per resource</td><td>One class submitting together — not total daily volume</td><td>Fire 30 assessments simultaneously against staging; assert no 5xx reaches a learner</td></tr>
+<tr><td>Transactions per second</td><td>Timetable peak, several classes at once</td><td>Overlap two class-burst scenarios (9.1)</td></tr>
+<tr><td>Monthly quota</td><td>Late in the billing period, silently</td><td>Confirm the alert fires approaching the cap, not on hitting it</td></tr>
+<tr><td>Per-request duration</td><td>REF-08, at the 60 s boundary</td><td>Assert the gateway timeout exceeds the longest permitted clip</td></tr>
+</tbody></table></div>
+
+<div class="fn">test/speech/quota.spec.ts</div>
+<pre><i>// 30 learners, one classroom, one minute — the shape that actually breaks it</i>
+<b>test</b>('a full class submitting together degrades, never errors', <b>async</b> () =&gt; {
+  <b>const</b> results = <b>await</b> Promise.all(
+    Array.from({ length: 30 }, () =&gt; assess(REF_01, referenceText))
+  );
+
+  <i>// Throttling is acceptable. A raw failure reaching the learner is not.</i>
+  <b>for</b> (<b>const</b> r <b>of</b> results) {
+    expect(r.status).not.toBe(500);
+    <b>if</b> (r.status === 429) expect(r.headers['retry-after']).toBeDefined();
+  }
+
+  <i>// And a throttled call must never consume one of the learner's three attempts</i>
+  expect(<b>await</b> countAttempts(uid, eid)).toBe(<u>results.filter(r =&gt; r.ok).length</u>);
+});</pre>
+
+<div class="box warn"><b class="bl">Retries amplify the burst</b>
+<p>A client that retries on 429 without backoff turns thirty requests into ninety against a service already refusing them, and the class never recovers inside the lesson period. Assert that retry is capped and jittered, and that a throttled attempt is not counted against the learner.</p></div>
+
+<h3>7.7 The phoneme feedback panel</h3>
+<p>The overall score is one number and easy to check. The panel beneath it renders one marker per phoneme, and is where payload and UI most often disagree.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:28%">Case</th><th style="width:28%">Expected</th><th>Why it breaks</th></tr></thead>
+<tbody>
+<tr><td>Payload omits <code>phonemes</code></td><td>Overall score shown, panel hidden</td><td>Partial responses are normal under load, and a missing array reads as <code>undefined.map</code></td></tr>
+<tr><td>Phoneme count ≠ words spoken</td><td>Panel aligns to what was assessed, not the reference text</td><td>Partial speech (REF-05) returns fewer phonemes than the sentence contains</td></tr>
+<tr><td>Score exactly on a colour threshold</td><td>One documented bucket, deterministic</td><td>60.0 rendering as "needs work" in one view and "good" in another</td></tr>
+<tr><td>Non-Latin reference text</td><td>Renders and aligns correctly</td><td>Devanagari and Tamil clusters span several code units; naive per-character mapping misaligns every marker (3.4)</td></tr>
+<tr><td>Long sentence at the 60 s limit</td><td>Wraps or scrolls inside the panel</td><td>Fixed-width rows clip silently on iPad portrait — the school's device again</td></tr>
+<tr><td>Second attempt after a first</td><td>Panel resets completely</td><td>Stale markers from the previous attempt persist beneath the new score</td></tr>
+</tbody></table></div>
+
+<div class="box warn"><b class="bl">Colour alone is not feedback</b>
+<p>Phoneme quality is almost always rendered red / amber / green. To a colour-blind learner that panel carries no information, and a screen reader announces a row of meaningless spans. Every marker needs a text or shape equivalent and an accessible name. This is the accessibility defect most likely to survive an axe scan, because the contrast passes and the markup is technically valid (9.3).</p></div>
 
 </div></details>
 

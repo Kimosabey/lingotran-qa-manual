@@ -37,7 +37,7 @@ no external JS, opens by double-click.
    form permitted is inside the hostname `api.lingotran.com`.
 4. **Light theme only.** No dark backgrounds anywhere except the hero gradient. Code
    blocks are light (`--code-bg`), never dark.
-5. **Page ceiling: 50.** Currently ~19.5. Measure with `scripts/verify.py` after any
+5. **Page ceiling: 50.** Currently ~21.2. Measure with `scripts/verify.py` after any
    content change. If a change pushes past 50, cut before shipping.
 6. **Customer domains are `school.edu`.** Learner emails, teacher emails, test fixtures.
 7. **Never build from `archive/`.** It holds the superseded 30-page Chapter 1 written to
@@ -52,16 +52,21 @@ Target roughly **75% tables and code, 25% prose.** Current mix:
 
 | Component | Volume | Pages |
 |---|---|---|
-| Prose | 2,455 words | 5.1 |
-| Code | 248 lines | 4.8 |
-| Tables | 289 rows | 9.6 |
-| **Total** | | **19.5** |
+| Prose | 2,797 words | 5.8 |
+| Code | 263 lines | 5.1 |
+| Tables | 308 rows | 10.3 |
+| **Total** | | **21.2** |
 
 Page maths used by `verify.py`: prose ÷ 480 wpp, code ÷ 52 lines/pp, tables ÷ 30 rows/pp.
 
 **When adding content, prefer a table.** Prose is for connective tissue and for the
 judgement calls a table cannot hold. If a new section is mostly paragraphs, it is
 probably textbook filler — cut it or convert it.
+
+`verify.py` fails below **70%**. The mix is currently 72%, so the guard is live rather
+than theoretical: a prose-heavy addition will fail the build, not merely drift. Callout
+boxes count as prose — they are worth their cost when they name a failure mode, but
+three boxes and an intro paragraph will move the ratio a full point.
 
 **Banned section types** (they were deliberately removed and must not come back):
 Learning Objectives · Why This Topic Matters · Chapter Summary · Knowledge Check
@@ -144,7 +149,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 
 ## 8. Current state
 
-**Complete — 13 modules, ~19.5 pages:**
+**Complete — 13 modules, ~21.2 pages:**
 
 | # | Module | Pages |
 |---|---|---|
@@ -155,7 +160,7 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 | 04 | Frontend testing · React | 4 |
 | 05 | API testing · Node & Express | 4 |
 | 06 | Database testing · PostgreSQL | 4 |
-| 07 | The speech pipeline | 3 |
+| 07 | The speech pipeline | 6 |
 | 08 | Automation · ATDD to pipeline | 5 |
 | 09 | Performance, security, accessibility | 5 |
 | 10 | Defects, RCA & production | 5 |
@@ -165,11 +170,9 @@ python3 scripts/verify.py  # tag balance, page count, compliance checks
 *(Per-module page labels in `<span class="pp">` are indicative, set by hand. The real
 total comes from `verify.py`.)*
 
-**~30 pages of headroom** against the 50 ceiling.
+**~29 pages of headroom** against the 50 ceiling.
 
 **Open / candidates for the headroom:**
-- Module 07 (speech pipeline) — deepest Lingotran-specific value; could take device
-  matrix, quota behaviour, and a phoneme-panel section.
 - Module 08 — Playwright fixture patterns, sharding, trace-on-failure triage.
 - A Module 13 on teacher/institution admin and reporting, currently thin.
 - Real screenshots of the lesson player (none present; all diagrams are ASCII/CSS).

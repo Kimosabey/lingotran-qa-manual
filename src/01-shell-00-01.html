@@ -176,7 +176,10 @@ pre{background:var(--code-bg);border:1px solid var(--code-br);border-left:3px so
   font-size:12px;line-height:1.5;color:var(--code-ink);margin:9px 0}
 pre b{color:var(--brand-purple);font-weight:700}
 pre i{color:var(--caption-safe);font-style:normal}
-pre u{color:var(--coral-text);text-decoration:none}
+/* WCAG 1.4.1 — the marked line must not be identified by colour alone.
+   Keep the coral, add a shape: a dotted underline plus a left marker. */
+pre u{color:var(--coral-text);text-decoration:underline;text-decoration-style:dotted;
+  text-underline-offset:3px;text-decoration-thickness:1px}
 .fn{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--pill-purple);
   background:var(--lilac);display:inline-block;padding:2px 9px;border-radius:5px 5px 0 0;margin:9px 0 0}
 .fn+pre{margin-top:0;border-radius:0 8px 8px 0}
@@ -320,6 +323,26 @@ footer{text-align:center;padding:30px 22px 44px;color:var(--caption-safe);font-s
 <tr><td>Signing off a release</td><td>Readiness table (12.2), then smoke inside five minutes (12.3)</td><td>Never sign "it is fine"</td></tr>
 <tr><td>Something repeats</td><td>Encode it as a skill so the standard travels with the repo</td><td>Module 13</td></tr>
 </tbody></table></div>
+
+<h4>Before you test anything — the discovery pass</h4>
+<p>Days one to ten are not for writing test cases. They are for finding out which of the assumptions in this manual are actually true here, and for building the things that do not exist yet.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:28%">Establish</th><th style="width:34%">How</th><th>Why it comes first</th></tr></thead>
+<tbody>
+<tr><td><strong>Does speech work on a real iPad?</strong></td><td>Borrow one. Open a lesson on school-grade wifi. Record</td><td>If it does not, the core feature is unavailable on the customer's main device. Everything else is secondary (7.2)</td></tr>
+<tr><td><strong>Is Google a named sub-processor?</strong></td><td>Read the signed school agreement, not the marketing page</td><td>Children's audio leaves the device. If the paperwork does not cover it, that is a legal exposure, not a defect (7.4)</td></tr>
+<tr><td><strong>Is UAT on HTTPS?</strong></td><td>Open it and look at the scheme</td><td>On HTTP the mic and speech APIs are blocked outright — no speech testing is possible there (2.3)</td></tr>
+<tr><td>Does UAT match production?</td><td>Row counts, and the API instance count</td><td>A one-instance UAT cannot reproduce the rate-limiter class of defect at all (2.3, 2.4)</td></tr>
+<tr><td>Run the standing SQL once</td><td>The five checks in 6.2, against UAT</td><td>Establishes the baseline. If cross-school is already non-zero, stop and escalate today</td></tr>
+<tr><td><strong>Record the REF corpus</strong></td><td>Eight clips, real voices, including an accented one</td><td>It does not exist until someone records it, and nothing in 7.3 works without it</td></tr>
+<tr><td>Inventory what tests exist</td><td>Read the pipeline. Count what runs and what it proves</td><td>You cannot say what is untested until you know what is tested</td></tr>
+<tr><td>Baseline the pipeline</td><td>Duration, failure rate, which specs re-run green</td><td>Flaky rate is a metric from day one, not something to start measuring later (12.6)</td></tr>
+<tr><td>Find the escalation route</td><td>Ask who to call, same day, for a safeguarding issue</td><td>You need this before the incident, never during it (9.2)</td></tr>
+<tr><td>Find what was promised</td><td>Ask sales what schools were told</td><td>Severity is meaningless without the contractual stake</td></tr>
+<tr><td>Confirm device access</td><td>Real iPad, a headset, a Bluetooth pair</td><td>Half the defects in Module 07 are unreproducible without them</td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Discovery output is a risk list, not a test plan</b>
+<p>End the pass with what you now know to be untrue, unavailable or unowned — and say it out loud before writing a single case. A test plan built on unchecked assumptions tests the assumptions, not the product.</p></div>
 
 <h4>First week on Lingotran</h4>
 <div class="tw"><table>

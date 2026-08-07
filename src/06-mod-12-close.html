@@ -8,9 +8,9 @@
 <b>In scope:</b>    LT-1187 extended sessions · LT-1201 feedback panel
 <b>Out of scope:</b> billing, marketing site  — and why
 <b>Risk order:</b>  1 session handling  2 scoring quality  3 class reports
-<b>Environments:</b> UAT (2 instances, 2M rows, real Speech)
+<b>Environments:</b> UAT (2 instances, 2M rows, <u>http — no speech, see 2.3</u>)
 <b>Entry:</b> all stories merged, UAT deployed, migrations run + rolled back once
-<b>Exit:</b>  E2E green · a11y scan clean · REF corpus within bands · no open Sev-1/2
+<b>Exit:</b>  E2E green · a11y scan clean · REF corpus within bands (<u>localhost/prod only</u>) · no open Sev-1/2
 <b>Not being tested, accepted as risk:</b> [the honest list — this is the most valuable line]</pre>
 
 <h3>12.2 Release readiness</h3>
@@ -82,20 +82,43 @@
 </tbody></table></div>
 <div class="box warn"><b class="bl">Do not publish</b><p>Test case counts, bugs raised per tester, or automation percentage. Each one is trivially gamed and rewards volume over judgement.</p></div>
 
-<h3>12.7 Glossary</h3>
+<h3>12.7 Glossary — what the words actually mean</h3>
+<p>If a term in this manual is not obvious, it is here. Plain meaning first, then why you care.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:24%">Term</th><th>Meaning here</th></tr></thead>
+<thead><tr><th style="width:19%">Term</th><th style="width:36%">What it means</th><th>Why it matters here</th></tr></thead>
 <tbody>
-<tr><td><strong>QA / QC / QE</strong></td><td>Assurance = preventing defects through process; Control = finding them by testing; Engineering = building the systems that do both.</td></tr>
-<tr><td><strong>Verification</strong></td><td>Did we build it to spec?</td></tr>
-<tr><td><strong>Validation</strong></td><td>Did we build a thing a teacher can actually use in a classroom?</td></tr>
-<tr><td><strong>Shift left</strong></td><td>QA in refinement, not after merge. Module 3 is shift-left in practice.</td></tr>
-<tr><td><strong>Shift right</strong></td><td>Learning from production — smoke, alerts, escape analysis.</td></tr>
-<tr><td><strong>Test pyramid</strong></td><td>Many fast unit tests, fewer API tests, fewest E2E. Inverted pyramids are slow and flaky.</td></tr>
-<tr><td><strong>Escape</strong></td><td>A defect that reached production. The gate that missed it is the finding, not the defect.</td></tr>
-<tr><td><strong>Flake</strong></td><td>A test that fails without a code change. Treated as a defect in the suite.</td></tr>
-<tr><td><strong>REF corpus</strong></td><td>The fixed reference clips in 7.3 — Lingotran's only scoring-quality regression signal.</td></tr>
-<tr><td><strong>Expand/contract</strong></td><td>Two-release pattern for renames so old and new code run together safely.</td></tr>
+<tr><td><strong>Secure context</strong></td><td>A page served over <code>https://</code> (or <code>localhost</code>). Browsers hide powerful APIs from anything else</td><td>On HTTP UAT the mic and speech APIs are simply absent (2.3)</td></tr>
+<tr><td><strong>ASR / STT</strong></td><td>Automatic Speech Recognition / Speech-To-Text — turning audio into words</td><td>All Lingotran gets back is words. There is no pronunciation score (7.2)</td></tr>
+<tr><td><strong>TTS</strong></td><td>Text-To-Speech — the device reads text aloud</td><td>Voices differ per device; a language voice may not be installed (7.4)</td></tr>
+<tr><td><strong>Transcript</strong></td><td>The text the recogniser thinks it heard</td><td>Our score is a comparison against it, so a mishearing becomes a wrong answer</td></tr>
+<tr><td><strong>NAT IP</strong></td><td>One public address shared by a whole network. A school of 30 looks like one visitor</td><td>Per-IP limits divide by 30. The cause of LT-INC-0219</td></tr>
+<tr><td><strong>Check-then-act</strong></td><td>Read a count, decide, then write — with a gap in between</td><td>Two requests both pass the check. Only a concurrency test finds it (5.3)</td></tr>
+<tr><td><strong>Idempotent</strong></td><td>Doing it twice has the same effect as once</td><td>Double-submit must record one attempt, not two</td></tr>
+<tr><td><strong>Soft delete</strong></td><td>Row is flagged deleted, not removed</td><td>Every query must filter it or deleted learners reappear (6.1)</td></tr>
+<tr><td><strong>Seq scan / index scan</strong></td><td>Reading every row versus jumping straight to it</td><td>200 dev rows hide a missing index; production does not (2.3)</td></tr>
+<tr><td><strong>EXPLAIN</strong></td><td>Asks PostgreSQL how it plans to run a query</td><td>The only way to see a missing index before users do</td></tr>
+<tr><td><strong>p95</strong></td><td>95 out of 100 requests were at least this fast</td><td>Averages hide the slow tail that users actually complain about</td></tr>
+<tr><td><strong>Sub-processor</strong></td><td>A third party that handles your customers' data on your behalf</td><td>Google transcribes children's speech. It must be named in the agreement (7.4)</td></tr>
+<tr><td><strong>Correlation ID</strong></td><td>One ID stamped on a request across every system it touches</td><td>Turns an hour of log searching into one query (10.1)</td></tr>
+<tr><td><strong>Canary account</strong></td><td>A dedicated fake account used to test production safely</td><td>The only acceptable way to touch production (12.3)</td></tr>
+<tr><td><strong>Flake / quarantine</strong></td><td>A test that fails without a code change; parking it so it stops blocking</td><td>Worse than no test — it trains the team to re-run the pipeline (8.3)</td></tr>
+<tr><td><strong>Fixture</strong></td><td>Reusable setup a test starts from</td><td>Shared fixtures create order dependence that only appears in CI</td></tr>
+<tr><td><strong>Stub</strong></td><td>A fake stand-in that always returns the same thing</td><td>A stub always returns good speech, so it hides the accent defect entirely</td></tr>
+<tr><td><strong>Boundary value</strong></td><td>Testing right at the edge of a limit, and one either side</td><td>Bugs cluster at the edge, never the middle (3.4)</td></tr>
+<tr><td><strong>Equivalence partition</strong></td><td>Grouping inputs that should behave identically, then testing one</td><td>Three cases instead of three hundred (3.3)</td></tr>
+<tr><td><strong>Expand / contract</strong></td><td>Renaming across two releases so old and new code both work meanwhile</td><td>A straight rename breaks the running version mid-deploy (6.3)</td></tr>
+<tr><td><strong>Escape</strong></td><td>A defect that reached production</td><td>The gate that missed it is the finding, not the defect (10.3)</td></tr>
+<tr><td><strong>Shift left / right</strong></td><td>QA in refinement before code / learning from production after it</td><td>Module 3 is the first, Module 10 the second</td></tr>
+<tr><td><strong>WCAG AA</strong></td><td>The accessibility standard public-sector buyers procure against</td><td>A sales gate for schools, not a nicety (9.3)</td></tr>
+<tr><td><strong>axe</strong></td><td>A tool that scans a page for accessibility violations</td><td>Catches about a third. It cannot tell you tab order is illogical</td></tr>
+<tr><td><strong>Charter</strong></td><td>A timeboxed exploratory session with a written goal</td><td>Highest yield per hour in the whole testing surface (1.6)</td></tr>
+<tr><td><strong>Skill</strong></td><td>A written procedure an AI tool loads on demand</td><td>Where anything you have explained twice belongs (13.2)</td></tr>
+<tr><td><strong>Subagent</strong></td><td>A separate AI worker with its own memory, run in parallel</td><td>For wide repetitive work, so it does not crowd your own context (13.4)</td></tr>
+<tr><td><strong>Hook</strong></td><td>A script the tool runs automatically before an action</td><td>It runs whether or not the model cooperates. That is the entire point</td></tr>
+<tr><td><strong>QA / QC / QE</strong></td><td>Preventing defects by process / finding them by testing / building the systems that do both</td><td>This manual is mostly the third</td></tr>
+<tr><td><strong>Verification / validation</strong></td><td>Did we build it to spec / did we build something a teacher can use</td><td>A feature can pass the first and fail the second</td></tr>
+<tr><td><strong>Test pyramid</strong></td><td>Many fast unit tests, fewer API tests, fewest end-to-end</td><td>Inverted pyramids are slow and flaky</td></tr>
+<tr><td><strong>REF corpus</strong></td><td>The fixed reference recordings in 7.3</td><td>Lingotran's only scoring-quality regression signal</td></tr>
 </tbody></table></div>
 
 </div></details>
@@ -284,6 +307,48 @@ Given a spec path:
 <tr><td><code>.claude/agents/</code></td><td>Wide, repetitive, context-hungry work</td><td>Keeps the main thread on the problem you are actually holding</td></tr>
 <tr><td>Hooks in <code>settings.json</code></td><td>Deterministic gates — lint, the SELECT-only check, secret scanning</td><td>A hook runs whether or not the model cooperates. That is the entire point</td></tr>
 </tbody></table></div>
+
+<h3>13.7 The QA workstation</h3>
+<p>Three tools, one standard. The standard lives in the repo — <code>AGENTS.md</code>, <code>CLAUDE.md</code> and <code>.claude/</code> — never in a tool's own settings, or three tools grow three versions of the house rules and the one your teammate uses is the one you never reviewed.</p>
+<div class="tw"><table>
+<thead><tr><th style="width:17%">Tool</th><th style="width:30%">Use it for</th><th style="width:26%">Do not use it for</th><th>Config it reads</th></tr></thead>
+<tbody>
+<tr><td><strong>Claude Code</strong></td><td>Repo-wide work, running build and verify, fan-out PR review, anything that must be gated</td><td>—</td><td><code>CLAUDE.md</code>, <code>.claude/</code></td></tr>
+<tr><td><strong>Cursor</strong></td><td>Writing and refactoring one spec file, in-editor speed</td><td>Multi-file agentic runs that need a gate</td><td><code>.cursor/rules/*.mdc</code> → points at the above</td></tr>
+<tr><td><strong>Antigravity</strong></td><td>Driving a real browser, capturing evidence, exploratory support</td><td>Anything trusted without a human reading it</td><td>Point it at <code>AGENTS.md</code></td></tr>
+</tbody></table></div>
+<div class="box warn"><b class="bl">Only one of them can gate</b>
+<p>Claude Code is the only one carrying a deterministic hook — <code>.claude/hooks/guard-db.py</code> blocks a write, a production host or an inline credential whether or not the model cooperates. Cursor and Antigravity cannot be reached by it, so they honour the same rules <em>by convention only</em>. That is a real difference: their output re-enters through the pipeline like anyone else's, and <strong>gating stays with the deterministic layer</strong>.</p></div>
+
+<h3>13.8 The overnight pipeline and the morning report</h3>
+<p>Everything that is too slow, too paid or too noisy to gate a PR runs overnight and produces one screen for 09:30 (1.5).</p>
+<div class="tw"><table>
+<thead><tr><th style="width:24%">Stage</th><th style="width:32%">Produces</th><th>Blocks</th></tr></thead>
+<tbody>
+<tr><td>REF speech corpus</td><td>Per-clip transcript match and the delta on the last run</td><td>Nothing — alerts on a band breach</td></tr>
+<tr><td>k6 class burst, single IP</td><td>p95, error rate, 429 count</td><td>Nothing — trend tracked</td></tr>
+<tr><td>Standing SQL (6.2)</td><td>Cross-school rows, orphans, soft-delete leaks</td><td><strong>Yes</strong> — non-zero is contract-terminating</td></tr>
+<tr><td>axe on changed views</td><td>New violations only</td><td>Nothing — reported</td></tr>
+<tr><td><code>/lt-morning-report</code></td><td>The screen below</td><td>Nothing. It reports; it never decides</td></tr>
+</tbody></table></div>
+
+<div class="fn">the 09:30 screen — ranked by consequence, not by section</div>
+<pre>LINGOTRAN QA · MORNING REPORT · 2026-08-07
+
+SPEECH CORPUS   8 clips · 7 pass · <u>1 BREACH</u>
+  <u>REF-02 accented   transcript match 61%  (floor 80%, was 84%)</u>
+  <u>accent regression — the defect class from 7.3. Confirm before scrum.</u>
+
+LOAD  1 NAT IP  30 VU / 90 s · p95 742 ms (was 610) · 429s: 0        ok
+DATA ISOLATION  cross-school rows: 0 · orphans: 0 · soft-delete: 0   ok
+ACCESSIBILITY   axe on 4 changed views · 2 new violations            see board
+PIPELINE        3 overnight failures · 1 passed on re-run            quarantine
+
+WHAT CHANGED    deploy 2.15.1 · migration 0043 · flag transcript_scoring_v2 ON
+FIRST ACTION    REF-02 breach. The flag flip is the obvious suspect — check it first.</pre>
+
+<div class="box"><b class="bl">A job that did not run is worse than one that failed</b>
+<p>A failure is loud. A job that silently did not run looks exactly like a clean night. The report states every check including the zeros, and says plainly when something is missing — <strong>"cross-school rows: 0" and "cross-school check: DID NOT RUN" must never be confusable.</strong></p></div>
 
 <div class="box warn"><b class="bl">The governing rule</b>
 <p>Agents propose; deterministic checks dispose. Every gate in this manual — the pipeline in 8.4, the REF bands in 7.3, the cross-school query in 6.2 — is a fact that either holds or does not, and none of them may be delegated to a model. Use Claude Code to widen what you look at and to make the standard identical between engineers. Never let it decide severity, readiness, or whether a score is correct (Module 11). The moment an agent can turn a gate green, the gate has stopped being one.</p></div>

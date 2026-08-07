@@ -55,11 +55,24 @@
 <div class="tw"><table>
 <thead><tr><th style="width:13%">Env</th><th style="width:20%">Data</th><th style="width:22%">Speech</th><th>What it can and cannot prove</th></tr></thead>
 <tbody>
-<tr><td><strong>Dev</strong></td><td>Seed script, ~200 rows</td><td>Real browser API, each developer's own Chrome</td><td>Logic only. Proves nothing about scale, real devices, or a class of thirty.</td></tr>
+<tr><td><strong>Dev</strong> <em>(http)</em></td><td>Seed script, ~200 rows</td><td>Only on <code>localhost</code> — a secure context by exception</td><td>Logic only. Proves nothing about scale, real devices, or a class of thirty.</td></tr>
 <tr><td><strong>CI container</strong></td><td>Fresh PostgreSQL per run</td><td>Stubbed</td><td>Regression and contract, deterministic by design. Not an environment anyone can open.</td></tr>
-<tr><td><strong>UAT</strong></td><td>Anonymised copy</td><td>Real</td><td>The only place before production where index and query-plan problems can appear — <em>if</em> it holds production-like volume.</td></tr>
+<tr><td><strong>UAT</strong> <em>(http)</em></td><td>Anonymised copy</td><td><strong>Blocked — no secure context</strong></td><td>The only place before production where index and query-plan problems can appear — <em>if</em> it holds production-like volume.</td></tr>
 <tr><td><strong>Production</strong></td><td>Live</td><td>Real</td><td>Read-only smoke against a dedicated canary account. Never exploratory testing.</td></tr>
 </tbody></table></div>
+
+<div class="box warn"><b class="bl">Dev and UAT are HTTP — so the core feature cannot run there</b>
+<p>Browsers only expose microphone and speech APIs in a <strong>secure context</strong>. Over plain <code>http://</code> — with the single exception of <code>localhost</code> — the browser refuses:</p>
+<div class="tw"><table>
+<thead><tr><th style="width:34%">API</th><th style="width:22%">On HTTP UAT</th><th>Consequence</th></tr></thead>
+<tbody>
+<tr><td><code>getUserMedia</code></td><td><strong>Blocked</strong></td><td>No microphone. Nothing in Module 07 can be exercised on UAT</td></tr>
+<tr><td><code>SpeechRecognition</code></td><td><strong>Blocked</strong></td><td>No transcript, so no score. The REF corpus cannot run here</td></tr>
+<tr><td>Service worker</td><td><strong>Blocked</strong></td><td><code>offline_lesson_cache</code> is untestable outside production</td></tr>
+<tr><td><code>Secure</code> cookies</td><td>Not set or sent</td><td>Session behaviour differs from production — LT-1187 proves nothing here</td></tr>
+<tr><td>JWT in transit</td><td>Plaintext</td><td>Tokens and learner data readable on the school network</td></tr>
+</tbody></table></div>
+<p><strong>A UAT sign-off on anything speech-related is currently worth nothing</strong> — the feature cannot execute. Fix it with TLS on UAT (a self-signed certificate suffices; the browser only checks for a secure context), or record it as accepted risk at every release (12.1).</p></div>
 
 <div class="box warn"><b class="bl">UAT is doing the work of two environments</b>
 <p>With no separate performance environment, UAT is simultaneously where people click around and where load tests run. Those two uses fight: a k6 class-burst while someone is doing acceptance testing invalidates both. <strong>Book it.</strong> Load runs go nightly when nobody is in it, and the results are only meaningful if UAT matches production on the two things that bite — <strong>data volume and instance count</strong>. A single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>

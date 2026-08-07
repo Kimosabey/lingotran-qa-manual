@@ -1,0 +1,28 @@
+---
+description: Lingotran QA house rules — applies to the manual and to any test code
+alwaysApply: true
+---
+
+Read `AGENTS.md` and `CLAUDE.md` at the repo root before editing. They are the source of
+truth; this file only points at them so the standard does not fork per tool.
+
+Non-negotiable here:
+
+- Never edit `dist/` — it is generated. Edit `src/`, then `bash scripts/build.sh`.
+- `python scripts/verify.py` must pass clean before a change is done.
+- SELECT-only against any database, and never a production host.
+- No learner audio, learner names, credentials or connection strings in a prompt.
+  Learners are minors. Use IDs and correlation IDs.
+- Lingotran is the only product discussed. Stack tool names are fine.
+
+Writing Playwright for Lingotran:
+
+- Seed state via the API, never through the UI — the largest source of flake and runtime.
+- Locate by `getByRole` with an accessible name, never a CSS class.
+- No `waitForTimeout`.
+- Assert the database at the end. A green UI over a wrong row is the defect that ships.
+- One assertion theme per test.
+- Fresh data per test; shared fixtures create order dependence that only shows up in CI.
+
+If a test passes before the feature exists, that is a broken assertion. Say so rather
+than reporting success.

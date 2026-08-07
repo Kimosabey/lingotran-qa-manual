@@ -8,8 +8,8 @@
 <b>In scope:</b>    LT-1187 extended sessions · LT-1201 feedback panel
 <b>Out of scope:</b> billing, marketing site  — and why
 <b>Risk order:</b>  1 session handling  2 scoring quality  3 class reports
-<b>Environments:</b> staging (2 instances, 2M rows, real Speech)
-<b>Entry:</b> all stories merged, staging deployed, migrations run + rolled back once
+<b>Environments:</b> UAT (2 instances, 2M rows, real Speech)
+<b>Entry:</b> all stories merged, UAT deployed, migrations run + rolled back once
 <b>Exit:</b>  E2E green · a11y scan clean · REF corpus within bands · no open Sev-1/2
 <b>Not being tested, accepted as risk:</b> [the honest list — this is the most valuable line]</pre>
 
@@ -19,7 +19,7 @@
 <tbody>
 <tr><td>All ACs verified</td><td>&nbsp;</td><td>Test run link</td></tr>
 <tr><td>E2E suite green</td><td>&nbsp;</td><td>Pipeline run</td></tr>
-<tr><td>Migrations applied and rolled back in staging</td><td>&nbsp;</td><td>Pipeline log</td></tr>
+<tr><td>Migrations applied and rolled back in UAT</td><td>&nbsp;</td><td>Pipeline log</td></tr>
 <tr><td>REF speech corpus within bands</td><td>&nbsp;</td><td>Nightly report</td></tr>
 <tr><td>Cross-school isolation query returns zero</td><td>&nbsp;</td><td>SQL output</td></tr>
 <tr><td>a11y scan clean + manual keyboard pass</td><td>&nbsp;</td><td>axe report + notes</td></tr>
@@ -50,7 +50,7 @@
 <tbody>
 <tr><td>Which trace layers change?</td><td>Test that layer and everything downstream (2.2)</td></tr>
 <tr><td>Any new route?</td><td>Auth middleware present on it <em>and</em> on every sibling verb</td></tr>
-<tr><td>Any new query?</td><td><code>EXPLAIN</code> on staging volumes; index present</td></tr>
+<tr><td>Any new query?</td><td><code>EXPLAIN</code> on UAT volumes; index present</td></tr>
 <tr><td>Any migration?</td><td>Reversible; concurrent index; expand/contract for renames</td></tr>
 <tr><td>Any in-process state?</td><td>Behaviour at 2+ instances (2.4)</td></tr>
 <tr><td>Any check-then-act?</td><td>Concurrency test required (5.3)</td></tr>
@@ -129,7 +129,7 @@
 <tr><td><code>lt-pr-trace</code></td><td>Diff → layers touched → tests for that row and everything downstream</td><td>CIDAM</td></tr>
 <tr><td><code>lt-testgen</code></td><td>Story → case table; mandatory concurrency, a11y and whole-class cases</td><td>TREF</td></tr>
 <tr><td><code>lt-playwright</code></td><td>Manual case → spec under the six house rules in 8.3</td><td>CO-STAR</td></tr>
-<tr><td><code>lt-sql-guard</code></td><td>Validation SQL, SELECT-only, staging connection only, never executed unprompted</td><td>TREF</td></tr>
+<tr><td><code>lt-sql-guard</code></td><td>Validation SQL, SELECT-only, UAT connection only, never executed unprompted</td><td>TREF</td></tr>
 <tr><td><code>lt-incident-timeline</code></td><td>Correlation ID + logs → timeline, first anomaly, ranked hypotheses</td><td>TREF</td></tr>
 <tr><td><code>lt-release-report</code></td><td>Pipeline artifacts → the readiness statement, in plain English</td><td>CO-STAR</td></tr>
 </tbody></table></div>
@@ -151,7 +151,7 @@ Read the diff. Do not summarise it back.
 3. For each layer in that set, list the concrete tests this diff requires.
 4. Flag explicitly, as separate lines:
    - a new route whose <b>sibling verbs</b> were not also checked for auth
-   - any new query with no <b>EXPLAIN</b> against staging volumes
+   - any new query with no <b>EXPLAIN</b> against UAT volumes
    - any <b>check-then-act</b> sequence (read, decide, write) — needs a concurrency test
    - any state held <b>in process memory</b> — behaves differently at 2 instances
 5. End with what you could <b>not</b> determine from the diff alone.
@@ -165,7 +165,7 @@ Read the diff. Do not summarise it back.
 <tbody>
 <tr><td><code>pr-triage</code></td><td>Read a diff, map layers, propose cases</td><td>Read, Grep, Glob</td><td>sonnet</td></tr>
 <tr><td><code>flake-hunter</code></td><td>Re-run one spec N times, classify each failure, recommend quarantine</td><td>Bash, Read</td><td>sonnet</td></tr>
-<tr><td><code>sql-validator</code></td><td>Run the standing checks in 6.2 against staging</td><td>Bash, Read</td><td>haiku</td></tr>
+<tr><td><code>sql-validator</code></td><td>Run the standing checks in 6.2 against UAT</td><td>Bash, Read</td><td>haiku</td></tr>
 <tr><td><code>a11y-sweep</code></td><td>axe plus the keyboard checklist over changed views</td><td>Bash, Read</td><td>sonnet</td></tr>
 <tr><td><code>corpus-referee</code></td><td>Score the REF clips, compare to bands, judge a breach</td><td>Bash, Read</td><td>opus</td></tr>
 </tbody></table></div>
@@ -193,23 +193,78 @@ Given a spec path:
 <u>Do not modify the spec. Diagnose only.</u></pre>
 
 <h3>13.5 The PR review workflow</h3>
-<pre>PR opened
-    │
-    ├─▶ pr-triage ──────▶ layers touched + required tests
-    ├─▶ a11y-sweep ─────▶ violations on changed views          } run in parallel,
-    ├─▶ sql-validator ──▶ standing checks still return zero    }  own contexts
-    │
-    ▼
- collected, de-duplicated
-    │
-    ▼
- QA reads it, keeps what is real, discards the rest
-    │
-    ▼
- PR comment ── written by Shashi Kumar, not by the agent
-    │
-    ▼
- <b>Gate: the deterministic pipeline (8.4).</b> Agents never gate.</pre>
+<div class="flowwrap">
+<svg class="flow" viewBox="0 0 1180 290" role="img"
+     aria-label="Pull request review flow: a PR fans out to three read-only agents running in parallel, their findings are collected and de-duplicated, QA triages them, QA writes the comment, and the deterministic pipeline is the only gate.">
+  <title>Agentic PR review flow</title>
+
+  <g class="conn-layer">
+    <path class="conn" d="M140,145 C162,145 162,47 184,47"/>
+    <path class="conn" d="M140,145 L184,145"/>
+    <path class="conn" d="M140,145 C162,145 162,243 184,243"/>
+    <path class="conn" d="M354,47 C376,47 376,145 398,145"/>
+    <path class="conn" d="M354,145 L398,145"/>
+    <path class="conn" d="M354,243 C376,243 376,145 398,145"/>
+    <path class="conn" d="M568,145 L604,145"/>
+    <path class="conn" d="M754,145 L794,145"/>
+    <path class="conn" d="M944,145 L984,145"/>
+
+    <path class="pulse" d="M140,145 C162,145 162,47 184,47"    style="animation-delay:0s"/>
+    <path class="pulse" d="M140,145 L184,145"                   style="animation-delay:.15s"/>
+    <path class="pulse" d="M140,145 C162,145 162,243 184,243"  style="animation-delay:.3s"/>
+    <path class="pulse" d="M354,47 C376,47 376,145 398,145"    style="animation-delay:.9s"/>
+    <path class="pulse" d="M354,145 L398,145"                   style="animation-delay:1.05s"/>
+    <path class="pulse" d="M354,243 C376,243 376,145 398,145"  style="animation-delay:1.2s"/>
+    <path class="pulse" d="M568,145 L604,145"                   style="animation-delay:1.7s"/>
+    <path class="pulse" d="M754,145 L794,145"                   style="animation-delay:2s"/>
+    <path class="pulse" d="M944,145 L984,145"                   style="animation-delay:2.3s"/>
+  </g>
+
+  <g class="box"><rect x="10" y="118" width="130" height="54" rx="9"/>
+    <text class="t" x="75" y="142" text-anchor="middle">PR opened</text>
+    <text class="s" x="75" y="159" text-anchor="middle">a diff appears</text></g>
+
+  <g class="box agent"><rect x="184" y="20" width="170" height="54" rx="9"/>
+    <text class="t" x="269" y="44" text-anchor="middle">pr-triage</text>
+    <text class="s" x="269" y="61" text-anchor="middle">layers + tests needed</text></g>
+  <g class="box agent"><rect x="184" y="118" width="170" height="54" rx="9"/>
+    <text class="t" x="269" y="142" text-anchor="middle">a11y-sweep</text>
+    <text class="s" x="269" y="159" text-anchor="middle">changed views</text></g>
+  <g class="box agent"><rect x="184" y="216" width="170" height="54" rx="9"/>
+    <text class="t" x="269" y="240" text-anchor="middle">sql-validator</text>
+    <text class="s" x="269" y="257" text-anchor="middle">isolation still zero</text></g>
+  <text class="s" x="269" y="288" text-anchor="middle">parallel · read-only · own context</text>
+
+  <g class="box"><rect x="398" y="118" width="170" height="54" rx="9"/>
+    <text class="t" x="483" y="142" text-anchor="middle">collect + dedupe</text>
+    <text class="s" x="483" y="159" text-anchor="middle">plain code, not a model</text></g>
+
+  <g class="box human"><rect x="604" y="118" width="150" height="54" rx="9"/>
+    <text class="t" x="679" y="142" text-anchor="middle">QA triages</text>
+    <text class="s" x="679" y="159" text-anchor="middle">keeps what is real</text></g>
+
+  <g class="box human"><rect x="794" y="118" width="150" height="54" rx="9"/>
+    <text class="t" x="869" y="142" text-anchor="middle">PR comment</text>
+    <text class="s" x="869" y="159" text-anchor="middle">by Shashi, not the agent</text></g>
+
+  <g class="box gate"><rect x="984" y="118" width="186" height="54" rx="9"/>
+    <text class="t" x="1077" y="142" text-anchor="middle">Pipeline gate (8.4)</text>
+    <text class="s" x="1077" y="159" text-anchor="middle">agents never gate</text></g>
+</svg>
+</div>
+
+<pre class="flowprint">PR opened
+    ├─▶ pr-triage      ──▶ layers touched + required tests
+    ├─▶ a11y-sweep     ──▶ violations on changed views     } parallel,
+    └─▶ sql-validator  ──▶ standing checks return zero     }  own contexts
+              ▼
+       collected, de-duplicated  (plain code, not a model)
+              ▼
+       QA keeps what is real, discards the rest
+              ▼
+       PR comment ── written by Shashi Kumar, not the agent
+              ▼
+       <b>Gate: the deterministic pipeline (8.4).</b> Agents never gate.</pre>
 
 <div class="tw"><table>
 <thead><tr><th style="width:22%">Stage</th><th style="width:22%">Who decides</th><th>What it may not do</th></tr></thead>

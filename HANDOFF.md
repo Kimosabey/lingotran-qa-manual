@@ -27,9 +27,9 @@ Workflow for every change:
 3. Run: python3 scripts/verify.py
 4. Do not consider a change done until verify passes clean.
 
-The manual is currently ~19.5 pages against a 50-page ceiling, so there is room,
-but the content ratio must stay near 75% tables and code. Prefer a table over
-paragraphs every time.
+The manual is currently ~28 pages against a 50-page ceiling, so there is room, but
+verify.py FAILS below 70% tables and code and the mix is ~71%. Prefer a table over
+paragraphs every time — a prose-heavy addition will fail the build, not merely drift.
 
 Before you change anything, give me a one-paragraph summary of what you understand
 the manual to be, plus the one decision in CONTEXT.md you think is most at risk of
@@ -66,6 +66,13 @@ lingotran-qa-manual/
 │  └─ 06-mod-12-close.html   templates/checklists, footer, filter script
 ├─ dist/
 │  └─ lingotran-qa-field-manual.html   GENERATED — do not edit
+├─ .claude/             the tooling the manual describes, as real files
+│  ├─ skills/           lt-pr-trace · lt-story-interrogate · lt-sql-guard
+│  ├─ agents/           pr-triage · flake-hunter
+│  ├─ hooks/guard-db.py deterministic PreToolUse gate (blocks writes/prod/secrets)
+│  └─ settings.json     wires the hook, allowlists the build
+├─ README.md            public-facing overview
+├─ vercel.json          static deploy — / serves the manual
 ├─ archive/             superseded 30-page chapter — reference only, never build from
 ├─ assets/
 │  └─ lingotran-brand-guidelines.html  authoritative colour/type reference
@@ -76,25 +83,24 @@ lingotran-qa-manual/
 
 Fragments concatenate in filename order. Fragment `01` opens `<head>` and `<body>`;
 fragment `06` closes them. If you add a fragment, name it so it sorts into the right
-position, and keep module IDs (`m00`–`m12`) in sync with the TOC in fragment 01.
+position, and keep module IDs (`m00`–`m13`) in sync with the TOC in fragment 01.
 
 ---
 
-## Suggested first tasks
+## Suggested next tasks
 
-Pick one — they are ordered by value, not effort.
+Pick one — ordered by value, not effort.
 
-1. **Deepen Module 07 (speech pipeline).** The most Lingotran-specific content in the
-   manual and the thinnest relative to its importance. Candidates: a device matrix
-   (laptop mic / iPad / classroom headset), Azure Speech quota and throttling behaviour,
-   and testing the phoneme feedback panel.
-2. **Add Module 13 — teacher and institution admin.** Class management, enrolment,
-   seat limits, progress reports, role boundaries. Currently only touched in passing,
-   and it is where the renewal conversation happens.
-3. **Playwright fixture patterns in Module 08.** Auth fixtures, per-worker database
-   isolation, sharding, and triaging a failed trace.
-4. **Replace the ASCII architecture diagram** in 2.1 with inline SVG using the brand
-   tokens. Keeps the light theme and prints cleanly.
+1. **Module 08 — Playwright fixtures.** Auth fixtures, per-worker database isolation,
+   sharding, triaging a failed trace. The largest remaining content gap.
+2. **Teacher and institution admin** — class management, enrolment, seat limits, role
+   boundaries, progress reports. Where renewal is decided. This would be `m14`; `m13`
+   is taken by the Claude Code module.
+3. **Replace the ASCII architecture diagram** in 2.1 with inline SVG, matching the
+   animated flow already in 13.5.
+4. **Plain-English pass** over Modules 01–06 and 08–12. Module 07 has had one; the
+   rest have not.
+
 
 ---
 

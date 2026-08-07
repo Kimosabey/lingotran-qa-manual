@@ -51,24 +51,28 @@
 <p>Open the PR, mark which layers the diff touches, and test that layer plus everything downstream. A change at layer 7 cannot break layer 1, but a change at layer 9 can break all ten above it.</p></div>
 
 <h3>2.3 Environments</h3>
+<p>Three environments, plus a throwaway database container inside the pipeline. Knowing what each one <em>cannot</em> prove matters more than knowing what it runs.</p>
 <div class="tw"><table>
-<thead><tr><th style="width:13%">Env</th><th style="width:20%">Data</th><th style="width:22%">Speech backend</th><th>What it can and cannot prove</th></tr></thead>
+<thead><tr><th style="width:13%">Env</th><th style="width:20%">Data</th><th style="width:22%">Speech</th><th>What it can and cannot prove</th></tr></thead>
 <tbody>
-<tr><td><strong>Local</strong></td><td>Seed script, ~200 rows</td><td>Stubbed JSON</td><td>Logic only. Proves nothing about latency, scale, or real audio.</td></tr>
-<tr><td><strong>CI</strong></td><td>Ephemeral container per run</td><td>Stubbed</td><td>Regression and contract. Deterministic by design.</td></tr>
-<tr><td><strong>Staging</strong></td><td>Anonymised copy, ~2M rows</td><td>Real, separate quota</td><td>The only place index and query-plan problems appear before production.</td></tr>
+<tr><td><strong>Dev</strong></td><td>Seed script, ~200 rows</td><td>Real browser API, each developer's own Chrome</td><td>Logic only. Proves nothing about scale, real devices, or a class of thirty.</td></tr>
+<tr><td><strong>CI container</strong></td><td>Fresh PostgreSQL per run</td><td>Stubbed</td><td>Regression and contract, deterministic by design. Not an environment anyone can open.</td></tr>
+<tr><td><strong>UAT</strong></td><td>Anonymised copy</td><td>Real</td><td>The only place before production where index and query-plan problems can appear — <em>if</em> it holds production-like volume.</td></tr>
 <tr><td><strong>Production</strong></td><td>Live</td><td>Real</td><td>Read-only smoke against a dedicated canary account. Never exploratory testing.</td></tr>
 </tbody></table></div>
 
+<div class="box warn"><b class="bl">UAT is doing the work of two environments</b>
+<p>With no separate performance environment, UAT is simultaneously where people click around and where load tests run. Those two uses fight: a k6 class-burst while someone is doing acceptance testing invalidates both. <strong>Book it.</strong> Load runs go nightly when nobody is in it, and the results are only meaningful if UAT matches production on the two things that bite — <strong>data volume and instance count</strong>. A single-instance UAT cannot reproduce the rate-limiter defect at all (2.4).</p></div>
+
 <div class="box warn"><b class="bl">The 200-row lie</b>
-<p>PostgreSQL will happily seq-scan 200 rows faster than it uses an index, so a missing index is invisible locally and in CI. It appears as gradually rising latency in production, then a timeout cliff. Any query added in a PR must be checked with <code>EXPLAIN</code> against staging volumes, not local.</p></div>
+<p>PostgreSQL will happily seq-scan 200 rows faster than it uses an index, so a missing index is invisible locally and in CI. It appears as gradually rising latency in production, then a timeout cliff. Any query added in a PR must be checked with <code>EXPLAIN</code> against UAT volumes, not local.</p></div>
 
 <h3>2.4 Configuration and multi-instance behaviour</h3>
 <p>Lingotran's API runs on two or more App Service instances. Anything holding state in process memory behaves differently in production than on your laptop.</p>
 <div class="tw"><table>
 <thead><tr><th style="width:30%">In-process state</th><th>Production consequence</th><th style="width:22%">Test approach</th></tr></thead>
 <tbody>
-<tr><td>Rate limiter counters</td><td>Effective limit = configured × instance count</td><td>Run staging at 2 instances and count actual rejections</td></tr>
+<tr><td>Rate limiter counters</td><td>Effective limit = configured × instance count</td><td>Run UAT at 2 instances and count actual rejections</td></tr>
 <tr><td>In-memory cache</td><td>Stale reads depending on which instance served you</td><td>Repeat the same read 10× and compare</td></tr>
 <tr><td>Scheduled job timers</td><td>Job fires once per instance — duplicate emails</td><td>Assert exactly-one side effect, not "at least one"</td></tr>
 <tr><td>WebSocket session map</td><td>Reconnect lands on the other instance and loses context</td><td>Force a reconnect mid-lesson</td></tr>

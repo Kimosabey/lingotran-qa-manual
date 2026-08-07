@@ -19,8 +19,8 @@ JS, opens by double-click and prints straight into a doc.
 | | |
 |---|---|
 | Modules | 14 (`m00`–`m13`) |
-| Length | 28.4 pages against a 50-page ceiling |
-| Content mix | 72% tables and code |
+| Length | 29.3 pages against a 50-page ceiling |
+| Content mix | 70% tables and code |
 | Theme | Light only, Nunito, brand tokens from `assets/` |
 
 ---

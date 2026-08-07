@@ -101,7 +101,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <div class="tw"><table>
 <thead><tr><th style="width:6%">#</th><th>Test</th></tr></thead>
 <tbody>
-<tr><td>①</td><td>Two instances → real limit is 20/min, not 10. Verify against staging at production instance count.</td></tr>
+<tr><td>①</td><td>Two instances → real limit is 20/min, not 10. Verify against UAT at production instance count.</td></tr>
 <tr><td>②</td><td>Expired, malformed, <code>alg:none</code>, valid token signed with the wrong key, token for a deleted user.</td></tr>
 <tr><td>③</td><td>Teacher token on a learner route → 403 not 500. Learner token on a teacher route → 403.</td></tr>
 <tr><td>④</td><td>Unknown fields stripped, not stored. Extra <code>{"role":"admin"}</code> in the body must not escalate.</td></tr>
@@ -183,7 +183,7 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <tr><td><code>CHECK</code> on role</td><td>Direct SQL insert of <code>role='superadmin'</code> must fail — proves the DB, not just the app, enforces it</td></tr>
 <tr><td><code>ON DELETE CASCADE</code></td><td>Delete a user, confirm attempts vanish. Then ask whether that is legal under the school's data-retention contract</td></tr>
 <tr><td><code>deleted_at</code></td><td>Soft-delete a learner, then run every list endpoint — one will still return them</td></tr>
-<tr><td>Composite index</td><td><code>EXPLAIN</code> the attempt-count query on staging; must be Index Scan, not Seq Scan</td></tr>
+<tr><td>Composite index</td><td><code>EXPLAIN</code> the attempt-count query on UAT; must be Index Scan, not Seq Scan</td></tr>
 <tr><td><code>numeric(5,2)</code></td><td>Score of 99.999 → rounds or errors? Confirm which, and that the UI agrees</td></tr>
 </tbody></table></div>
 
@@ -222,9 +222,9 @@ router.delete('/attempts/:id', attemptController.remove);   <u>// ⑤ no auth �
 <tr><td>Add index</td><td>Medium</td><td>Must be <code>CREATE INDEX CONCURRENTLY</code>, or writes block during deploy</td></tr>
 <tr><td>Rename column</td><td><strong>High</strong></td><td>Breaks the running old version mid-deploy. Expand/contract over two releases.</td></tr>
 <tr><td>Drop column</td><td><strong>High</strong></td><td>Irreversible. Confirm no code path and no report reads it.</td></tr>
-<tr><td>Change type</td><td><strong>High</strong></td><td>Full table rewrite plus lock. Test on a staging-sized copy and time it.</td></tr>
+<tr><td>Change type</td><td><strong>High</strong></td><td>Full table rewrite plus lock. Test on a UAT-sized copy and time it.</td></tr>
 </tbody></table></div>
 <div class="box warn"><b class="bl">Rollback is a test case, not a hope</b>
-<p>Every migration must be run <em>down</em> in staging before the release is approved. A migration without a tested rollback turns a 10-minute incident into a 4-hour one. Assert that data written after the up-migration survives the down-migration.</p></div>
+<p>Every migration must be run <em>down</em> in UAT before the release is approved. A migration without a tested rollback turns a 10-minute incident into a 4-hour one. Assert that data written after the up-migration survives the down-migration.</p></div>
 
 </div></details>

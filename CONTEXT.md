@@ -43,7 +43,7 @@ before a single table or code block exists. The template *guarantees* the overru
 it is not a discipline problem.
 
 **Decision:** abandon the chapter/section model entirely. Rebuild as a field manual of
-13 modules at ~20 pages total.
+13 modules at ~20 pages total. (Now 14 modules at ~28 — see D12–D14.)
 
 **Rationale:** a 1,200-page handbook is not read, and an unread handbook has zero
 quality impact regardless of how good it is. The binding constraint on a QA reference is
@@ -179,3 +179,51 @@ across into the modules in denser form.
 
 If asked to "restore" or "expand back to" the original format, point at this file and
 the 1,200-page projection first.
+
+---
+
+## Later decisions
+
+### D12 · Speech is the browser Web Speech API, not Azure
+The manual was written against Azure AI Speech Pronunciation Assessment. That was
+wrong. Lingotran runs the **browser Web Speech API** — Google-backed ASR/STT plus
+`speechSynthesis` for TTS.
+
+This is not a vendor swap, it changes what can be tested:
+- **No pronunciation score exists.** The API returns a transcript. The score is our own
+  text comparison, so every scoring bug is ours.
+- **No phonemes**, so there is no phoneme panel — 7.7 is word-level feedback.
+- **Recognition is client-side**, so audio never passes through our API. It goes from
+  the browser straight to Google.
+- **`SpeechRecognition` is Chrome/Edge**, unreliable on iPad Safari — the device schools
+  actually own. This is now the largest single risk in the manual.
+- **No contract, no quota page, no SLA.**
+
+REF-02 survives and gets sharper: the recogniser mishears accented speech, our
+comparison sees a mismatch, and the learner is marked wrong for the recogniser's error.
+Indistinguishable from a learner getting worse.
+
+**Consequence for rule 1:** Google was banned outright. That was correct only while it
+was not part of the stack. It is now a real sub-processor for children's audio and must
+be nameable in the privacy checks. The `stray_google` check was removed from
+`verify.py`; `FORBIDDEN` still covers actual competitors.
+
+### D13 · Module 13, and shipping the tooling rather than describing it
+Module 13 covers Claude Code mechanics. The point is that the same judgement is applied
+identically by every engineer without retyping it. The described skills, subagents and
+hooks now **exist as files** in `.claude/` — a chapter about tooling that has no tooling
+is a chapter about nothing.
+
+Governing rule, and it is not negotiable: **agents propose, deterministic checks
+dispose.** The moment an agent can turn a gate green, the gate has stopped being one.
+
+### D14 · The ratio floor moved 60% → 70%
+D2 targets ~75% structured content but `verify.py` only failed below 60%, leaving a
+15-point corridor the manual could drift down while every build printed `ok`. The floor
+is now 70% and the mix is ~71%, so the guard is live rather than theoretical.
+
+Two related guards were added after the hero silently claimed the wrong module and page
+counts for a whole revision: `verify.py` now checks the hero against reality, and checks
+the four D3 sections that were never guarded (Business Perspective, Developer
+Perspective, Step-by-Step Process, Equivalence Partitioning) — scanning **headings
+only**, because "Equivalence partitioning" is legitimate as a technique row in 3.3.

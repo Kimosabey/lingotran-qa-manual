@@ -74,7 +74,7 @@
 <h3>10.1 Bug report that gets fixed</h3>
 <div class="box"><b class="bl">LT-4471 · Sev-2</b>
 <p><strong>Title</strong> Attempt limit resets on page reload, allowing unlimited submissions<br>
-<strong>Environment</strong> Staging, build 2.14.3, Chrome 126, learner account at school.edu<br>
+<strong>Environment</strong> UAT, build 2.14.3, Chrome 126, learner account at school.edu<br>
 <strong>Steps</strong> 1. Sign in as learner · 2. Open exercise with maxAttempts 3 · 3. Submit 3 clips · 4. Confirm Record is disabled · 5. Reload the page<br>
 <strong>Actual</strong> Record is enabled; a 4th attempt is accepted and stored<br>
 <strong>Expected</strong> Limit persists; 4th attempt rejected with 429<br>
@@ -107,7 +107,7 @@
 <tbody>
 <tr><td>Immediate</td><td>Key the limiter on IP + email rather than IP alone</td><td>Backend · same day</td></tr>
 <tr><td>Short term</td><td>Move counters to shared state so the limit stops scaling with instance count</td><td>Backend · this sprint</td></tr>
-<tr><td>Detection</td><td>Alert when 429 exceeds 1% of login traffic over 5 minutes</td><td>Shashi Kumar (QA) + SRE · this sprint</td></tr>
+<tr><td>Detection</td><td>Alert when 429 exceeds 1% of login traffic over 5 minutes</td><td>Shashi Kumar (QA) + a named backend engineer · this sprint</td></tr>
 <tr><td>Prevention</td><td>Add "how does this behave for 30 users behind one NAT?" to the PR checklist</td><td>QA · this sprint</td></tr>
 <tr><td>Regression</td><td>k6 class-burst scenario from a single source IP, nightly</td><td>QA · this sprint</td></tr>
 </tbody></table></div>
@@ -119,7 +119,7 @@
 <tbody>
 <tr><td>Rate limiter per-IP</td><td>Tested on one instance, many IPs</td><td>Load test from a single IP at production instance count</td></tr>
 <tr><td>Session survives password change</td><td>Needs two concurrent sessions to observe</td><td>Multi-session fixture in the E2E suite</td></tr>
-<tr><td>Missing index</td><td>Test data was 200 rows</td><td><code>EXPLAIN</code> gate on staging volumes for new queries</td></tr>
+<tr><td>Missing index</td><td>Test data was 200 rows</td><td><code>EXPLAIN</code> gate on UAT volumes for new queries</td></tr>
 <tr><td>Accent penalty in scoring</td><td>Only native-speaker clips tested</td><td>REF-02 in the nightly corpus with a floor assertion</td></tr>
 <tr><td>Double submit → two attempts</td><td>Manual clicking is too slow</td><td>Concurrent-request test in the API suite</td></tr>
 <tr><td>iPad recording fails</td><td>Tested on desktop Chrome only</td><td>Real-device pass on the school's actual hardware</td></tr>
@@ -212,7 +212,7 @@ Mark clearly anything you inferred rather than read directly in the log.</pre>
 <p>It is the fastest to type and the only one with no guard rail — no Restriction field to keep a command off production, no Evaluation field to make the model check its own output. That is fine for a local repro and dangerous everywhere else. The failure mode of AI in QA is not an answer that looks wrong; it is a plausible one nobody verifies. Every framework above except TAG forces a field that catches exactly that.</p></div>
 
 <h3>11.3 The frameworks, written for Lingotran</h3>
-<div class="fn">TREF · standing SQL validation, staging only</div>
+<div class="fn">TREF · standing SQL validation, UAT only</div>
 <pre><b>TASK</b>        Write the SQL proving no learner holds attempts on another school's
             exercise, against the Lingotran schema in 6.1.
 <b>RESTRICTION</b> Read-only. SELECT only — no INSERT, UPDATE, DELETE, DDL or

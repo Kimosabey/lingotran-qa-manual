@@ -253,6 +253,25 @@ pre u{color:var(--coral-text);text-decoration:underline;text-decoration-style:do
   background-size:contain;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2341009A' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E")}
 
+/* ---- risk matrix ---- */
+.mx{width:100%;min-width:520px;max-width:760px;height:auto;display:block}
+.mx .cell{stroke:#fff;stroke-width:2}
+.mx .ax{font-family:var(--sans);font-weight:700;font-size:11px;fill:var(--caption-safe)}
+.mx .axl{font-family:var(--sans);font-weight:800;font-size:11.5px;fill:var(--brand-purple);
+  text-transform:uppercase;letter-spacing:1.1px}
+.mx .dot{fill:#fff;stroke:var(--brand-purple);stroke-width:2.5}
+.mx .dot.hi{stroke:var(--coral-text)}
+.mx .lb{font-family:var(--sans);font-weight:700;font-size:10.5px;fill:var(--ink)}
+.mx .sc{font-family:var(--sans);font-weight:800;font-size:10px;fill:var(--brand-purple)}
+.mx .dotg{animation:dotin .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes dotin{from{opacity:0;transform:scale(.4)}}
+
+.mx .bar2{animation:bargrow .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bargrow{from{width:0}}
+.mx .bl2{font-family:var(--sans);font-weight:700;font-size:11.5px;fill:var(--ink)}
+.mx .bv{font-family:var(--sans);font-weight:600;font-size:10.5px;fill:var(--caption-safe)}
+.mx .lim{font-family:var(--sans);font-weight:800;font-size:10.5px;fill:var(--coral-text)}
+
 /* ---- infographic: meters, stat tiles ---- */
 .meter{display:block;height:6px;border-radius:3px;background:var(--lilac);overflow:hidden;margin-top:4px;max-width:120px}
 .meter i{display:block;height:100%;border-radius:3px;width:var(--v);
@@ -485,6 +504,20 @@ footer{text-align:center;padding:clamp(26px,3vw,40px) var(--gutter) clamp(34px,4
 <tr><td>Billing &amp; seat counts</td><td>4</td><td>2</td><td><strong>8</strong><span class="meter"><i style="--v:40%"></i></span></td><td>Contractual exposure, but changes rarely</td></tr>
 <tr><td>Marketing pages</td><td>1</td><td>3</td><td><strong>3</strong><span class="meter"><i style="--v:15%"></i></span></td><td>Embarrassing, not damaging</td></tr>
 </tbody></table></div>
+
+<div class="flowwrap">
+<svg class="mx" viewBox="0 0 700 400" role="img"
+     aria-label="Risk matrix plotting the seven Lingotran areas by impact and likelihood. Login and session, and speech capture and scoring, both sit at impact 5 likelihood 4 with a score of 20 — the highest. Marketing pages sits at impact 1 likelihood 3, score 3, the lowest.">
+  <title>Impact against likelihood, from the table above</title>
+  <rect class="cell" x="96" y="282" width="80" height="62" fill="rgba(65,0,154,0.072)"/><rect class="cell" x="176" y="282" width="80" height="62" fill="rgba(65,0,154,0.084)"/><rect class="cell" x="256" y="282" width="80" height="62" fill="rgba(65,0,154,0.096)"/><rect class="cell" x="336" y="282" width="80" height="62" fill="rgba(65,0,154,0.108)"/><rect class="cell" x="416" y="282" width="80" height="62" fill="rgba(65,0,154,0.120)"/><rect class="cell" x="96" y="220" width="80" height="62" fill="rgba(65,0,154,0.084)"/><rect class="cell" x="176" y="220" width="80" height="62" fill="rgba(65,0,154,0.108)"/><rect class="cell" x="256" y="220" width="80" height="62" fill="rgba(65,0,154,0.132)"/><rect class="cell" x="336" y="220" width="80" height="62" fill="rgba(65,0,154,0.156)"/><rect class="cell" x="416" y="220" width="80" height="62" fill="rgba(65,0,154,0.180)"/><rect class="cell" x="96" y="158" width="80" height="62" fill="rgba(65,0,154,0.096)"/><rect class="cell" x="176" y="158" width="80" height="62" fill="rgba(65,0,154,0.132)"/><rect class="cell" x="256" y="158" width="80" height="62" fill="rgba(65,0,154,0.168)"/><rect class="cell" x="336" y="158" width="80" height="62" fill="rgba(65,0,154,0.204)"/><rect class="cell" x="416" y="158" width="80" height="62" fill="rgba(65,0,154,0.240)"/><rect class="cell" x="96" y="96" width="80" height="62" fill="rgba(65,0,154,0.108)"/><rect class="cell" x="176" y="96" width="80" height="62" fill="rgba(65,0,154,0.156)"/><rect class="cell" x="256" y="96" width="80" height="62" fill="rgba(65,0,154,0.204)"/><rect class="cell" x="336" y="96" width="80" height="62" fill="rgba(65,0,154,0.252)"/><rect class="cell" x="416" y="96" width="80" height="62" fill="rgba(65,0,154,0.300)"/><rect class="cell" x="96" y="34" width="80" height="62" fill="rgba(65,0,154,0.120)"/><rect class="cell" x="176" y="34" width="80" height="62" fill="rgba(65,0,154,0.180)"/><rect class="cell" x="256" y="34" width="80" height="62" fill="rgba(65,0,154,0.240)"/><rect class="cell" x="336" y="34" width="80" height="62" fill="rgba(65,0,154,0.300)"/><rect class="cell" x="416" y="34" width="80" height="62" fill="rgba(65,0,154,0.360)"/>
+  <text class="axl" x="96" y="18">Impact ↑   ·   Likelihood →</text>
+  <text class="ax" x="136.0" y="362" text-anchor="middle">1</text><text class="ax" x="216.0" y="362" text-anchor="middle">2</text><text class="ax" x="296.0" y="362" text-anchor="middle">3</text><text class="ax" x="376.0" y="362" text-anchor="middle">4</text><text class="ax" x="456.0" y="362" text-anchor="middle">5</text>
+  <text class="ax" x="84" y="317.0" text-anchor="end">1</text><text class="ax" x="84" y="255.0" text-anchor="end">2</text><text class="ax" x="84" y="193.0" text-anchor="end">3</text><text class="ax" x="84" y="131.0" text-anchor="end">4</text><text class="ax" x="84" y="69.0" text-anchor="end">5</text>
+  <g class="dotg" style="animation-delay:0.00s"><circle class="dot hi" cx="376.0" cy="52.0" r="7"/><text class="lb" x="364.0" y="51.0" text-anchor="end">Login & session</text><text class="sc" x="364.0" y="63.0" text-anchor="end">score 20</text></g><g class="dotg" style="animation-delay:0.07s"><circle class="dot hi" cx="376.0" cy="78.0" r="7"/><text class="lb" x="364.0" y="77.0" text-anchor="end">Speech & scoring</text><text class="sc" x="364.0" y="89.0" text-anchor="end">score 20</text></g><g class="dotg" style="animation-delay:0.14s"><circle class="dot hi" cx="296.0" cy="65.0" r="7"/><text class="lb" x="308.0" y="64.0" text-anchor="start">Progress persistence</text><text class="sc" x="308.0" y="76.0" text-anchor="start">score 15</text></g><g class="dotg" style="animation-delay:0.21s"><circle class="dot" cx="296.0" cy="127.0" r="7"/><text class="lb" x="308.0" y="126.0" text-anchor="start">Class reports</text><text class="sc" x="308.0" y="138.0" text-anchor="start">score 12</text></g><g class="dotg" style="animation-delay:0.28s"><circle class="dot" cx="216.0" cy="65.0" r="7"/><text class="lb" x="228.0" y="64.0" text-anchor="start">Role-based access</text><text class="sc" x="228.0" y="76.0" text-anchor="start">score 10</text></g><g class="dotg" style="animation-delay:0.35s"><circle class="dot" cx="216.0" cy="127.0" r="7"/><text class="lb" x="228.0" y="126.0" text-anchor="start">Billing & seats</text><text class="sc" x="228.0" y="138.0" text-anchor="start">score 8</text></g><g class="dotg" style="animation-delay:0.42s"><circle class="dot" cx="296.0" cy="313.0" r="7"/><text class="lb" x="308.0" y="312.0" text-anchor="start">Marketing pages</text><text class="sc" x="308.0" y="324.0" text-anchor="start">score 3</text></g>
+</svg>
+</div>
+<div class="box"><b class="bl">Read it as an order, not a score</b>
+<p>Test top-right first and work down-left. The two at 20 are the product's reason to exist and the way in — neither can be deprioritised. Marketing pages at 3 is the only area where "we did not test it" is a reasonable sentence.</p></div>
 
 <div class="box"><b class="bl">The institution multiplier</b>
 <p>Lingotran sells to schools, not individuals. Every defect is multiplied by class size before anyone notices it. A bug affecting one learner is a ticket; the same bug on a shared classroom network is thirty simultaneous tickets and an escalation to the head of department. Weight likelihood accordingly.</p></div>

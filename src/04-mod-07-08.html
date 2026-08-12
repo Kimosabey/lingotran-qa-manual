@@ -312,6 +312,20 @@ TTS: speechSynthesis ──▶ voice from the device, not from us</pre>
 <tr><td>Nightly speech corpus</td><td>~20 min</td><td>Nothing — reports, alerts on band breach</td></tr>
 <tr><td>Nightly k6 load</td><td>~15 min</td><td>Nothing — trends tracked over time</td></tr>
 </tbody></table></div>
+<div class="flowwrap">
+<svg class="mx" viewBox="0 0 760 260" role="img"
+     aria-label="Pipeline time budgets. Lint and unit three minutes and API integration six minutes both block merge, totalling nine minutes against the ten-minute rule. End-to-end takes ten more and blocks the UAT deploy. The two nightly stages, twenty and fifteen minutes, block nothing.">
+  <title>Pipeline budgets against the ten-minute rule</title>
+  <defs><linearGradient id="gpr" x1="0" x2="1">
+    <stop offset="0" stop-color="#41009A"/><stop offset="1" stop-color="#7C4DFF"/>
+  </linearGradient></defs>
+  <line x1="380.0" y1="30" x2="380.0" y2="236" stroke="#DC2800" stroke-width="2" stroke-dasharray="5 4"/>
+  <text class="lim" x="386.0" y="24">10 min — keep PR feedback inside this</text>
+  <text class="bl2" x="178" y="61" text-anchor="end">Lint + unit</text><rect class="bar2" x="190" y="44" width="57.0" height="26" rx="5" fill="url(#gpr)"/><text class="bv" x="255.0" y="61">3 min · blocks merge</text><text class="bl2" x="178" y="101" text-anchor="end">API + integration</text><rect class="bar2" x="190" y="84" width="114.0" height="26" rx="5" fill="url(#gpr)"/><text class="bv" x="312.0" y="101">6 min · blocks merge</text><text class="bl2" x="178" y="141" text-anchor="end">E2E, sharded x4</text><rect class="bar2" x="190" y="124" width="190.0" height="26" rx="5" fill="rgba(65,0,154,.22)"/><text class="bv" x="388.0" y="141">10 min · blocks UAT deploy</text><text class="bl2" x="178" y="181" text-anchor="end">Nightly speech corpus</text><rect class="bar2" x="190" y="164" width="380.0" height="26" rx="5" fill="rgba(65,0,154,.22)"/><text class="bv" x="578.0" y="181">20 min · blocks nothing</text><text class="bl2" x="178" y="221" text-anchor="end">Nightly k6 load</text><rect class="bar2" x="190" y="204" width="285.0" height="26" rx="5" fill="rgba(65,0,154,.22)"/><text class="bv" x="483.0" y="221">15 min · blocks nothing</text>
+  <text class="bv" x="190" y="258">Merge-blocking stages total 9 min. It fits, but only just.</text>
+</svg>
+</div>
+
 <div class="box good"><b class="bl">Ten minutes</b><p>Keep PR feedback under ten minutes. Beyond that the author has context-switched, and the pipeline stops being feedback and starts being an obstacle to route around.</p></div>
 
 </div></details>

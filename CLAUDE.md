@@ -145,11 +145,8 @@ bash scripts/build.sh      # concat src/*.html -> dist/lingotran-qa-field-manual
 python3 scripts/verify.py  # tag balance, page count, compliance checks
 ```
 
-**On Windows:** write files with `newline="
-"`. Python's `write_text()` translates
-`
-` to `
-` by default, which seeds CRLF into `src/` and makes a local rebuild
+**On Windows:** write files with `newline="\n"`. Python's `write_text()` translates
+`\n` to `\r\n` by default, which seeds CRLF into `src/` and makes a local rebuild
 differ byte-wise from the committed `dist/`. Git normalises on commit so the repo stays
 clean, but CI compares with `--strip-trailing-cr` for exactly this reason.
 

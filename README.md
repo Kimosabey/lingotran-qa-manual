@@ -6,7 +6,7 @@ language-learning platform sold to schools and institutions.
 **Live:** https://lingotran-qa-manual.vercel.app
 
 It is a **field manual, not a textbook** — meant to be filtered and searched at a desk
-mid-task, never read front to back. Thirteen collapsible modules behind a live filter
+mid-task, never read front to back. Fourteen collapsible modules behind a live filter
 box. Every design and content decision follows from that one constraint.
 
 ---
@@ -77,12 +77,17 @@ considered and rejected, with the reasoning recorded — including the original
 |---|---|
 | `main` | **Released.** Vercel deploys this to production on every push |
 | `develop` | Working branch. Merge to `main` to release |
-| `vN.N.N` | Tagged release. `v3.0.0` is current |
+| `vN.N.N` | Tagged release. `v3.3.0` is current |
 
 Revision in the hero and footer tracks the tag — bump both together.
 
 | Version | What changed |
 |---|---|
+| `v3.3.0` | Risk matrix and pipeline budget chart, plotted from existing data |
+| `v3.2.0` | Plain-English pass; 2.1 and 7.1 as animated SVG; CI gate; full skill set |
+| `v3.1.0` | Skills own the recurring prompts; 11.1 becomes a pointer |
+| `v3.0.2` | Responsive spacing scale; shared page gutter |
+| `v3.0.1` | Device lab present; HTTPS identified as the blocker to speech testing |
 | `v3.0.0` | Speech corrected to the browser Web Speech API; Modules 07 and 13 expanded; dev/UAT confirmed HTTP; `.claude/` toolchain shipped; cream editorial theme; WCAG 1.4.1 fixed; `verify.py` hardened |
 | `v2.0` | The 14-module field manual, rebuilt from the abandoned handbook template |
 
